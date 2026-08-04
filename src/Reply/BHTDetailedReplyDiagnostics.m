@@ -481,6 +481,13 @@ void BHTDetailedReplyDiagnosticsCaptureDecodedResponse(
             BHTDetailedReplyCaptureStartedAt = BHTDetailedReplyNow();
             BHTDetailedReplyScheduleExpiryLocked();
             BHTDetailedReplyCaptureState = @"capturingDecodedResponse";
+            // Make the in-flight attempt visible immediately so typed,
+            // prepared, or failure callbacks can merge while JSON redaction
+            // is still running outside the lock.
+            BHTDetailedReplyCapture = @{
+                @"sessionGeneration": @(sessionGeneration),
+                @"responseJSONState": @"decoderCapturePending",
+            };
             accepted = YES;
         } else if (BHTDetailedReplySessionGeneration ==
                    sessionGeneration) {
@@ -655,7 +662,8 @@ void BHTDetailedReplyDiagnosticsCaptureFailure(
         BHTDetailedReplyRedactionCount += redactions;
         BHTDetailedReplyTruncationCount += truncations;
         BHTDetailedReplyCaptureState = @"failureCaptured";
-        BHTDetailedReplySessionGeneration = 0;
+        // Keep the generation open for the bounded 90-second collection
+        // window so a concurrently redacting decoded response is not lost.
     }
 }
 
