@@ -2808,6 +2808,7 @@ def main() -> None:
             "BHTDetailedReplyCaptureEpoch",
             "BHTDetailedReplyScheduleExpiryLocked(void)",
             "dispatch_after(",
+            "BHTDetailedReplyCaptureEpoch != acceptedEpoch",
             "BHTDetailedReplyResponseLimit = 256 * 1024",
             "BHTDetailedReplyMaximumDepth = 8",
             "BHTDetailedReplyMaximumDictionaryKeys = 32",
