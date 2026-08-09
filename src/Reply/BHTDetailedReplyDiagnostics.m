@@ -372,7 +372,10 @@ static NSDictionary* BHTDetailedReplyObjectSummary(
     };
 }
 
-static NSData* BHTDetailedReplyResponseData(id response) {
+static NSData* BHTDetailedReplyResponseData(
+    id response,
+    BOOL* accessorsObserved) {
+    if (accessorsObserved) *accessorsObserved = NO;
     if (!response) return nil;
     SEL infoSelector = NSSelectorFromString(@"info");
     if (!BHTDetailedReplyMethodReturnsObjectWithNoArguments(
@@ -388,9 +391,7 @@ static NSData* BHTDetailedReplyResponseData(id response) {
                 [info class], dataSelector)) {
             return nil;
         }
-        @synchronized(BHTDetailedReplyLock()) {
-            BHTDetailedReplyResponseAccessorsObserved = YES;
-        }
+        if (accessorsObserved) *accessorsObserved = YES;
         id data = ((id (*)(id, SEL))objc_msgSend)(
             info, dataSelector);
         return [data isKindOfClass:NSData.class] ? data : nil;
@@ -470,6 +471,7 @@ void BHTDetailedReplyDiagnosticsCaptureDecodedResponse(
     if (sessionGeneration == 0 || !response) return;
 
     BOOL accepted = NO;
+    NSUInteger acceptedEpoch = 0;
     @synchronized(BHTDetailedReplyLock()) {
         BHTDetailedReplyPruneLocked();
         if (BHTDetailedReplyArmed) {
@@ -479,15 +481,25 @@ void BHTDetailedReplyDiagnosticsCaptureDecodedResponse(
             BHTDetailedReplyCaptureStartedAt = BHTDetailedReplyNow();
             BHTDetailedReplyScheduleExpiryLocked();
             BHTDetailedReplyCaptureState = @"capturingDecodedResponse";
+            // Make the in-flight attempt visible immediately so typed,
+            // prepared, or failure callbacks can merge while JSON redaction
+            // is still running outside the lock.
+            BHTDetailedReplyCapture = @{
+                @"sessionGeneration": @(sessionGeneration),
+                @"responseJSONState": @"decoderCapturePending",
+            };
             accepted = YES;
         } else if (BHTDetailedReplySessionGeneration ==
                    sessionGeneration) {
             accepted = YES;
         }
+        if (accepted) acceptedEpoch = BHTDetailedReplyCaptureEpoch;
     }
     if (!accepted) return;
 
-    NSData* data = BHTDetailedReplyResponseData(response);
+    BOOL responseAccessorsObserved = NO;
+    NSData* data = BHTDetailedReplyResponseData(
+        response, &responseAccessorsObserved);
     NSUInteger redactions = 0;
     NSUInteger truncations = 0;
     NSMutableDictionary* capture = [NSMutableDictionary dictionary];
@@ -528,7 +540,10 @@ void BHTDetailedReplyDiagnosticsCaptureDecodedResponse(
     }
 
     @synchronized(BHTDetailedReplyLock()) {
-        if (BHTDetailedReplySessionGeneration != sessionGeneration) return;
+        if (BHTDetailedReplyCaptureEpoch != acceptedEpoch ||
+            BHTDetailedReplySessionGeneration != sessionGeneration) {
+            return;
+        }
         NSMutableDictionary* merged =
             [BHTDetailedReplyCapture mutableCopy] ?:
                 [NSMutableDictionary dictionary];
@@ -536,6 +551,9 @@ void BHTDetailedReplyDiagnosticsCaptureDecodedResponse(
         BHTDetailedReplyCapture = [merged copy];
         BHTDetailedReplyRedactionCount += redactions;
         BHTDetailedReplyTruncationCount += truncations;
+        BHTDetailedReplyResponseAccessorsObserved =
+            BHTDetailedReplyResponseAccessorsObserved ||
+            responseAccessorsObserved;
         BHTDetailedReplyCaptureState = @"decodedResponseCaptured";
     }
 }
@@ -552,12 +570,14 @@ void BHTDetailedReplyDiagnosticsCapturePreparedResponse(
     id finalOperationError,
     id finalAPIErrors) {
     if (sessionGeneration == 0) return;
+    NSUInteger acceptedEpoch = 0;
     @synchronized(BHTDetailedReplyLock()) {
         BHTDetailedReplyPruneLocked();
         if (BHTDetailedReplySessionGeneration != sessionGeneration ||
             !BHTDetailedReplyCapture) {
             return;
         }
+        acceptedEpoch = BHTDetailedReplyCaptureEpoch;
     }
 
     NSUInteger redactions = 0;
@@ -585,7 +605,8 @@ void BHTDetailedReplyDiagnosticsCapturePreparedResponse(
     };
 
     @synchronized(BHTDetailedReplyLock()) {
-        if (BHTDetailedReplySessionGeneration != sessionGeneration ||
+        if (BHTDetailedReplyCaptureEpoch != acceptedEpoch ||
+            BHTDetailedReplySessionGeneration != sessionGeneration ||
             !BHTDetailedReplyCapture) {
             return;
         }
@@ -604,12 +625,14 @@ void BHTDetailedReplyDiagnosticsCaptureFailure(
     NSString* source,
     NSNotification* notification) {
     if (sessionGeneration == 0) return;
+    NSUInteger acceptedEpoch = 0;
     @synchronized(BHTDetailedReplyLock()) {
         BHTDetailedReplyPruneLocked();
         if (BHTDetailedReplySessionGeneration != sessionGeneration ||
             !BHTDetailedReplyCapture) {
             return;
         }
+        acceptedEpoch = BHTDetailedReplyCaptureEpoch;
     }
 
     NSUInteger redactions = 0;
@@ -627,7 +650,8 @@ void BHTDetailedReplyDiagnosticsCaptureFailure(
     }
 
     @synchronized(BHTDetailedReplyLock()) {
-        if (BHTDetailedReplySessionGeneration != sessionGeneration ||
+        if (BHTDetailedReplyCaptureEpoch != acceptedEpoch ||
+            BHTDetailedReplySessionGeneration != sessionGeneration ||
             !BHTDetailedReplyCapture) {
             return;
         }
@@ -638,7 +662,8 @@ void BHTDetailedReplyDiagnosticsCaptureFailure(
         BHTDetailedReplyRedactionCount += redactions;
         BHTDetailedReplyTruncationCount += truncations;
         BHTDetailedReplyCaptureState = @"failureCaptured";
-        BHTDetailedReplySessionGeneration = 0;
+        // Keep the generation open for the bounded 90-second collection
+        // window so a concurrently redacting decoded response is not lost.
     }
 }
 
@@ -649,6 +674,7 @@ void BHTDetailedReplyDiagnosticsCaptureTypedResult(
     id error) {
     if (sessionGeneration == 0) return;
     BOOL accepted = NO;
+    NSUInteger acceptedEpoch = 0;
     @synchronized(BHTDetailedReplyLock()) {
         BHTDetailedReplyPruneLocked();
         if (BHTDetailedReplyArmed) {
@@ -668,6 +694,7 @@ void BHTDetailedReplyDiagnosticsCaptureTypedResult(
                    BHTDetailedReplyCapture) {
             accepted = YES;
         }
+        if (accepted) acceptedEpoch = BHTDetailedReplyCaptureEpoch;
     }
     if (!accepted) return;
 
@@ -682,7 +709,8 @@ void BHTDetailedReplyDiagnosticsCaptureTypedResult(
     };
 
     @synchronized(BHTDetailedReplyLock()) {
-        if (BHTDetailedReplySessionGeneration != sessionGeneration ||
+        if (BHTDetailedReplyCaptureEpoch != acceptedEpoch ||
+            BHTDetailedReplySessionGeneration != sessionGeneration ||
             !BHTDetailedReplyCapture) {
             return;
         }
