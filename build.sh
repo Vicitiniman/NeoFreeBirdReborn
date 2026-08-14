@@ -21,6 +21,31 @@ say() { if [[ -n "${bold}${green}${reset}" ]]; then printf "%b%s%b\n" "${bold}${
 err() { printf "Error: %s\n" "$1" >&2; }
 die() { err "$1"; exit 1; }
 
+NFB_TIMINGS_FILE="${NFB_TIMINGS_FILE:-}"
+BUILD_SCRIPT_STARTED_AT="$(date +%s)"
+
+record_timing() {
+  local phase="$1" started_at="$2" finished_at
+  [[ -n "$NFB_TIMINGS_FILE" ]] || return 0
+  finished_at="$(date +%s)"
+  mkdir -p "$(dirname "$NFB_TIMINGS_FILE")"
+  printf '%s\t%s\n' "$phase" "$((finished_at - started_at))" >> "$NFB_TIMINGS_FILE"
+}
+
+record_total_timing() {
+  record_timing "Total build.sh" "$BUILD_SCRIPT_STARTED_AT"
+}
+trap record_total_timing EXIT
+
+run_timed() {
+  local phase="$1" started_at status=0
+  shift
+  started_at="$(date +%s)"
+  "$@" || status=$?
+  record_timing "$phase" "$started_at"
+  return "$status"
+}
+
 usage() {
   cat <<EOF
 Usage: $(basename "$0") [--sideloaded | --rootless | --trollstore | --rootfull]
@@ -47,6 +72,28 @@ require_cmd bash
 require_cmd make
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+detect_build_jobs() {
+  local jobs="${NFB_BUILD_JOBS:-}"
+  if [[ -z "$jobs" ]]; then
+    if [[ "$(uname)" == "Darwin" ]]; then
+      jobs="$(sysctl -n hw.logicalcpu 2>/dev/null || printf '1')"
+    elif command -v nproc >/dev/null 2>&1; then
+      jobs="$(nproc)"
+    else
+      jobs="$(getconf _NPROCESSORS_ONLN 2>/dev/null || printf '1')"
+    fi
+  fi
+
+  [[ "$jobs" =~ ^[1-9][0-9]*$ ]] || die "NFB_BUILD_JOBS must be a positive integer."
+  # The tweak and FLEX compile comfortably in parallel, while this cap avoids
+  # excessive memory pressure on shared CI runners and older development Macs.
+  if (( jobs > 8 )); then jobs=8; fi
+  printf '%s\n' "$jobs"
+}
+
+BUILD_JOBS="$(detect_build_jobs)"
+say "Using ${BUILD_JOBS} parallel make job(s)."
 
 MODE=""
 
@@ -94,6 +141,12 @@ clean_tree() {
   if [[ -f Makefile ]]; then make clean || true; fi
 }
 
+run_make() {
+  local phase="$1"
+  shift
+  run_timed "$phase" make -j"$BUILD_JOBS" "$@"
+}
+
 find_build_artifact() {
   local artifact="$1"
   local result
@@ -122,32 +175,37 @@ apply_sideload_branding() {
   bash "$SCRIPT_DIR/rebrand.sh" --twitter-branding --twitter-icon "$icon" "$ipa"
 }
 
-# The ffmpeg stack is built from source, not tracked.
-if [[ ! -f "$SCRIPT_DIR/deps/ffmpeg-kit-next/build/lib/libffmpegkit.a" ]]; then
+# The ffmpeg stack is built from source, not tracked. Check a representative
+# header and both wrapper/core archives so a partial cache cannot be accepted.
+if [[ ! -f "$SCRIPT_DIR/deps/ffmpeg-kit-next/build/FFmpegKit.h" ||
+      ! -f "$SCRIPT_DIR/deps/ffmpeg-kit-next/build/lib/libffmpegkit.a" ||
+      ! -f "$SCRIPT_DIR/deps/ffmpeg-kit-next/build/lib/libavcodec.a" ]]; then
   say "ffmpeg libraries not found; building them from source (this takes a while)."
-  git -C "$SCRIPT_DIR" submodule update --init deps/ffmpeg-kit-next/upstream
-  "$SCRIPT_DIR/deps/ffmpeg-kit-next/build-ffmpeg.sh"
+  git -C "$SCRIPT_DIR" submodule update --init --depth 1 deps/ffmpeg-kit-next/upstream
+  run_timed "ffmpeg source build" "$SCRIPT_DIR/deps/ffmpeg-kit-next/build-ffmpeg.sh" || \
+    die "An error occurred while building ffmpeg."
 fi
 
 case "$MODE" in
   sideloaded)
     say "Preparing to compile NeoFreeBird. Argument added: --sideloaded."
-    clean_tree
-    make SIDELOADED=1
-    if [[ $? -ne 0 ]]; then
-      die "An error occurred when building."
-    fi
+    run_timed "Clean build tree" clean_tree
+    run_make "Sideloaded compile" SIDELOADED=1 || die "An error occurred when building."
     if [[ -e ./packages/com.atebits.Tweetie2.ipa ]]; then
       say "Building the IPA."
-      apply_sideload_branding
+      run_timed "Sideloaded branding" apply_sideload_branding || die "Branding failed."
       if command -v cyan >/dev/null 2>&1; then
         BHT_DYLIB="$(find_build_artifact BHTwitter.dylib)"
         validate_runtime_linkage "$BHT_DYLIB"
         FLEX_DYLIB="$(find_build_artifact libbhFLEX.dylib)"
         ZX_DYLIB="$(find_build_artifact zxPluginsInject.dylib)"
-        cyan -i packages/com.atebits.Tweetie2.ipa -o packages/NeoFreeBird-sideloaded --ignore-encrypted \
+        run_timed "Sideloaded IPA injection" cyan \
+          -i packages/com.atebits.Tweetie2.ipa \
+          -o packages/NeoFreeBird-sideloaded \
+          --ignore-encrypted \
           -uwf "$ZX_DYLIB" "$FLEX_DYLIB" "$BHT_DYLIB" \
-          "layout/Library/Application Support/BHT/BHTwitter.bundle"
+          "layout/Library/Application Support/BHT/BHTwitter.bundle" || \
+          die "IPA injection failed."
       else
         say "Skipping cyan step because it is not installed."
       fi
@@ -158,29 +216,30 @@ case "$MODE" in
     ;;
   rootless)
     say "Preparing to compile NeoFreeBird. Argument added: --rootless."
-    clean_tree
+    run_timed "Clean build tree" clean_tree
     export THEOS_PACKAGE_SCHEME="rootless"
-    make package
+    run_make "Rootless package" package || die "An error occurred when building."
     validate_runtime_linkage "$(find_build_artifact BHTwitter.dylib)"
     say "NeoFreeBird has been successfully built. Enjoy!"
     ;;
   trollstore)
     say "Preparing to compile NeoFreeBird. Argument added: --trollstore."
-    clean_tree
-    make
-    if [[ $? -ne 0 ]]; then
-      die "An error occurred when building."
-    fi
+    run_timed "Clean build tree" clean_tree
+    run_make "TrollStore compile" || die "An error occurred when building."
     if [[ -e ./packages/com.atebits.Tweetie2.ipa ]]; then
       say "Merging NeoFreeBird to provided Twitter IPA."
-      apply_sideload_branding
+      run_timed "TrollStore branding" apply_sideload_branding || die "Branding failed."
       if command -v cyan >/dev/null 2>&1; then
         BHT_DYLIB="$(find_build_artifact BHTwitter.dylib)"
         validate_runtime_linkage "$BHT_DYLIB"
         FLEX_DYLIB="$(find_build_artifact libbhFLEX.dylib)"
-        cyan -i packages/com.atebits.Tweetie2.ipa -o packages/NeoFreeBird-trollstore.tipa --ignore-encrypted \
+        run_timed "TrollStore IPA injection" cyan \
+          -i packages/com.atebits.Tweetie2.ipa \
+          -o packages/NeoFreeBird-trollstore.tipa \
+          --ignore-encrypted \
           -uwf "$BHT_DYLIB" "$FLEX_DYLIB" \
-          "layout/Library/Application Support/BHT/BHTwitter.bundle"
+          "layout/Library/Application Support/BHT/BHTwitter.bundle" || \
+          die "IPA injection failed."
       else
         say "Skipping cyan step because it is not installed."
       fi
@@ -191,9 +250,9 @@ case "$MODE" in
     ;;
   rootfull)
     say "Preparing to compile NeoFreeBird. Argument added: --rootfull."
-    clean_tree
+    run_timed "Clean build tree" clean_tree
     unset THEOS_PACKAGE_SCHEME || true
-    make package
+    run_make "Rootful package" package || die "An error occurred when building."
     validate_runtime_linkage "$(find_build_artifact BHTwitter.dylib)"
     say "NeoFreeBird has been successfully built. Enjoy!"
     ;;

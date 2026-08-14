@@ -14,6 +14,7 @@ on:
       - "rebrand.sh"
       - "control"
       - "BHTwitter.plist"
+      - ".gitmodules"
       - ".github/workflows/build.yml"
   workflow_dispatch:
     inputs:
@@ -78,17 +79,28 @@ jobs:
         with:
           path: main
           ref: ${{ github.event.inputs.commit_id || github.ref }}
-          submodules: recursive
+          submodules: false
 
       - name: Install Dependencies
         run: |
-          # GitHub's macOS image includes AWS SAM CLI from this third-party
-          # tap, but this build does not use it. Remove it instead of granting
-          # the whole tap trust during formula resolution.
-          if brew tap | grep -qx 'aws/tap'; then
-            brew untap --force aws/tap
+          missing_formulas=()
+          for formula in make dpkg ldid; do
+            if ! brew list --formula "$formula" >/dev/null 2>&1; then
+              missing_formulas+=("$formula")
+            fi
+          done
+
+          if (( ${#missing_formulas[@]} )); then
+            # GitHub's macOS image includes AWS SAM CLI from this third-party
+            # tap, but this build does not use it. Remove it instead of granting
+            # the whole tap trust during formula resolution.
+            if brew tap | grep -qx 'aws/tap'; then
+              brew untap --force aws/tap
+            fi
+            HOMEBREW_NO_AUTO_UPDATE=1 brew install "${missing_formulas[@]}"
+          else
+            echo "Required Homebrew formulae are already installed."
           fi
-          brew install make dpkg ldid
 
       - name: Add GNU Make to PATH
         run: |
@@ -101,13 +113,34 @@ jobs:
           python3 main/branding/source_smoke_test.py
           python3 main/branding/smoke_test.py
 
+      - name: Restore Theos Toolchain
+        id: theos-cache
+        uses: actions/cache/restore@v5
+        with:
+          path: theos
+          key: theos-${{ runner.os }}-${{ runner.arch }}-5280bd038207e14f8bd76f5417aa2fe641c03228
+
       - name: Download Theos
+        if: steps.theos-cache.outputs.cache-hit != 'true'
         uses: actions/checkout@v6
         with:
           repository: theos/theos
-          ref: master
+          # Pin the exact revision used by the last known-good build. Updating
+          # Theos now becomes an intentional, reviewable cache-key change.
+          ref: 5280bd038207e14f8bd76f5417aa2fe641c03228
           path: theos
           submodules: recursive
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Save Theos Toolchain
+        if: steps.theos-cache.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          # Save immediately, before the separately cached SDK is restored.
+          # This keeps the toolchain cache small and independent of SDK input.
+          path: theos
+          key: theos-${{ runner.os }}-${{ runner.arch }}-5280bd038207e14f8bd76f5417aa2fe641c03228
 
       - name: Install cyan
         if: env.BUILD_DEPLOY_FORMAT == 'sideloaded' || env.BUILD_DEPLOY_FORMAT == 'trollstore'
@@ -168,13 +201,38 @@ jobs:
       - name: Compute ffmpeg Cache Key
         id: ffmpeg-key
         run: |
-          echo "key=ffmpeg-stack-sdk$(xcrun --sdk iphoneos --show-sdk-version)-${{ hashFiles('main/deps/ffmpeg-kit-next/build-ffmpeg.sh') }}" >> "$GITHUB_OUTPUT"
+          echo "host-sdk=$(xcrun --sdk iphoneos --show-sdk-version)" >> "$GITHUB_OUTPUT"
+          echo "toolchain=$(xcodebuild -version | shasum -a 256 | cut -c1-12)" >> "$GITHUB_OUTPUT"
+          echo "source=$(git -C main rev-parse HEAD:deps/ffmpeg-kit-next/upstream)" >> "$GITHUB_OUTPUT"
 
       - name: Restore ffmpeg Stack
+        id: ffmpeg-cache
         uses: actions/cache@v5
         with:
-          path: ffmpeg-build
-          key: ${{ steps.ffmpeg-key.outputs.key }}
+          # build-ffmpeg.sh installs the finished headers/libraries here, and
+          # this is also the path consumed by the Makefile.
+          path: main/deps/ffmpeg-kit-next/build
+          key: ffmpeg-stack-${{ runner.os }}-${{ runner.arch }}-sdk${{ steps.ffmpeg-key.outputs.host-sdk }}-${{ steps.ffmpeg-key.outputs.toolchain }}-${{ steps.ffmpeg-key.outputs.source }}-${{ hashFiles('main/deps/ffmpeg-kit-next/build-ffmpeg.sh') }}
+
+      - name: Checkout Required Build Sources
+        run: |
+          git -C main submodule sync --recursive
+          git -C main submodule update --init --depth 1 --recursive \
+            deps/flex/upstream
+
+          if [[ "${BUILD_DEPLOY_FORMAT}" == "sideloaded" ]]; then
+            git -C main submodule update --init --depth 1 --recursive \
+              deps/zxPluginsInject/upstream
+          fi
+
+          if [[ "${FFMPEG_CACHE_HIT}" != "true" ]]; then
+            git -C main submodule update --init --depth 1 --recursive \
+              deps/ffmpeg-kit-next/upstream
+          else
+            echo "Using cached ffmpeg headers and libraries; source checkout skipped."
+          fi
+        env:
+          FFMPEG_CACHE_HIT: ${{ steps.ffmpeg-cache.outputs.cache-hit }}
 
       - name: Build Package
         run: |
@@ -184,7 +242,8 @@ jobs:
           ./build.sh --${BUILD_DEPLOY_FORMAT}
         env:
           THEOS: ${{ github.workspace }}/theos
-          BUILD_DIR: ${{ github.workspace }}/ffmpeg-build
+          BUILD_DIR: ${{ runner.temp }}/nfb-ffmpeg-build
+          NFB_TIMINGS_FILE: ${{ runner.temp }}/nfb-build-timings.tsv
 
       - name: Rename IPA to include IPA version
         if: env.BUILD_DEPLOY_FORMAT == 'sideloaded' || env.BUILD_DEPLOY_FORMAT == 'trollstore'
@@ -218,3 +277,27 @@ jobs:
           name: v${{ env.TWEAK_VERSION }} - ${{ env.TWEAK_NAME }}
           files: main/packages/${{ steps.package_name.outputs.package }}
           draft: true
+
+      - name: Publish Build Summary
+        if: always()
+        run: |
+          {
+            echo "### Build performance"
+            echo
+            echo "| Item | Result |"
+            echo "| --- | --- |"
+            echo "| Job | ${JOB_STATUS} |"
+            echo "| Theos toolchain cache | ${THEOS_CACHE_HIT:-false} |"
+            echo "| ffmpeg stack cache | ${FFMPEG_CACHE_HIT:-false} |"
+
+            if [[ -s "${NFB_TIMINGS_FILE}" ]]; then
+              while IFS=$'\t' read -r phase seconds; do
+                printf '| %s | %ss |\n' "$phase" "$seconds"
+              done < "${NFB_TIMINGS_FILE}"
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+        env:
+          JOB_STATUS: ${{ job.status }}
+          THEOS_CACHE_HIT: ${{ steps.theos-cache.outputs.cache-hit }}
+          FFMPEG_CACHE_HIT: ${{ steps.ffmpeg-cache.outputs.cache-hit }}
+          NFB_TIMINGS_FILE: ${{ runner.temp }}/nfb-build-timings.tsv
