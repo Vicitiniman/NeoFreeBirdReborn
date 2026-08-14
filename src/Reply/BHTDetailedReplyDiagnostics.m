@@ -1860,8 +1860,8 @@ static NSString* BHTDetailedWriteServerStringCategory(NSString* value) {
         return @"rateLimit";
     }
     if ([normalized containsString:@"duplicate"] ||
-        [normalized containsString:@"already"] &&
-            [normalized containsString:@"post"]) {
+        ([normalized containsString:@"already"] &&
+         [normalized containsString:@"post"])) {
         return @"duplicate";
     }
     if ([normalized containsString:@"spam"] ||
