@@ -76,6 +76,59 @@ static BOOL BHTReplyDiagnosticMethodReturnsObjectWithNoArguments(
     return *type == '@';
 }
 
+static BOOL BHTReplyDiagnosticMethodReturnsBoolWithNoArguments(
+    Class cls, SEL selector) {
+    if (!cls || !selector) return NO;
+    Method method = class_getInstanceMethod(cls, selector);
+    if (!method || method_getNumberOfArguments(method) != 2) {
+        return NO;
+    }
+    char returnType[16] = {0};
+    method_getReturnType(method, returnType, sizeof(returnType));
+    const char* type = returnType;
+    while (*type == 'r' || *type == 'n' || *type == 'N' ||
+           *type == 'o' || *type == 'O' || *type == 'R' ||
+           *type == 'V') {
+        type++;
+    }
+    return type[0] == 'B' && type[1] == '\0';
+}
+
+static Class BHTReplyDiagnosticCompositionClass;
+static BOOL BHTReplyDiagnosticCompositionIsReplyABIAvailable;
+
+static BOOL BHTReplyDiagnosticCompositionKind(
+    id compositions, BOOL* known) {
+    if (known) *known = NO;
+    if (!BHTReplyDiagnosticCompositionIsReplyABIAvailable ||
+        ![compositions isKindOfClass:NSArray.class]) {
+        return NO;
+    }
+    NSArray* compositionArray = compositions;
+    if (compositionArray.count == 0 || compositionArray.count > 8) {
+        return NO;
+    }
+    BOOL sawReply = NO;
+    BOOL sawOriginal = NO;
+    @try {
+        for (id composition in compositionArray) {
+            if (object_getClass(composition) !=
+                BHTReplyDiagnosticCompositionClass) {
+                return NO;
+            }
+            BOOL itemIsReply = ((BOOL (*)(id, SEL))objc_msgSend)(
+                composition, NSSelectorFromString(@"isReply"));
+            sawReply = sawReply || itemIsReply;
+            sawOriginal = sawOriginal || !itemIsReply;
+        }
+    } @catch (__unused NSException* exception) {
+        return NO;
+    }
+    if (sawReply == sawOriginal) return NO;
+    if (known) *known = YES;
+    return sawReply;
+}
+
 static id BHTCurrentNativeAccountForWebReply(void) {
     Class hostClass = NSClassFromString(@"T1HostViewController");
     SEL sharedSelector =
@@ -165,6 +218,20 @@ static id BHTCurrentNativeAccountForWebReply(void) {
 %hook T1TweetComposeViewController
 
 - (void)_t1_sendCompositions:(__unsafe_unretained id)compositions {
+    if (BHTDetailedReplyDiagnosticsNetworkCaptureMayBeActive()) {
+        BOOL compositionKindKnown = NO;
+        BOOL isReply = BHTReplyDiagnosticCompositionKind(
+            compositions, &compositionKindKnown);
+        if (compositionKindKnown) {
+            // Capture the active account at this UI-owned send seam. The
+            // later network callback must never query private UI state.
+            id activeAccount = NSThread.isMainThread
+                ? BHTCurrentNativeAccountForWebReply()
+                : nil;
+            BHTDetailedReplyDiagnosticsNoteCompositionContext(
+                isReply, activeAccount);
+        }
+    }
     BHTRecordReplyWorkflowDiagnostic(
         BHTReplyWorkflowDiagnosticSendCompositionsEntered);
     %orig(compositions);
@@ -209,6 +276,9 @@ static id BHTCurrentNativeAccountForWebReply(void) {
                         scribeElement:(__unsafe_unretained id)scribeElement
                            parameters:(__unsafe_unretained id)parameters
                        originalStatus:(__unsafe_unretained id)originalStatus {
+    if (BHTDetailedReplyDiagnosticsNetworkCaptureMayBeActive()) {
+        BHTDetailedReplyDiagnosticsNoteReplyAccount(account);
+    }
     BHTWebReplyRouteResult routeResult =
         BHTTryPresentAccountBoundWebReplyFallback(
             originalStatus, account, topMostController());
@@ -280,11 +350,15 @@ static id BHTCurrentNativeAccountForWebReply(void) {
     BHTRecordReplyWorkflowDiagnostic(
         BHTReplyWorkflowDiagnosticReplyActionTapped);
 
+    id currentAccount = BHTCurrentNativeAccountForWebReply();
+    if (BHTDetailedReplyDiagnosticsNetworkCaptureMayBeActive()) {
+        BHTDetailedReplyDiagnosticsNoteReplyAccount(currentAccount);
+    }
     if ([BHTSettings boolForKey:@"web_reply_fallback"]) {
         BHTWebReplyRouteResult routeResult =
             BHTTryPresentWebReplyFallback(
                 self.statusViewModel,
-                BHTCurrentNativeAccountForWebReply(),
+                currentAccount,
                 topMostController());
         if (BHTWebReplyRouteResultConsumesTap(routeResult)) {
             BHTRecordReplyWorkflowDiagnostic(
@@ -330,6 +404,12 @@ static id BHTCurrentNativeAccountForWebReply(void) {
 
     Class composer =
         NSClassFromString(@"T1TweetComposeViewController");
+    BHTReplyDiagnosticCompositionClass =
+        NSClassFromString(@"TFNTwitterComposition");
+    BHTReplyDiagnosticCompositionIsReplyABIAvailable =
+        BHTReplyDiagnosticMethodReturnsBoolWithNoArguments(
+            BHTReplyDiagnosticCompositionClass,
+            NSSelectorFromString(@"isReply"));
     if (BHTReplyDiagnosticMethodHasShape(
             composer, @selector(viewDidAppear:), 1) &&
         BHTReplyDiagnosticMethodHasShape(

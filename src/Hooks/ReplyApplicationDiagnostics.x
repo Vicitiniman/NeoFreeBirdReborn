@@ -19,12 +19,14 @@
 #import <stdlib.h>
 
 static Class BHTReplyApplicationRequestClass;
+static Class BHTReplyApplicationEndpointResponseClass;
 static Class BHTReplyApplicationCreateTweetResponseClass;
 static Class BHTReplyApplicationCreateTweetPayloadClass;
 static Class BHTReplyApplicationSwiftValueClass;
 static Ivar BHTReplyApplicationCreateTweetIvar;
 static Ivar BHTReplyApplicationTweetResultsIvar;
 static BOOL BHTReplyApplicationModelLayoutAvailable;
+static char BHTReplyApplicationDetailedRequestTokenKey;
 
 static const char* BHTReplyApplicationUnqualifiedType(
     const char* type) {
@@ -62,6 +64,33 @@ static BOOL BHTReplyApplicationMethodHasDecoderABI(
             BHTReplyApplicationUnqualifiedType(argumentType);
         if (!argument || argument[0] != '^' ||
             argument[1] != '@' || argument[2] != '\0') {
+            return NO;
+        }
+    }
+    return YES;
+}
+
+static BOOL BHTReplyApplicationMethodHasRequestOperationInitializerABI(
+    Class cls, SEL selector) {
+    if (!cls || !selector) return NO;
+    Method method = class_getInstanceMethod(cls, selector);
+    if (!method || method_getNumberOfArguments(method) != 6) return NO;
+
+    char returnType[16] = {0};
+    method_getReturnType(method, returnType, sizeof(returnType));
+    const char* result =
+        BHTReplyApplicationUnqualifiedType(returnType);
+    if (!result || result[0] != '@' || result[1] != '\0') return NO;
+
+    const char expected[] = {'@', '#', '@', '@'};
+    for (unsigned int index = 0; index < 4; index++) {
+        char argumentType[16] = {0};
+        method_getArgumentType(
+            method, index + 2, argumentType, sizeof(argumentType));
+        const char* argument =
+            BHTReplyApplicationUnqualifiedType(argumentType);
+        if (!argument || argument[0] != expected[index] ||
+            argument[1] != '\0') {
             return NO;
         }
     }
@@ -156,13 +185,22 @@ BHTReplyApplicationModelStructureState(id model) {
     }
 }
 
-static NSURL* BHTReplyApplicationRequestURL(id response) {
+static id BHTReplyApplicationOriginalRequest(id response) {
     SEL originalRequestSelector =
         NSSelectorFromString(@"originalRequest");
-    SEL URLSelector = NSSelectorFromString(@"URL");
     id originalRequest =
         ((id (*)(id, SEL))objc_msgSend)(
             response, originalRequestSelector);
+    if (!BHTReplyApplicationRequestClass ||
+        ![originalRequest
+            isKindOfClass:BHTReplyApplicationRequestClass]) {
+        return nil;
+    }
+    return originalRequest;
+}
+
+static NSURL* BHTReplyApplicationURLFromRequest(id originalRequest) {
+    SEL URLSelector = NSSelectorFromString(@"URL");
     if (!BHTReplyApplicationRequestClass ||
         ![originalRequest
             isKindOfClass:BHTReplyApplicationRequestClass]) {
@@ -174,6 +212,20 @@ static NSURL* BHTReplyApplicationRequestURL(id response) {
     return [candidateURL isKindOfClass:NSURL.class]
         ? candidateURL
         : nil;
+}
+
+static NSURL* BHTReplyApplicationRequestURL(id response) {
+    return BHTReplyApplicationURLFromRequest(
+        BHTReplyApplicationOriginalRequest(response));
+}
+
+static NSDictionary* BHTReplyApplicationDetailedToken(id response) {
+    id request = BHTReplyApplicationOriginalRequest(response);
+    id token = request
+        ? objc_getAssociatedObject(
+              request, &BHTReplyApplicationDetailedRequestTokenKey)
+        : nil;
+    return [token isKindOfClass:NSDictionary.class] ? token : nil;
 }
 
 static BOOL BHTReplyApplicationGetObject(
@@ -188,6 +240,42 @@ static BOOL BHTReplyApplicationGetObject(
         return NO;
     }
 }
+
+%group BHTDetailedWriteOriginalRequestBindingHooks
+
+%hook TNLRequestOperation
+
+- (id)initWithRequest:(__unsafe_unretained id)request
+        responseClass:(Class)responseClass
+        configuration:(__unsafe_unretained id)configuration
+             delegate:(__unsafe_unretained id)delegate {
+    id result = %orig(request, responseClass, configuration, delegate);
+    if (!result ||
+        !BHTDetailedReplyDiagnosticsNetworkCaptureMayBeActive()) {
+        return result;
+    }
+    @try {
+        if (object_getClass(request) != BHTReplyApplicationRequestClass ||
+            responseClass != BHTReplyApplicationEndpointResponseClass) {
+            return result;
+        }
+        NSURL* requestURL = BHTReplyApplicationURLFromRequest(request);
+        NSDictionary* token =
+            BHTDetailedReplyDiagnosticsApplicationTokenForRequestURL(
+                requestURL);
+        if (token) {
+            objc_setAssociatedObject(
+                request, &BHTReplyApplicationDetailedRequestTokenKey,
+                token, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
+    } @catch (__unused NSException* exception) {
+    }
+    return result;
+}
+
+%end
+
+%end
 
 %group BHTNativeReplyApplicationDecoderHooks
 
@@ -207,9 +295,11 @@ static BOOL BHTReplyApplicationGetObject(
     }
 
     id model = %orig(parseError, APIErrors);
-    if (!correlated) return model;
 
     @try {
+        NSDictionary* detailedToken =
+            BHTReplyApplicationDetailedToken(self);
+        if (!correlated && !detailedToken) return model;
         NSURL* requestURL =
             BHTReplyApplicationRequestURL(self);
         id decodedParseError = parseError ? *parseError : nil;
@@ -223,14 +313,22 @@ static BOOL BHTReplyApplicationGetObject(
             modelStructureState =
                 BHTReplyApplicationModelStructureState(model);
         }
-        BHTRecordNativeReplyApplicationResult(
-            sessionGeneration, requestURL, model,
-            decodedParseError, decodedAPIErrors,
-            modelStructureState);
+        if (correlated) {
+            BHTRecordNativeReplyApplicationResult(
+                sessionGeneration, requestURL, model,
+                decodedParseError, decodedAPIErrors,
+                modelStructureState);
+        }
         if (eligible) {
-            BHTDetailedReplyDiagnosticsCaptureDecodedResponse(
-                sessionGeneration, self, model,
-                decodedParseError, decodedAPIErrors);
+            if (detailedToken) {
+                BHTDetailedReplyDiagnosticsCaptureBoundDecodedResponse(
+                    detailedToken, self, model,
+                    decodedParseError, decodedAPIErrors);
+            } else if (correlated) {
+                BHTDetailedReplyDiagnosticsCaptureDecodedResponse(
+                    sessionGeneration, self, model,
+                    decodedParseError, decodedAPIErrors);
+            }
         }
     } @catch (__unused NSException* exception) {
     }
@@ -258,16 +356,20 @@ static BOOL BHTReplyApplicationGetObject(
     }
 
     %orig;
-    if (!correlated) return;
 
     @try {
+        NSDictionary* detailedToken =
+            BHTReplyApplicationDetailedToken(self);
+        if (!correlated && !detailedToken) return;
         NSURL* requestURL =
             BHTReplyApplicationRequestURL(self);
         if (!BHTNativeReplyApplicationRequestURLIsEligible(
                 requestURL)) {
-            BHTRecordNativeReplyPreparedResponse(
-                sessionGeneration, requestURL, NO,
-                nil, nil, nil, nil, nil, nil, nil, nil);
+            if (correlated) {
+                BHTRecordNativeReplyPreparedResponse(
+                    sessionGeneration, requestURL, NO,
+                    nil, nil, nil, nil, nil, nil, nil, nil);
+            }
             return;
         }
         id finalModel = nil;
@@ -302,29 +404,45 @@ static BOOL BHTReplyApplicationGetObject(
                 BHTReplyApplicationGetObject(
                     self, @"APIErrors", &effectiveAPIErrors);
         }
-        BHTRecordNativeReplyPreparedResponse(
-            sessionGeneration,
-            requestURL,
-            observationComplete,
-            effectiveModel,
-            effectiveParseError,
-            effectiveOperationError,
-            effectiveAPIErrors,
-            finalModel,
-            finalParseError,
-            finalOperationError,
-            finalAPIErrors);
-        BHTDetailedReplyDiagnosticsCapturePreparedResponse(
-            sessionGeneration,
-            observationComplete,
-            effectiveModel,
-            effectiveParseError,
-            effectiveOperationError,
-            effectiveAPIErrors,
-            finalModel,
-            finalParseError,
-            finalOperationError,
-            finalAPIErrors);
+        if (correlated) {
+            BHTRecordNativeReplyPreparedResponse(
+                sessionGeneration,
+                requestURL,
+                observationComplete,
+                effectiveModel,
+                effectiveParseError,
+                effectiveOperationError,
+                effectiveAPIErrors,
+                finalModel,
+                finalParseError,
+                finalOperationError,
+                finalAPIErrors);
+        }
+        if (detailedToken) {
+            BHTDetailedReplyDiagnosticsCaptureBoundPreparedResponse(
+                detailedToken,
+                observationComplete,
+                effectiveModel,
+                effectiveParseError,
+                effectiveOperationError,
+                effectiveAPIErrors,
+                finalModel,
+                finalParseError,
+                finalOperationError,
+                finalAPIErrors);
+        } else if (correlated) {
+            BHTDetailedReplyDiagnosticsCapturePreparedResponse(
+                sessionGeneration,
+                observationComplete,
+                effectiveModel,
+                effectiveParseError,
+                effectiveOperationError,
+                effectiveAPIErrors,
+                finalModel,
+                finalParseError,
+                finalOperationError,
+                finalAPIErrors);
+        }
     } @catch (__unused NSException* exception) {
     }
 }
@@ -344,6 +462,8 @@ static BOOL BHTReplyApplicationGetObject(
     Class responseClass = NSClassFromString(
         @"_TtC14GraphQLActions23GraphQLEndpointResponse");
     Class requestClass = NSClassFromString(@"TFSAPIRequest");
+    Class requestOperationClass =
+        NSClassFromString(@"TNLRequestOperation");
     Class createTweetResponseClass = NSClassFromString(
         @"_TtC13GraphQLModels28CreateTweetOperationResponse");
     Class createTweetPayloadClass = NSClassFromString(
@@ -355,6 +475,7 @@ static BOOL BHTReplyApplicationGetObject(
         NSSelectorFromString(@"originalRequest");
     SEL URLSelector = NSSelectorFromString(@"URL");
     BHTReplyApplicationRequestClass = requestClass;
+    BHTReplyApplicationEndpointResponseClass = responseClass;
     BHTReplyApplicationSwiftValueClass = swiftValueClass;
     if (swiftValueClass) {
         BHTMarkNativeReplySwiftValueBoxRecognitionAvailable();
@@ -381,6 +502,17 @@ static BOOL BHTReplyApplicationGetObject(
             responseClass, originalRequestSelector) &&
         BHTReplyApplicationMethodReturnsObjectWithNoArguments(
             requestClass, URLSelector);
+    SEL requestOperationInitializer = NSSelectorFromString(
+        @"initWithRequest:responseClass:configuration:delegate:");
+    BOOL applicationBindingHookAvailable =
+        requestAccessorsAvailable && requestOperationClass &&
+        BHTReplyApplicationMethodHasRequestOperationInitializerABI(
+            requestOperationClass, requestOperationInitializer);
+    if (applicationBindingHookAvailable) {
+        %init(BHTDetailedWriteOriginalRequestBindingHooks);
+    }
+    BHTDetailedReplyDiagnosticsSetApplicationBindingHookAvailable(
+        applicationBindingHookAvailable);
     if (requestAccessorsAvailable &&
         BHTReplyApplicationMethodHasDecoderABI(
             responseClass, decoderSelector)) {

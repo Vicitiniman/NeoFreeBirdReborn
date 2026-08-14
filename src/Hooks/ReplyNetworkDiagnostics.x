@@ -7,6 +7,7 @@
 //
 
 #import "Reply/BHTReplyRequestDiagnostics.h"
+#import "Reply/BHTDetailedReplyDiagnostics.h"
 #import "Compatibility/BHTCompatibilityReporter.h"
 
 #import <objc/runtime.h>
@@ -59,14 +60,45 @@ static BOOL BHTReplyNetworkMethodHasObjectShape(
 
 static void BHTReplyNetworkTagFailOpen(
     NSURLRequest* request,
+    NSData* suppliedBodyData,
     NSURLSessionTask* task,
     BHTReplyRequestConstructorKind constructorKind) {
-    if (!BHTReplyWorkflowNetworkDiagnosticWindowMayBeActive()) {
+    BOOL replyWindowMayBeActive =
+        BHTReplyWorkflowNetworkDiagnosticWindowMayBeActive();
+    BOOL pairedCaptureMayBeActive =
+        BHTDetailedReplyDiagnosticsNetworkCaptureMayBeActive();
+    if (!replyWindowMayBeActive && !pairedCaptureMayBeActive) {
         return;
     }
     @try {
-        BHTTagPotentialNativeReplyRequest(
-            request, task, constructorKind);
+        NSUInteger replySessionGeneration = 0;
+        if (replyWindowMayBeActive) {
+            (void)BHTReplyWorkflowDiagnosticSessionForNetworkRequest(
+                &replySessionGeneration);
+        }
+        if (pairedCaptureMayBeActive &&
+            BHTDetailedReplyDiagnosticsRequestIsEligible(request)) {
+            // The exact, deadline-aware POST/HTTPS/first-party/CreateTweet
+            // gate above must run before this sole HTTPBody access.
+            NSData* requestBody = suppliedBodyData ?: request.HTTPBody;
+            BHTDetailedReplyDiagnosticsCaptureRequest(
+                request, requestBody, task,
+                constructorKind < BHTReplyRequestConstructorKindCount
+                    ? @[
+                          @"dataRequest",
+                          @"dataRequestCompletion",
+                          @"uploadData",
+                          @"uploadDataCompletion",
+                          @"uploadFile",
+                          @"uploadFileCompletion",
+                      ][constructorKind]
+                    : @"unknown",
+                replySessionGeneration);
+        }
+        if (replyWindowMayBeActive) {
+            BHTTagPotentialNativeReplyRequest(
+                request, task, constructorKind);
+        }
     } @catch (__unused NSException* exception) {
     }
 }
@@ -78,7 +110,7 @@ static void BHTReplyNetworkTagFailOpen(
 - (NSURLSessionDataTask*)dataTaskWithRequest:(NSURLRequest*)request {
     NSURLSessionDataTask* task = %orig(request);
     BHTReplyNetworkTagFailOpen(
-        request, task, BHTReplyRequestConstructorData);
+        request, nil, task, BHTReplyRequestConstructorData);
     return task;
 }
 
@@ -95,7 +127,7 @@ static void BHTReplyNetworkTagFailOpen(
     NSURLSessionDataTask* task =
         %orig(request, completionHandler);
     BHTReplyNetworkTagFailOpen(
-        request, task,
+        request, nil, task,
         BHTReplyRequestConstructorDataCompletion);
     return task;
 }
@@ -112,7 +144,8 @@ static void BHTReplyNetworkTagFailOpen(
                                         fromData:(NSData*)bodyData {
     NSURLSessionUploadTask* task = %orig(request, bodyData);
     BHTReplyNetworkTagFailOpen(
-        request, task, BHTReplyRequestConstructorUploadData);
+        request, bodyData, task,
+        BHTReplyRequestConstructorUploadData);
     return task;
 }
 
@@ -130,7 +163,7 @@ static void BHTReplyNetworkTagFailOpen(
     NSURLSessionUploadTask* task =
         %orig(request, bodyData, completionHandler);
     BHTReplyNetworkTagFailOpen(
-        request, task,
+        request, bodyData, task,
         BHTReplyRequestConstructorUploadDataCompletion);
     return task;
 }
@@ -147,7 +180,8 @@ static void BHTReplyNetworkTagFailOpen(
                                         fromFile:(NSURL*)fileURL {
     NSURLSessionUploadTask* task = %orig(request, fileURL);
     BHTReplyNetworkTagFailOpen(
-        request, task, BHTReplyRequestConstructorUploadFile);
+        request, nil, task,
+        BHTReplyRequestConstructorUploadFile);
     return task;
 }
 
@@ -166,7 +200,7 @@ static void BHTReplyNetworkTagFailOpen(
     NSURLSessionUploadTask* task =
         %orig(request, fileURL, completionHandler);
     BHTReplyNetworkTagFailOpen(
-        request, task,
+        request, nil, task,
         BHTReplyRequestConstructorUploadFileCompletion);
     return task;
 }
@@ -184,6 +218,7 @@ static void BHTReplyNetworkTagFailOpen(
                                    error:(NSError*)error {
     %orig(task, session, error);
     @try {
+        BHTDetailedReplyDiagnosticsCompleteRequest(task, error);
         BHTCompletePotentialNativeReplyRequest(task, error);
     } @catch (__unused NSException* exception) {
     }
@@ -202,6 +237,7 @@ static void BHTReplyNetworkTagFailOpen(
 didCompleteWithError:(NSError*)error {
     %orig(session, task, error);
     @try {
+        BHTDetailedReplyDiagnosticsCompleteRequest(task, error);
         BHTCompletePotentialNativeReplyRequest(task, error);
     } @catch (__unused NSException* exception) {
     }

@@ -1,5 +1,7 @@
 #import "Login/BHTCompatibilityLogin.h"
 
+#import "Reply/BHTDetailedReplyDiagnostics.h"
+
 #import "Compatibility/BHTCompatibilityReporter.h"
 #import "Core/BHTBundle.h"
 
@@ -1484,6 +1486,8 @@ static BOOL BHTPresentNativeLoginChallenge(
                         }
                         return;
                     }
+                    BHTDetailedReplyDiagnosticsNoteCompatibilityAccount(
+                        account);
                     BHTCompatibilityRecord(
                         BHTCompatibilityLoginEventAuthenticated,
                         @"authenticated", nil);
@@ -2024,6 +2028,10 @@ static BOOL BHTPresentNativeLoginChallenge(
                     : fallbackUsername,
                 userID);
             registered = BHTRegisterNativeAccount(account);
+            if (registered) {
+                BHTDetailedReplyDiagnosticsNoteCompatibilityAccount(
+                    account);
+            }
         } @catch (__unused NSException* exception) {
             registered = NO;
         }
