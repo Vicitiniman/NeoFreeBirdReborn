@@ -158,10 +158,10 @@
 // A timeout of 0 reads as "Off"; any positive value shows its seconds.
 - (NSString*)labelForTimeout:(NSInteger)seconds {
     if (seconds <= 0) {
-        return [[BHTBundle sharedBundle] localizedTwitterStringForKey:@"GENERIC_OFF_LABEL"];
+        return [[BHTBundle sharedBundle] localizedStringForKey:@"UNDO_SEND_OFF"];
     }
     NSString* format = [[BHTBundle sharedBundle]
-        localizedTwitterStringForKey:@"SUBSCRIPTION_UNDO_SEND_DURATION_LABEL"];
+        localizedStringForKey:@"UNDO_SEND_SECONDS_FORMAT"];
     return [NSString stringWithFormat:format, (long)seconds];
 }
 
@@ -173,7 +173,8 @@
 - (void)showUndoTimeoutPicker:(NSDictionary*)sender {
     UIAlertController* alert = [UIAlertController
         alertControllerWithTitle:[[BHTBundle sharedBundle] localizedStringForKey:@"UNDO_TWEET_TITLE"]
-                         message:nil
+                         message:[[BHTBundle sharedBundle]
+                                     localizedStringForKey:@"UNDO_SEND_DESCRIPTION"]
                   preferredStyle:UIAlertControllerStyleAlert];
 
     for (NSNumber* seconds in @[@0, @5, @10, @20, @30, @60]) {

@@ -230,12 +230,12 @@
 @class DownloadInlineButton;
 
 // DM media message container (DMConversation.MessageAttachmentView)
-@interface _TtC14DMConversation21MessageAttachmentView : UIView
+@interface _TtC16ChatConversation21MessageAttachmentView : UIView
 @property (nonatomic, strong) UIContextMenuInteraction* downloadMenuInteraction;
 @property (nonatomic, strong) DownloadInlineButton* downloadHandler;
 @end
 
-@interface _TtC14DMConversation21MessageAttachmentView () <
+@interface _TtC16ChatConversation21MessageAttachmentView () <
     UIContextMenuInteractionDelegate>
 @end
 
@@ -260,13 +260,11 @@
 // associates the originating entity with it and substitutes its own quality
 // picker when video downloads are enabled.
 @interface T1VideoDownloadViewModel : NSObject
-+ (NSURL*)urlIfCanDownloadWithAccount:(id)account
-                          mediaEntity:(TFSTwitterEntityMedia*)mediaEntity;
+
 + (id)makeVideDownloaderWithAccount:(id)account
                  fromViewController:(UIViewController*)viewController
                         mediaEntity:(TFSTwitterEntityMedia*)mediaEntity
-                    statusViewModel:(id)statusViewModel
-                      scribeContext:(id)scribeContext;
+                    statusViewModel:(id)statusViewModel;
 - (void)tappedDownload;
 @end
 

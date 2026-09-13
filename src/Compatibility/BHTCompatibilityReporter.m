@@ -662,7 +662,7 @@ void BHTInstallReplyWorkflowDiagnosticObservers(void) {
     NSString* version = [NSBundle.mainBundle
         objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
     if (![version isKindOfClass:NSString.class] ||
-        ![version isEqualToString:@"12.9"]) {
+        ![version isEqualToString:@"12.24.1"]) {
         return;
     }
 
@@ -1062,7 +1062,7 @@ static NSDictionary* BHTForYouControllerRuntimeShape(void) {
                       NSSelectorFromString(@"itemAtIndexPath:")]),
         },
         @"filterExecutionPolicy":
-            @"verified_urt_role_section_then_exact_urt_item_height_fallback",
+            @"explicit_home_provider_then_legacy_urt_role_with_item_height_fallback",
         @"unknownSectionOwnerFailsOpen": @YES,
     };
 }
@@ -1087,6 +1087,8 @@ static NSDictionary* BHTForYouFilterDiagnosticSnapshot(void) {
         @"noMatches",
         @"renderRowCollapses",
         @"renderReloads",
+        @"providerOwnerResolvedChecks",
+        @"providerOwnerMissingChecks",
     ];
     NSMutableDictionary* snapshot =
         [NSMutableDictionary dictionaryWithCapacity:names.count];
@@ -1474,7 +1476,7 @@ NSURL* BHTCompatibilityReportURL(void) {
     NSURL* caches = [[[NSFileManager defaultManager]
         URLsForDirectory:NSCachesDirectory
                inDomains:NSUserDomainMask] firstObject];
-    return [caches URLByAppendingPathComponent:@"BHTwitter-X12.9-Compatibility.json"];
+    return [caches URLByAppendingPathComponent:@"BHTwitter-X12.24.1-Compatibility.json"];
 }
 
 static NSDictionary* BHTProbe(NSString* feature, NSString* className,
@@ -1528,8 +1530,7 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"video", @"TFSTwitterEntityMediaVideoInfo", @"variants", NO),
         BHTProbe(@"video", @"TFSTwitterEntityMediaVideoInfo", @"primaryUrl", NO),
         BHTProbe(@"video", @"TFSTwitterEntityMedia", @"allowDownload", NO),
-        BHTProbe(@"video", @"T1VideoDownloadViewModel", @"urlIfCanDownloadWithAccount:mediaEntity:", YES),
-        BHTProbe(@"video", @"T1VideoDownloadViewModel", @"makeVideDownloaderWithAccount:fromViewController:mediaEntity:statusViewModel:scribeContext:", YES),
+        BHTProbe(@"video", @"T1VideoDownloadViewModel", @"makeVideDownloaderWithAccount:fromViewController:mediaEntity:statusViewModel:", YES),
         BHTProbe(@"video", @"T1VideoDownloadViewModel", @"tappedDownload", NO),
         BHTProbe(@"video", @"T1TwitterSwift.VideoControlsView", @"init", NO),
         BHTProbe(@"video", @"TweetMediaAttachments.MultiMediaView", @"inlineMediaInfos", NO),
@@ -1542,7 +1543,7 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"mediaActions", @"TFNMenuSheetViewController", @"initWithTitle:actionItems:", NO),
         BHTProbe(@"mediaActions", @"TFNMenuSheetViewController", @"tfnPresentedCustomPresentFromViewController:animated:completion:", NO),
 
-        BHTProbe(@"dmDownloads", @"DMConversation.MessageAttachmentView", @"layoutSubviews", NO),
+        BHTProbe(@"dmDownloads", @"ChatConversation.MessageAttachmentView", @"layoutSubviews", NO),
         BHTProbe(@"dmDownloads", @"DMConversation.MessageSaveActionPlugin", @"init", NO),
         BHTProbe(@"dmDownloads", @"TweetMediaAttachments.MultiMediaView", @"inlineMediaInfos", NO),
         BHTProbe(@"messages", @"_TtC14DMConversation26ConversationViewController", @"viewDidLoad", NO),
@@ -1708,7 +1709,7 @@ static NSDictionary* BHTSettingsSnapshot(void) {
         @"hide_timeline_prompts", @"hide_discover_more", @"hide_topics",
         @"hide_topics_to_follow", @"hide_spaces", @"hide_custom_timelines",
         @"remember_timeline_tab", @"enable_likes_tab",
-        @"likes_media_waterfall", @"enable_grok_translations",
+        @"likes_media_waterfall", @"profile_media_waterfall", @"profile_media_default_photos", @"enable_grok_translations",
         @"hide_grok_analyze", @"hide_grok_sidebar", @"hide_grok_create",
         @"disable_auto_translate", @"download_videos", @"dm_media_downloads",
         @"voice_creation_enabled", @"no_voice_messages", @"old_compose_bar",

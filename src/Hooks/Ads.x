@@ -505,13 +505,7 @@ static id BHTItemAtIndexPath(TFNItemsDataViewController* controller,
 
 %end
 
-%hook T1StatusTableSlideshowManager
-
-- (BOOL)_t1_isPromotedTweetMediaDisabledInMultiStatusSlideshow {
-    return [BHTSettings boolForKey:@"hide_promoted"] ? YES : %orig;
-}
-
-%end
+// T1StatusTableSlideshowManager was removed in X 12.24.1.
 
 // X 12.9's video session initializer accepts ad metadata separately from the
 // playable media entity. Keep the real media untouched and strip only that

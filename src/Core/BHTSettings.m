@@ -192,11 +192,6 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                         @"type": @"toggle"
                     },
                     @{
-                        @"key": @"hide_grok_sidebar",
-                        @"default": @YES,
-                        @"type": @"toggle"
-                    },
-                    @{
                         @"key": @"hide_grok_create",
                         @"default": @YES,
                         @"type": @"toggle"
@@ -315,6 +310,14 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                 @"titleKey": @"MODERN_SETTINGS_PROFILES_TITLE",
                 @"subtitleKey": @"MODERN_SETTINGS_PROFILES_SUBTITLE",
                 @"settings": @[
+                    @{@"key": @"profile_media_waterfall",
+                      @"default": @YES,
+                      @"type": @"toggle",
+                      @"sectionKey": @"SETTINGS_SECTION_PROFILE_TABS"},
+                    @{@"key": @"profile_media_default_photos",
+                      @"default": @YES,
+                      @"type": @"toggle",
+                      @"sectionKey": @"SETTINGS_SECTION_PROFILE_TABS"},
                     @{
                         @"titleKey":
                             @"COMPATIBILITY_SIGN_IN_TITLE",
@@ -878,6 +881,10 @@ static BOOL BHTIsValidKeywordArray(id value, BOOL usernameKeywords) {
     if ([key isEqualToString:@"likes_media_waterfall"]) {
         return @{@"key": key, @"default": @YES};
     }
+    // The Grok promotion control now lives in Edit navigation bar.
+    if ([key isEqualToString:@"hide_grok_sidebar"]) {
+        return @{@"key": key, @"default": @YES};
+    }
     return nil;
 }
 
@@ -911,6 +918,7 @@ static BOOL BHTIsValidKeywordArray(id value, BOOL usernameKeywords) {
             }
         }
         [allowList addObjectsFromArray:@[
+            @"hide_grok_sidebar",
             @"enable_likes_tab",
             @"likes_media_waterfall",
             @"bh_color_theme_selectedColor"

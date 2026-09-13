@@ -410,7 +410,7 @@ def main() -> None:
             "BHTInstallCompatibilitySignInEntry",
             "BHTInstallCompatibilityAddAccountSignInEntry",
             "BHTCompatibilitySignInDiagnosticSnapshot",
-            "guarded X 12.9 compatibility password flow",
+            "guarded X 12.24.1 compatibility password flow",
             "Successful accounts are registered and switched through X's account APIs",
         ),
         "compatibility sign-in public contract",
@@ -425,7 +425,7 @@ def main() -> None:
     require_source_tokens(
         compatibility_login_source,
         (
-            'BHTCompatibilityTargetVersion = @"12.9"',
+            'BHTCompatibilityTargetVersion = @"12.24.1"',
             "static void BHTLoadCompatibilityFrameworkIfNeeded(void)",
             '@"TwitterSPMMigration.framework"',
             '@"TwitterSPMMigration"',
@@ -1045,7 +1045,8 @@ def main() -> None:
             "BHTCompatibilityMetricsURLIsAllowed(URL)",
             "componentsWithURL:URL resolvingAgainstBaseURL:NO",
             'if (![item.name isEqualToString:@"result"]) continue;',
-            "metrics.length == 0 || metrics.length > 65536",
+            "BHTCompatibilityValidatedMetrics(item.value)",
+            "if (!metrics)",
             "BHTCompatibilityLoginEventMetricsResolvedFromNavigation",
             "[self finishWithMetrics:metrics];",
         ),
@@ -1305,18 +1306,18 @@ def main() -> None:
             "self.metricsCollector.hostView = self.view;",
             "NSProcessInfo.processInfo.systemUptime;",
             "NSProcessInfo.processInfo.systemUptime -",
-            "startWithCompletion:^(__unused NSString* metrics)",
+            "startWithCompletion:^(NSString* metrics)",
+            "BHTCompatibilityValidatedMetrics(metrics)",
             "BHTCompatibilityMinimumPreflightDuration - elapsed",
             "BHTCompatibilityLoginEventMinimumPreflightElapsed",
             "dispatch_after(",
-            "metrics:nil",
+            "metrics:validatedMetrics",
         ),
-        "beta 29 request timing and compatibility metrics isolation",
+        "beta 55 request timing and validated verification data",
     )
-    if "metrics:metrics" in sign_in_action:
+    if "metrics:nil" in sign_in_action or "metrics:metrics" in sign_in_action:
         raise AssertionError(
-            "Navigation-derived metrics must remain isolated from the "
-            "compatibility password command"
+            "Use validated metrics without discarding or forwarding unchecked data"
         )
 
     password_response = source_section(
@@ -1389,21 +1390,23 @@ def main() -> None:
             '@"credentialEntryOwner": @"compatibility_screen_ephemeral"',
             '@"credentialPersistence": @"x_native_account_storage"',
             '@"xAuthClientMetadataPolicy":',
-            '@"native_x_12_9"',
+            '@"native_x_12_24_1"',
             '@"xAuthClientMetadataTargetVersion":',
             '@"xAuthClientMetadataOverrideInstalled": @NO',
             '@"xAuthClientMetadataOverrideClaimed": @0',
             '@"xAuthClientMetadataOverrideApplied": @0',
             '@"xAuthClientMetadataScopeTimedOut": @0',
             '@"compatibilityRequestProfile":',
-            '@"beta29_native_12_9_preflight"',
+            '@"beta55_native_12_24_1_validated_metrics"',
             '@"preflightPolicy":',
-            '@"minimum_12_second_then_nil_metrics"',
+            '@"minimum_12_second_then_validated_metrics"',
             '@"preflightMinimumDelaySeconds":',
             '@"attestationOverridesIncluded": @NO',
             '@"credentialBackupIncluded": @NO',
-            '@"uiMetricsPolicy": @"compatibility_nil"',
-            '@"capturedMetricsUsedForAuthentication": @NO',
+            '@"uiMetricsPolicy": @"validated_json_else_nil"',
+            '@"capturedMetricsUsedForAuthentication": @YES',
+            '@"lastCommandUsedMetrics"',
+            '@"lastCommandAPIErrorCode"',
             '@"addAccountEntryAvailable":',
             '@"nativeAddAccountCompletionSelectorAvailable":',
             '@"addAccountEntryInstalled"',
@@ -1588,7 +1591,7 @@ def main() -> None:
         (
             "BHTReplyDiagnosticMethodHasShape(",
             "BHTReplyDiagnosticMethodHasObjectArguments(",
-            'isEqualToString:@"12.9"',
+            'isEqualToString:@"12.24.1"',
             "method_getNumberOfArguments(method)",
             "if (*type != '@') return NO;",
             "BHTInstallReplyWorkflowDiagnosticObservers();",
@@ -1804,7 +1807,7 @@ def main() -> None:
     require_source_tokens(
         reply_network_hook,
         (
-            'isEqualToString:@"12.9"',
+            'isEqualToString:@"12.24.1"',
             "%hook NSURLSession",
             "dataTaskWithRequest:(NSURLRequest*)request",
             "uploadTaskWithRequest:(NSURLRequest*)request",
@@ -1833,7 +1836,6 @@ def main() -> None:
     for unsafe_network_value in (
         "absoluteString",
         "pathComponents",
-        "HTTPBody",
         "allHTTPHeaderFields",
         "valueForHTTPHeaderField",
         "httpCookieStore",
@@ -1851,6 +1853,57 @@ def main() -> None:
                 f"rewrite sensitive traffic: {unsafe_network_value}"
             )
 
+    # The ordinary report remains metadata-only. Beta 50's separately
+    # confirmed paired diagnostic may read the in-memory body exactly once,
+    # under its own one-shot gate, and must pass it directly to the bounded
+    # value-free schema capture without touching headers or a body stream.
+    if "HTTPBody" in reply_network_source:
+        raise AssertionError(
+            "The standard reply request diagnostic must remain body-blind"
+        )
+    if reply_network_hook.count("request.HTTPBody") != 1:
+        raise AssertionError(
+            "The paired diagnostic must have exactly one guarded HTTPBody "
+            "read"
+        )
+    paired_network_capture = source_section(
+        reply_network_hook,
+        "static void BHTReplyNetworkTagFailOpen(",
+        "%group BHTNativeReplyDataRequestHook",
+        "paired native-write network capture",
+    )
+    require_source_tokens(
+        paired_network_capture,
+        (
+            "BHTDetailedReplyDiagnosticsNetworkCaptureMayBeActive()",
+            "if (!replyWindowMayBeActive && !pairedCaptureMayBeActive)",
+            "if (pairedCaptureMayBeActive &&",
+            "BHTDetailedReplyDiagnosticsRequestIsEligible(request)",
+            "NSData* requestBody = suppliedBodyData ?: request.HTTPBody;",
+            "BHTDetailedReplyDiagnosticsCaptureRequest(",
+        ),
+        "explicitly gated paired request-body schema capture",
+    )
+    exact_gate_position = paired_network_capture.find(
+        "BHTDetailedReplyDiagnosticsRequestIsEligible(request)"
+    )
+    body_read_position = paired_network_capture.find("request.HTTPBody")
+    paired_capture_position = paired_network_capture.find(
+        "BHTDetailedReplyDiagnosticsCaptureRequest("
+    )
+    if not (
+        0 <= exact_gate_position < body_read_position < paired_capture_position
+    ):
+        raise AssertionError(
+            "The body-blind exact CreateTweet gate must run before the sole "
+            "HTTPBody read and paired capture"
+        )
+    if "HTTPBodyStream" in reply_network_hook:
+        raise AssertionError(
+            "The paired diagnostic must never consume or replace a body "
+            "stream"
+        )
+
     reply_failure_header = (
         ROOT / "src" / "Reply" / "BHTReplyFailureDiagnostics.h"
     ).read_text(encoding="utf-8")
@@ -1865,7 +1918,7 @@ def main() -> None:
             "BHTPrepareNativeReplyFailureDiagnostics(void)",
             "BHTObserveNativeReplyFailureNotification(",
             "BHTNativeReplyFailureDiagnosticSnapshot(void)",
-            'isEqualToString:@"12.9"',
+            'isEqualToString:@"12.24.1"',
             '"TFNTwitterCompositionOutboxNotificationErrorUserInfoKey"',
             '"HTTPRequestActionResponseErrorGetAPIErrors"',
             '"HTTPRequestActionResponseErrorGetRestErrors"',
@@ -2456,11 +2509,12 @@ def main() -> None:
     require_source_tokens(
         reply_application_hook,
         (
-            'isEqualToString:@"12.9"',
+            'isEqualToString:@"12.24.1"',
             '%hook _TtC14GraphQLActions23GraphQLEndpointResponse',
             'modelWithParseError:(id __autoreleasing*)parseError',
             'APIErrors:(id __autoreleasing*)APIErrors',
             'BHTReplyApplicationMethodHasDecoderABI(',
+            'BHTReplyApplicationMethodHasRequestOperationInitializerABI(',
             'method_getNumberOfArguments(method) != 4',
             "argument[0] != '^'",
             "argument[1] != '@'",
@@ -2482,6 +2536,16 @@ def main() -> None:
             'BHTMarkNativeReplyModelStructureLayoutAvailable();',
             'BHTMarkNativeReplySwiftValueBoxRecognitionAvailable();',
             'NSClassFromString(@"TFSAPIRequest")',
+            'NSClassFromString(@"TNLRequestOperation")',
+            '@"initWithRequest:responseClass:configuration:delegate:"',
+            '%group BHTDetailedWriteOriginalRequestBindingHooks',
+            'responseClass != BHTReplyApplicationEndpointResponseClass',
+            'BHTDetailedReplyDiagnosticsApplicationTokenForRequestURL(',
+            'objc_setAssociatedObject(',
+            'BHTReplyApplicationDetailedToken(self)',
+            'BHTDetailedReplyDiagnosticsCaptureBoundDecodedResponse(',
+            'BHTDetailedReplyDiagnosticsCaptureBoundPreparedResponse(',
+            '%init(BHTDetailedWriteOriginalRequestBindingHooks);',
             'NSSelectorFromString(@"originalRequest")',
             'NSSelectorFromString(@"URL")',
             'BHTReplyWorkflowDiagnosticSessionForApplicationResponse(',
@@ -2536,16 +2600,39 @@ def main() -> None:
             "The exact opaque Swift-value representation must return before "
             "any direct generated-model layout inspection"
         )
-    if reply_application_hook.count("%orig(") != 1:
-        raise AssertionError(
-            "The decoded reply diagnostic must forward to X exactly once"
-        )
     decoded_hook_body = source_section(
         reply_application_hook,
         "- (id)modelWithParseError:",
         "%end",
         "decoded reply application hook",
     )
+    if decoded_hook_body.count("%orig(") != 1:
+        raise AssertionError(
+            "The decoded reply diagnostic must forward to X exactly once"
+        )
+    binding_hook_body = source_section(
+        reply_application_hook,
+        "%group BHTDetailedWriteOriginalRequestBindingHooks",
+        "%group BHTNativeReplyApplicationDecoderHooks",
+        "original-request application binding hook",
+    )
+    if binding_hook_body.count("%orig(") != 1:
+        raise AssertionError(
+            "The original-request binding hook must forward to X exactly once"
+        )
+    for forbidden_binding_read in (
+        "HTTPBody",
+        "HTTPBodyStream",
+        "allHTTPHeaderFields",
+        "valueForHTTPHeaderField",
+        "description]",
+        "debugDescription",
+    ):
+        if forbidden_binding_read in binding_hook_body:
+            raise AssertionError(
+                "The original-request binding hook must remain body-, "
+                "header-, and description-blind: " + forbidden_binding_read
+            )
     fast_gate_position = decoded_hook_body.find(
         "BHTReplyWorkflowApplicationDiagnosticWindowMayBeActive()"
     )
@@ -2796,6 +2883,15 @@ def main() -> None:
         detailed_reply_header + detailed_reply_source,
         (
             "BHTArmDetailedReplyDiagnostics(void)",
+            "BHTDetailedReplyDiagnosticsNetworkCaptureMayBeActive(void)",
+            "BHTDetailedReplyDiagnosticsRequestIsEligible(",
+            "BHTDetailedReplyDiagnosticsCaptureRequest(",
+            "BHTDetailedReplyDiagnosticsCompleteRequest(",
+            "BHTDetailedReplyDiagnosticsNoteCompositionContext(",
+            "BHTDetailedReplyDiagnosticsApplicationTokenForRequestURL(",
+            "BHTDetailedReplyDiagnosticsCaptureBoundDecodedResponse(",
+            "BHTDetailedReplyDiagnosticsCaptureBoundPreparedResponse(",
+            "BHTDetailedReplyDiagnosticsSetApplicationBindingHookAvailable(",
             "BHTDetailedReplyDiagnosticsCaptureDecodedResponse(",
             "BHTDetailedReplyDiagnosticsCapturePreparedResponse(",
             "BHTDetailedReplyDiagnosticsCaptureTypedResult(",
@@ -2806,6 +2902,7 @@ def main() -> None:
             "BHTDetailedReplyExportLifetime = 10.0 * 60.0",
             '@"captureExpiredAndCleared"',
             "BHTDetailedReplyCaptureEpoch",
+            "BHTDetailedReplyScheduleArmExpiryLocked(void)",
             "BHTDetailedReplyScheduleExpiryLocked(void)",
             "dispatch_after(",
             "BHTDetailedReplyCaptureEpoch != acceptedEpoch",
@@ -2815,22 +2912,101 @@ def main() -> None:
             "BHTDetailedReplyMaximumDictionaryKeys = 32",
             "BHTDetailedReplyMaximumArrayElements = 16",
             "BHTDetailedReplyMaximumStringLength = 2048",
+            "BHTDetailedWriteRequestLimit = 128 * 1024",
+            "BHTDetailedWriteMaximumSchemaDepth = 8",
+            "BHTDetailedWriteMaximumSchemaKeys = 64",
             'NSSelectorFromString(@"info")',
             'NSSelectorFromString(@"data")',
             "BHTDetailedReplyMethodReturnsObjectWithNoArguments(",
             "JSONObjectWithData:data",
             '@"overLimitOmitted"',
             '@"nonJSONOmitted"',
-            '@"temporaryInvasiveBeta": @YES',
-            '@"containsSensitivePersonalData": @YES',
+            '@"schemaVersion": @2',
+            '@"mode": @"temporary_paired_native_write_beta50"',
+            '@"temporaryInvasiveBeta": @NO',
+            '@"containsSensitivePersonalData": @NO',
             '@"includedOnlyByExplicitDetailedExport": @YES',
+            '@"attempts": @2',
+            '@"queryFingerprintAlgorithm": @"fnv1a64"',
+            "UINT64_C(14695981039346656037)",
+            "BHTDetailedWriteAllowedSchemaKeys(void)",
+            '@"unknownKeysCollapseToOpaquePlaceholder": @YES',
+            '@"unknownKeyValuesOrFingerprintsExported": @NO',
+            '@"bodyBytesRetained": @NO',
+            '@"capturesTextOrIdentifierValues": @NO',
+            '@"validForRequestShapeComparison"',
+            '@"validForReplyAuthorizationDiagnosis"',
+            '@"standaloneApplicationOutcomeRequiresTesterConfirmation"',
+            '@"applicationOutcomeBoundByOriginalRequestIdentity"',
+            '@"standaloneGraphQLSuccessShape"',
+            '@"originalRequestApplicationBindingHookAvailable"',
+            '@"requiredOrder": @"standaloneThenReply"',
+            '@"replyBeforeStandaloneRejectsCapture": @YES',
+            '@"capturedRequestAndResponseBodySizes": @YES',
+            '@"capturedStringLengths": @YES',
+            '@"rawRequestBodies": @YES',
+            '@"postAndReplyText": @YES',
             '@"authorizationHeaders": @YES',
             '@"cookiesAndWebKitStorage": @YES',
             '@"authenticationTokens": @YES',
             '@"rawNonJSONResponseBytes": @YES',
         ),
-        "bounded one-shot detailed reply capture",
+        "bounded paired native-write capture",
     )
+    for forbidden_unknown_key_fingerprint in (
+        "BHTDetailedWriteOpaqueFieldSalt",
+        "BHTDetailedWriteOpaqueSchemaKey",
+        'unknownKeysUseCaptureSaltedOpaqueLabels',
+        'opaqueSaltExported',
+    ):
+        if forbidden_unknown_key_fingerprint in detailed_reply_source:
+            raise AssertionError(
+                "Unknown schema keys must collapse to one non-reversible "
+                "placeholder: " + forbidden_unknown_key_fingerprint
+            )
+    for forbidden_paired_metadata in (
+        '@"bodyByteCountBucket"',
+        '@"responseByteCountBucket"',
+        '@"lengthBucket"',
+        '@"descriptionLengthBucket"',
+        '@"messageLengthBucket"',
+        '@"notificationNameLengthBucket"',
+        "BHTDetailedWriteStringLengthBucket",
+        "BHTDetailedWriteCurrentNativeAccount",
+        "BHTDetailedReplyDiagnosticsNoteCompositionKind",
+    ):
+        if forbidden_paired_metadata in detailed_reply_source:
+            raise AssertionError(
+                "Paired diagnostics must not export size/length metadata or "
+                "query private UI from a network callback: "
+                f"{forbidden_paired_metadata}"
+            )
+    safe_key_section = source_section(
+        detailed_reply_source,
+        "static NSString* BHTDetailedWriteSafeSchemaKey(",
+        "static id BHTDetailedWriteSchemaForValue(",
+        "opaque paired schema-key policy",
+    )
+    require_source_tokens(
+        safe_key_section,
+        (
+            "BHTDetailedWriteAllowedSchemaKeys()",
+            "return key;",
+            'return @"<opaqueField>";',
+        ),
+        "allowlisted and opaque-placeholder schema keys",
+    )
+    schema_value_section = source_section(
+        detailed_reply_source,
+        "static id BHTDetailedWriteSchemaForValue(",
+        "static NSString* BHTDetailedWriteFormDecode(",
+        "value-free variable schema",
+    )
+    if '@"value": @([(NSNumber*)value boolValue])' in schema_value_section:
+        raise AssertionError(
+            "Variable-schema booleans must be type-only; only the dedicated "
+            "feature-shape comparison may retain boolean settings"
+        )
     for redacted_key in (
         "authorization",
         "cookie",
@@ -2860,7 +3036,6 @@ def main() -> None:
         "WKWebsiteDataStore",
         "HTTPBody",
         "HTTPBodyStream",
-        "Authorization",
     ):
         if forbidden_capture_api in detailed_reply_source:
             raise AssertionError(
@@ -2881,6 +3056,15 @@ def main() -> None:
     require_source_tokens(
         reply_hook_source,
         (
+            'NSClassFromString(@"TFNTwitterComposition")',
+            'NSSelectorFromString(@"isReply")',
+            'BHTReplyDiagnosticMethodReturnsBoolWithNoArguments(',
+            'object_getClass(composition)',
+            'compositionArray.count > 8',
+            'BHTDetailedReplyDiagnosticsNoteCompositionContext(',
+            'isReply, activeAccount);',
+            'id activeAccount = NSThread.isMainThread',
+            '? BHTCurrentNativeAccountForWebReply()',
             '%hook TFNTwitterCompositionUpdateStatusOperation',
             '_tfn_main_statusesUpdateCommandDidUpdateStatus:',
             'BHTReplyWorkflowApplicationDiagnosticWindowMayBeActive()',
@@ -3159,7 +3343,7 @@ def main() -> None:
             'NSClassFromString(@"T1WebViewController")',
             'NSClassFromString(@"T1BaseWebViewController")',
             'NSClassFromString(@"T1WebNavigationController")',
-            'isEqualToString:@"12.9"',
+            'isEqualToString:@"12.24.1"',
             "replyURL, account, YES, NO,",
             "nil, nil, nil",
             "controllerAccount != account",
@@ -3923,11 +4107,11 @@ def main() -> None:
             "navigation delegate"
         )
 
-    if "Version: 6.1.0-beta.49" not in (
+    if "Version: 6.1.0-beta.55" not in (
         ROOT / "control"
     ).read_text(encoding="utf-8"):
         raise AssertionError(
-            "The one-shot detailed reply diagnostics must ship as beta.49"
+            "Compatibility verification changes must ship as beta.55"
         )
 
     branding_source = (
@@ -5350,9 +5534,13 @@ def main() -> None:
         "return MAX(0.10, MIN(10.0, ratio));",
         "waterfallDecodedRatioCorrections",
         "waterfallAnchorPreservations",
-        "collectionView.indexPathsForVisibleItems",
-        "waterfallLayoutInvalidationPendingUntilIdle",
-        "applyPendingWaterfallLayoutInvalidationIfIdle",
+        "collection.indexPathsForVisibleItems",
+        "waterfallLayoutDisplayLink",
+        "applyPendingWaterfallLayoutInvalidation",
+        "NSRunLoopCommonModes",
+        "context.contentOffsetAdjustment",
+        "BHTMediaEntityAspectRatio",
+        "BHTWaterfallPreviewPixels",
         "aspectRatioConfirmedByImage",
         "updateAdaptiveAspectRatioForItem",
         "desiredSpan = MIN(2, columns);",

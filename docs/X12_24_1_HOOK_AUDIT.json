@@ -1,0 +1,5428 @@
+{
+  "host": {
+    "CFBundleIdentifier": "com.atebits.Tweetie2",
+    "CFBundleShortVersionString": "12.24.1",
+    "CFBundleVersion": "1",
+    "MinimumOSVersion": "15.0"
+  },
+  "ipa_sha256": "d720024ea8d9125f1554727875f7d90b211d1800108be8a1bb59c0eb67dc6ceb",
+  "images": [
+    {
+      "image": "Payload/Twitter.app/Frameworks/AppAuth.framework/AppAuth",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[87, 36, 68, 147, 16, 226, 52, 220, 177, 120, 54, 211, 147, 163, 4, 215]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/AppCheckCore.framework/AppCheckCore",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[174, 83, 73, 29, 179, 68, 51, 232, 146, 195, 56, 146, 191, 153, 154, 211]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/BrazeKit.framework/BrazeKit",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[207, 236, 19, 118, 36, 100, 54, 159, 191, 254, 44, 160, 123, 64, 254, 67]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/C2PAC.framework/C2PAC",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[154, 183, 80, 23, 9, 35, 57, 93, 172, 137, 23, 125, 242, 157, 246, 190]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/CastleSDK.framework/CastleSDK",
+      "classes": 35,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[201, 210, 233, 171, 215, 228, 59, 199, 177, 68, 224, 195, 99, 90, 142, 163]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/DeviceRisk.framework/DeviceRisk",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[76, 153, 215, 12, 156, 72, 56, 213, 139, 39, 175, 176, 112, 148, 160, 71]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/FBLPromises.framework/FBLPromises",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[105, 7, 46, 142, 79, 82, 56, 104, 163, 194, 178, 151, 39, 245, 220, 255]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/FirebaseAnalytics.framework/FirebaseAnalytics",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[179, 115, 38, 10, 131, 226, 63, 22, 178, 125, 153, 245, 185, 40, 203, 23]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/FirebaseCore.framework/FirebaseCore",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[175, 141, 90, 123, 96, 57, 52, 93, 190, 36, 75, 53, 207, 206, 135, 124]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/FirebaseCoreExtension.framework/FirebaseCoreExtension",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[67, 248, 246, 94, 178, 104, 48, 142, 143, 123, 30, 39, 253, 125, 170, 222]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/FirebaseCoreInternal.framework/FirebaseCoreInternal",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[158, 108, 66, 102, 163, 121, 49, 179, 136, 115, 138, 148, 98, 19, 205, 121]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/FirebaseCrashlytics.framework/FirebaseCrashlytics",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[95, 82, 112, 27, 193, 209, 48, 151, 179, 7, 75, 118, 73, 134, 125, 30]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/FirebaseInstallations.framework/FirebaseInstallations",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[86, 63, 150, 85, 144, 254, 52, 141, 149, 197, 197, 109, 42, 139, 237, 143]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/FirebaseRemoteConfigInterop.framework/FirebaseRemoteConfigInterop",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[173, 245, 157, 150, 8, 11, 52, 193, 172, 114, 206, 221, 133, 144, 94, 46]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/FirebaseSessions.framework/FirebaseSessions",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[124, 21, 113, 20, 39, 157, 59, 167, 157, 18, 44, 26, 155, 105, 154, 129]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/GoogleAppMeasurement.framework/GoogleAppMeasurement",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[12, 84, 129, 136, 145, 39, 51, 222, 191, 215, 5, 123, 168, 240, 166, 51]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/GoogleAppMeasurementIdentitySupport.framework/GoogleAppMeasurementIdentitySupport",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[16, 5, 92, 142, 103, 129, 60, 156, 162, 86, 32, 42, 228, 127, 165, 204]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/GoogleDataTransport.framework/GoogleDataTransport",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[186, 139, 248, 228, 202, 151, 59, 183, 173, 222, 18, 238, 138, 1, 167, 209]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/GoogleMobileAds.framework/GoogleMobileAds",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[239, 59, 136, 246, 14, 10, 48, 247, 135, 168, 34, 58, 85, 59, 11, 20]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/GoogleSignIn.framework/GoogleSignIn",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[153, 63, 181, 227, 38, 107, 50, 36, 185, 79, 86, 223, 157, 28, 117, 94]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/GoogleUtilities.framework/GoogleUtilities",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[252, 121, 55, 197, 48, 5, 49, 63, 139, 59, 145, 96, 207, 180, 77, 227]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/GTMAppAuth.framework/GTMAppAuth",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[178, 110, 4, 171, 113, 141, 56, 247, 155, 157, 119, 146, 99, 208, 129, 237]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/GTMSessionFetcher.framework/GTMSessionFetcher",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[142, 166, 236, 218, 232, 129, 50, 183, 133, 116, 214, 129, 173, 62, 139, 239]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/IOSSecuritySuite_-5B594600D65C7EA3_PackageProduct.framework/IOSSecuritySuite_-5B594600D65C7EA3_PackageProduct",
+      "classes": 14,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[237, 157, 145, 138, 243, 192, 56, 246, 166, 202, 12, 26, 205, 23, 178, 57]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/LHLSLib.framework/LHLSLib",
+      "classes": 24,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[39, 20, 120, 191, 118, 22, 50, 223, 182, 182, 193, 188, 50, 59, 203, 173]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/libbrotli.framework/libbrotli",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[76, 115, 10, 11, 17, 74, 59, 110, 177, 78, 176, 84, 73, 252, 172, 188]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/LinkKit.framework/LinkKit",
+      "classes": 164,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[139, 220, 128, 22, 234, 217, 56, 216, 178, 33, 57, 197, 237, 106, 216, 163]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/LiveKitWebRTC.framework/LiveKitWebRTC",
+      "classes": 102,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[76, 76, 68, 31, 85, 85, 49, 68, 161, 248, 234, 34, 60, 245, 251, 58]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/MarkdownView.framework/MarkdownView",
+      "classes": 47,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[65, 252, 168, 17, 75, 59, 51, 31, 137, 101, 106, 230, 137, 96, 175, 53]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/MobileIntelligence.framework/MobileIntelligence",
+      "classes": 62,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[75, 25, 252, 181, 110, 179, 53, 121, 177, 187, 68, 191, 10, 46, 100, 153]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/nanopb.framework/nanopb",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[178, 185, 233, 87, 40, 253, 50, 38, 152, 53, 158, 255, 203, 190, 25, 151]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/NOZXBrotli.framework/NOZXBrotli",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[116, 67, 1, 166, 207, 255, 57, 55, 139, 180, 186, 77, 79, 3, 31, 193]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/PalmAPISaas.framework/PalmAPISaas",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[1, 183, 246, 224, 187, 121, 54, 222, 191, 138, 109, 209, 221, 183, 200, 81]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/Persona2.framework/Persona2",
+      "classes": 557,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[135, 255, 0, 220, 172, 93, 57, 34, 187, 10, 196, 158, 237, 195, 65, 129]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/PinwheelSDK.framework/PinwheelSDK",
+      "classes": 152,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[197, 147, 95, 128, 177, 106, 48, 126, 144, 110, 247, 30, 200, 219, 151, 188]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/Prelude_37DAFDA622105FD8_PackageProduct.framework/Prelude_37DAFDA622105FD8_PackageProduct",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[184, 153, 116, 223, 104, 113, 63, 120, 180, 57, 165, 162, 193, 221, 241, 90]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/PreludeCore.framework/PreludeCore",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[124, 58, 170, 211, 178, 192, 50, 248, 152, 169, 206, 21, 79, 5, 73, 130]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/Promises.framework/Promises",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[199, 143, 85, 161, 127, 156, 63, 129, 134, 100, 168, 166, 106, 116, 36, 107]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/SocureDocV.framework/SocureDocV",
+      "classes": 191,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[42, 94, 213, 199, 67, 37, 57, 111, 169, 136, 55, 53, 149, 100, 157, 62]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/SwiftUIIntrospect_2C5EC2718B657AE7_PackageProduct.framework/SwiftUIIntrospect_2C5EC2718B657AE7_PackageProduct",
+      "classes": 2,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[246, 246, 141, 33, 161, 127, 51, 112, 137, 24, 160, 33, 44, 221, 1, 230]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/T1Twitter.framework/T1Twitter",
+      "classes": 3234,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[183, 98, 109, 120, 233, 99, 48, 255, 167, 225, 193, 40, 27, 199, 41, 141]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/TFSFeatureSwitchesUI.framework/TFSFeatureSwitchesUI",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[105, 44, 147, 202, 124, 66, 56, 184, 183, 171, 34, 16, 211, 237, 198, 68]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/TwitterDiagnosticTools.framework/TwitterDiagnosticTools",
+      "classes": 28,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[212, 190, 180, 81, 227, 187, 59, 73, 151, 185, 92, 176, 143, 13, 253, 105]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/TwitterLifecycleTools.framework/TwitterLifecycleTools",
+      "classes": 23,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[80, 182, 112, 245, 232, 167, 56, 247, 163, 129, 76, 198, 178, 14, 65, 247]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/TwitterNotifications.framework/TwitterNotifications",
+      "classes": 40,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[239, 59, 146, 65, 190, 44, 55, 107, 148, 118, 197, 134, 46, 147, 118, 217]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/TwitterNotificationsExtension.framework/TwitterNotificationsExtension",
+      "classes": 40,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[182, 201, 221, 129, 113, 227, 54, 51, 130, 28, 150, 215, 73, 27, 208, 38]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/TwitterSharedResources.framework/TwitterSharedResources",
+      "classes": 3,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[175, 41, 89, 237, 122, 180, 62, 158, 156, 171, 253, 128, 5, 241, 145, 128]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/TwitterSPMMigration.framework/TwitterSPMMigration",
+      "classes": 7674,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[13, 29, 152, 36, 159, 121, 53, 125, 131, 137, 148, 43, 66, 93, 243, 231]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/UserMessagingPlatform.framework/UserMessagingPlatform",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[30, 189, 141, 202, 51, 115, 51, 237, 177, 97, 73, 125, 187, 22, 72, 156]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/VeryAILiveness.framework/VeryAILiveness",
+      "classes": 35,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[255, 56, 143, 152, 82, 54, 58, 236, 140, 165, 136, 204, 69, 21, 14, 206]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/WebRTC.framework/WebRTC",
+      "classes": 95,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[135, 160, 159, 75, 166, 29, 59, 186, 187, 190, 32, 238, 53, 108, 113, 254]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/XAppLibraries.framework/XAppLibraries",
+      "classes": 4686,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[104, 217, 144, 176, 213, 176, 52, 209, 152, 156, 122, 187, 133, 235, 53, 71]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/XChatSDK.framework/XChatSDK",
+      "classes": 11,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[154, 45, 30, 78, 179, 19, 49, 73, 188, 19, 24, 158, 107, 24, 235, 59]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/XKotlin.framework/XKotlin",
+      "classes": 1800,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[166, 39, 30, 152, 221, 109, 52, 217, 182, 212, 154, 141, 234, 117, 127, 58]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/XPalmLiveness_-3FBD916C0EFD0C8_PackageProduct.framework/XPalmLiveness_-3FBD916C0EFD0C8_PackageProduct",
+      "classes": 20,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[122, 236, 170, 211, 150, 182, 59, 41, 132, 121, 255, 78, 162, 191, 23, 105]"
+    },
+    {
+      "image": "Payload/Twitter.app/Frameworks/ZipUtilities.framework/ZipUtilities",
+      "classes": 0,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[213, 81, 171, 186, 180, 234, 57, 193, 169, 34, 65, 183, 203, 238, 18, 250]"
+    },
+    {
+      "image": "Payload/Twitter.app/PlugIns/ShareExtension.appex/ShareExtension",
+      "classes": 1332,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[19, 107, 147, 4, 179, 116, 52, 182, 167, 9, 158, 208, 231, 98, 107, 239]"
+    },
+    {
+      "image": "Payload/Twitter.app/PlugIns/TwitterNotificationContentExtension.appex/TwitterNotificationContentExtension",
+      "classes": 9,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[229, 31, 111, 44, 192, 161, 55, 112, 189, 127, 23, 18, 247, 237, 234, 113]"
+    },
+    {
+      "image": "Payload/Twitter.app/PlugIns/TwitterNotificationServiceExtension.appex/TwitterNotificationServiceExtension",
+      "classes": 1,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[69, 73, 115, 71, 204, 22, 53, 210, 180, 65, 44, 30, 69, 55, 137, 111]"
+    },
+    {
+      "image": "Payload/Twitter.app/PlugIns/WidgetExtension Production.appex/WidgetExtension Production",
+      "classes": 1,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[11, 121, 211, 254, 42, 226, 59, 126, 143, 200, 200, 50, 156, 185, 95, 172]"
+    },
+    {
+      "image": "Payload/Twitter.app/Twitter",
+      "classes": 251,
+      "cryptids": [
+        0
+      ],
+      "uuid": "[29, 80, 88, 39, 188, 198, 58, 249, 180, 32, 54, 9, 181, 218, 95, 118]"
+    }
+  ],
+  "counts": {
+    "present": 223,
+    "system-runtime": 30,
+    "new": 9,
+    "guarded-runtime-alternative": 2,
+    "guarded-legacy-alias": 5
+  },
+  "hooks": [
+    {
+      "file": "src/Hooks/AccountBoundWebReply.x",
+      "class": "T1WebViewController",
+      "selector": "-doesURLResultTypeOpenInWebview:",
+      "return": "BOOL",
+      "args": "doesURLResultTypeOpenInWebview:(NSInteger)resultType",
+      "status": "present",
+      "owner": "T1WebViewController",
+      "native": {
+        "types": "B24@0:8q16",
+        "address": 5603796
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNItemsDataViewController",
+      "selector": "-setSections:restoreScrollPosition:",
+      "return": "void",
+      "args": "setSections:(NSArray*)sections\n    restoreScrollPosition:(BOOL)restoreScrollPosition",
+      "status": "present",
+      "owner": "TFNItemsDataViewController",
+      "native": {
+        "types": "v28@0:8@16B24",
+        "address": 13881704
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNItemsDataViewController",
+      "selector": "-updateSections:reconfigureItemIdentifiers:withRowAnimation:completion:",
+      "return": "void",
+      "args": "updateSections:(NSArray*)sections\n    reconfigureItemIdentifiers:(NSArray*)identifiers\n              withRowAnimation:(long long)animation\n                    completion:(id)completion",
+      "status": "present",
+      "owner": "TFNItemsDataViewController",
+      "native": {
+        "types": "v48@0:8@16@24q32@?40",
+        "address": 13889996
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNItemsDataViewController",
+      "selector": "-tableViewCellForItem:atIndexPath:",
+      "return": "id",
+      "args": "tableViewCellForItem:(id)item atIndexPath:(NSIndexPath*)indexPath",
+      "status": "present",
+      "owner": "TFNItemsDataViewController",
+      "native": {
+        "types": "@32@0:8@16@24",
+        "address": 13893216
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNItemsDataViewController",
+      "selector": "-tableView:heightForRowAtIndexPath:",
+      "return": "double",
+      "args": "tableView:(UITableView*)tableView\n    heightForRowAtIndexPath:(NSIndexPath*)indexPath",
+      "status": "present",
+      "owner": "TFNItemsDataViewController",
+      "native": {
+        "types": "d32@0:8@16@24",
+        "address": 13890632
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNItemsDataViewAdapterRegistry",
+      "selector": "-dataViewAdapterForItem:",
+      "return": "id",
+      "args": "dataViewAdapterForItem:(id)item",
+      "status": "present",
+      "owner": "TFNItemsDataViewAdapterRegistry",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 13879268
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "T1PlayerMediaEntitySessionProducible",
+      "selector": "-initWithMediaEntity:contentMediaIdentifier:ownerIdentifier:baseScribeItem:promotedContent:",
+      "return": "id",
+      "args": "initWithMediaEntity:(id)mediaEntity\n    contentMediaIdentifier:(id)contentMediaIdentifier\n           ownerIdentifier:(id)ownerIdentifier\n            baseScribeItem:(id)baseScribeItem\n         promotedContent:(id)promotedContent",
+      "status": "present",
+      "owner": "T1PlayerMediaEntitySessionProducible",
+      "native": {
+        "types": "@56@0:8@16@24@32@40@48",
+        "address": 1037768
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "UICollectionViewCell",
+      "selector": "-didMoveToWindow",
+      "return": "void",
+      "args": "didMoveToWindow",
+      "status": "system-runtime",
+      "owner": "UICollectionViewCell",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "UICollectionViewCell",
+      "selector": "-layoutSubviews",
+      "return": "void",
+      "args": "layoutSubviews",
+      "status": "system-runtime",
+      "owner": "UICollectionViewCell",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "UICollectionViewCell",
+      "selector": "-sizeThatFits:",
+      "return": "CGSize",
+      "args": "sizeThatFits:(CGSize)size",
+      "status": "system-runtime",
+      "owner": "UICollectionViewCell",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "UICollectionViewCell",
+      "selector": "-preferredLayoutAttributesFittingAttributes:",
+      "return": "UICollectionViewLayoutAttributes*",
+      "args": "preferredLayoutAttributesFittingAttributes:\n    (UICollectionViewLayoutAttributes*)attributes",
+      "status": "system-runtime",
+      "owner": "UICollectionViewCell",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "UICollectionViewCell",
+      "selector": "-applyLayoutAttributes:",
+      "return": "void",
+      "args": "applyLayoutAttributes:(UICollectionViewLayoutAttributes*)attributes",
+      "status": "system-runtime",
+      "owner": "UICollectionViewCell",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "UICollectionViewCell",
+      "selector": "-setHidden:",
+      "return": "void",
+      "args": "setHidden:(BOOL)hidden",
+      "status": "system-runtime",
+      "owner": "UICollectionViewCell",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "UICollectionViewCell",
+      "selector": "-setAlpha:",
+      "return": "void",
+      "args": "setAlpha:(CGFloat)alpha",
+      "status": "system-runtime",
+      "owner": "UICollectionViewCell",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFSTwitterSspMetadata",
+      "selector": "-isPrerollEligible",
+      "return": "BOOL",
+      "args": "isPrerollEligible",
+      "status": "present",
+      "owner": "TFSTwitterSspMetadata",
+      "native": {
+        "types": "B16@0:8",
+        "address": 40421304
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFSTwitterSspMetadata",
+      "selector": "-adTagURL",
+      "return": "id",
+      "args": "adTagURL",
+      "status": "present",
+      "owner": "TFSTwitterSspMetadata",
+      "native": {
+        "types": "@16@0:8",
+        "address": 40421496
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNTwitterStatus",
+      "selector": "-isPoliticalAd",
+      "return": "BOOL",
+      "args": "isPoliticalAd",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10004416
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNTwitterStatus",
+      "selector": "-isIssueAd",
+      "return": "BOOL",
+      "args": "isIssueAd",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10004476
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNTwitterStatus",
+      "selector": "-isRTBCreative",
+      "return": "BOOL",
+      "args": "isRTBCreative",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10004536
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNTwitterStatus",
+      "selector": "-isPrerollContent",
+      "return": "BOOL",
+      "args": "isPrerollContent",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10005948
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNTwitterStatus",
+      "selector": "-isAdsVideoCard",
+      "return": "BOOL",
+      "args": "isAdsVideoCard",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10006832
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNTwitterStatus",
+      "selector": "-allowDynamicAd",
+      "return": "BOOL",
+      "args": "allowDynamicAd",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10006892
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNTwitterStatus",
+      "selector": "-sspMetadata",
+      "return": "id",
+      "args": "sspMetadata",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "@16@0:8",
+        "address": 10031872
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNTwitterStatus",
+      "selector": "-promotedContent",
+      "return": "id",
+      "args": "promotedContent",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "@16@0:8",
+        "address": 10030048
+      }
+    },
+    {
+      "file": "src/Hooks/Ads.x",
+      "class": "TFNTwitterStatus",
+      "selector": "-isCardHidden",
+      "return": "_Bool",
+      "args": "isCardHidden",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10031088
+      }
+    },
+    {
+      "file": "src/Hooks/AppLifecycle.x",
+      "class": "T1AppDelegate",
+      "selector": "-application:didFinishLaunchingWithOptions:",
+      "return": "_Bool",
+      "args": "application:(__unsafe_unretained UIApplication*)application\n    didFinishLaunchingWithOptions:(__unsafe_unretained id)arg2",
+      "status": "present",
+      "owner": "T1AppDelegate",
+      "native": {
+        "types": "B32@0:8@16@24",
+        "address": 5399104
+      }
+    },
+    {
+      "file": "src/Hooks/AppLifecycle.x",
+      "class": "T1AppDelegate",
+      "selector": "-applicationDidBecomeActive:",
+      "return": "void",
+      "args": "applicationDidBecomeActive:(__unsafe_unretained id)arg1",
+      "status": "present",
+      "owner": "T1AppDelegate",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 5400996
+      }
+    },
+    {
+      "file": "src/Hooks/AppLifecycle.x",
+      "class": "T1AppDelegate",
+      "selector": "-applicationWillResignActive:",
+      "return": "void",
+      "args": "applicationWillResignActive:(__unsafe_unretained id)arg1",
+      "status": "present",
+      "owner": "T1AppDelegate",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 5401140
+      }
+    },
+    {
+      "file": "src/Hooks/AppLifecycle.x",
+      "class": "T1AppDelegate",
+      "selector": "-applicationDidEnterBackground:",
+      "return": "void",
+      "args": "applicationDidEnterBackground:(__unsafe_unretained id)arg1",
+      "status": "present",
+      "owner": "T1AppDelegate",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 5402132
+      }
+    },
+    {
+      "file": "src/Hooks/AppLifecycle.x",
+      "class": "T1AnimatedLaunchScreenView",
+      "selector": "-didMoveToWindow",
+      "return": "void",
+      "args": "didMoveToWindow",
+      "status": "system-runtime",
+      "owner": "UIView",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/AppLifecycle.x",
+      "class": "T1AnimatedLaunchScreenView",
+      "selector": "-layoutSubviews",
+      "return": "void",
+      "args": "layoutSubviews",
+      "status": "present",
+      "owner": "T1AnimatedLaunchScreenView",
+      "native": {
+        "types": "v16@0:8",
+        "address": 16822728
+      }
+    },
+    {
+      "file": "src/Hooks/AppLifecycle.x",
+      "class": "T1AnimatedLaunchScreenView",
+      "selector": "-animateRevealWithCompletion:",
+      "return": "void",
+      "args": "animateRevealWithCompletion:(id)completion",
+      "status": "present",
+      "owner": "T1AnimatedLaunchScreenView",
+      "native": {
+        "types": "v24@0:8@?16",
+        "address": 16826232
+      }
+    },
+    {
+      "file": "src/Hooks/Avatars.x",
+      "class": "TFNAvatarImageView",
+      "selector": "-setStyle:",
+      "return": "void",
+      "args": "setStyle:(NSInteger)style",
+      "status": "present",
+      "owner": "TFNAvatarImageView",
+      "native": {
+        "types": "v24@0:8q16",
+        "address": 13331328
+      }
+    },
+    {
+      "file": "src/Hooks/Avatars.x",
+      "class": "TUIAvatarImageView",
+      "selector": "-setStyle:",
+      "return": "void",
+      "args": "setStyle:(NSInteger)style",
+      "status": "present",
+      "owner": "TUIAvatarImageView",
+      "native": {
+        "types": "v24@0:8q16",
+        "address": 4297264060
+      }
+    },
+    {
+      "file": "src/Hooks/Avatars.x",
+      "class": "TUIAvatarImageView",
+      "selector": "+avatarImageViewStyleWithProfileImageShape:identityType:",
+      "return": "NSInteger",
+      "args": "avatarImageViewStyleWithProfileImageShape:(NSInteger)shape\n                                          identityType:(NSInteger)identityType",
+      "status": "present",
+      "owner": "TUIAvatarImageView",
+      "native": {
+        "types": "q32@0:8q16q24",
+        "address": 4297264336
+      }
+    },
+    {
+      "file": "src/Hooks/Avatars.x",
+      "class": "UIImage",
+      "selector": "-tfn_roundImageWithTargetDimensions:targetContentMode:",
+      "return": "UIImage*",
+      "args": "tfn_roundImageWithTargetDimensions:(CGSize)targetDimensions\n                             targetContentMode:\n                                 (UIViewContentMode)targetContentMode",
+      "status": "present",
+      "owner": "UIImage",
+      "native": {
+        "types": "@40@0:8{CGSize=dd}16q32",
+        "address": 14723524
+      }
+    },
+    {
+      "file": "src/Hooks/Avatars.x",
+      "class": "TFNCircularAvatarShadowLayer",
+      "selector": "-setHidden:",
+      "return": "void",
+      "args": "setHidden:(BOOL)hidden",
+      "status": "system-runtime",
+      "owner": "CALayer",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Branding.x",
+      "class": "NSBundle",
+      "selector": "-localizedStringForKey:value:table:",
+      "return": "NSString*",
+      "args": "localizedStringForKey:(NSString*)key\n                             value:(NSString*)value\n                             table:(NSString*)tableName",
+      "status": "system-runtime",
+      "owner": "NSBundle",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Branding.x",
+      "class": "TFNAttributedTextView",
+      "selector": "-setTextModel:",
+      "return": "void",
+      "args": "setTextModel:(TFNAttributedTextModel*)model",
+      "status": "present",
+      "owner": "TFNAttributedTextView",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 13301908
+      }
+    },
+    {
+      "file": "src/Hooks/Branding.x",
+      "class": "TUIUpdateIndicator",
+      "selector": "-_recreatePillControlForContentNotification:hideOnScroll:",
+      "return": "void",
+      "args": "_recreatePillControlForContentNotification:(id)notification\n                                      hideOnScroll:(BOOL)hideOnScroll",
+      "status": "present",
+      "owner": "TUIUpdateIndicator",
+      "native": {
+        "types": "v28@0:8@16B24",
+        "address": 4297256684
+      }
+    },
+    {
+      "file": "src/Hooks/CompatibilityLogin.x",
+      "class": "T1HostViewController",
+      "selector": "-makeOnboardingViewControllerWithCompletion:",
+      "return": "void",
+      "args": "makeOnboardingViewControllerWithCompletion:\n    (void (^)(UIViewController* controller))completion",
+      "status": "present",
+      "owner": "T1HostViewController",
+      "native": {
+        "types": "v24@0:8@?16",
+        "address": 1245352
+      }
+    },
+    {
+      "file": "src/Hooks/CompatibilityLogin.x",
+      "class": "T1AccountsViewController",
+      "selector": "-viewWillAppear:",
+      "return": "void",
+      "args": "viewWillAppear:(BOOL)animated",
+      "status": "present",
+      "owner": "T1AccountsViewController",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 1089640
+      }
+    },
+    {
+      "file": "src/Hooks/CompatibilityLogin.x",
+      "class": "T1AccountsViewController",
+      "selector": "-viewDidAppear:",
+      "return": "void",
+      "args": "viewDidAppear:(BOOL)animated",
+      "status": "present",
+      "owner": "TFNDataViewController",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 13490452
+      }
+    },
+    {
+      "file": "src/Hooks/Confirmations.x",
+      "class": "T1TweetComposeViewController",
+      "selector": "-_t1_didTapSendButton:",
+      "return": "void",
+      "args": "_t1_didTapSendButton:(__unsafe_unretained UIButton*)sendButton",
+      "status": "present",
+      "owner": "T1TweetComposeViewController",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 369212
+      }
+    },
+    {
+      "file": "src/Hooks/Confirmations.x",
+      "class": "TUIFollowControl",
+      "selector": "-_followUser:event:",
+      "return": "void",
+      "args": "_followUser:(id)sender event:(id)event",
+      "status": "present",
+      "owner": "TUIFollowControl",
+      "native": {
+        "types": "v32@0:8@16@24",
+        "address": 4297274472
+      }
+    },
+    {
+      "file": "src/Hooks/Confirmations.x",
+      "class": "TTAStatusInlineActionButton",
+      "selector": "-didTap",
+      "return": "void",
+      "args": "didTap",
+      "status": "present",
+      "owner": "TTAStatusInlineActionButton",
+      "native": {
+        "types": "v16@0:8",
+        "address": 46289912
+      }
+    },
+    {
+      "file": "src/Hooks/Confirmations.x",
+      "class": "_TtC14T1TwitterSwift32ImmersiveDoubleTapLikePluginView",
+      "selector": "-handleDoubleTap:",
+      "return": "void",
+      "args": "handleDoubleTap:(id)gesture",
+      "status": "present",
+      "owner": "_TtC14T1TwitterSwift32ImmersiveDoubleTapLikePluginView",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 7496764
+      }
+    },
+    {
+      "file": "src/Hooks/Confirmations.x",
+      "class": "T1UndoSendConfig",
+      "selector": "-hasAccessToUndoSend",
+      "return": "BOOL",
+      "args": "hasAccessToUndoSend",
+      "status": "present",
+      "owner": "T1UndoSendConfig",
+      "native": {
+        "types": "B16@0:8",
+        "address": 12797412
+      }
+    },
+    {
+      "file": "src/Hooks/Confirmations.x",
+      "class": "T1UndoSendConfig",
+      "selector": "-undoTimeInterval",
+      "return": "double",
+      "args": "undoTimeInterval",
+      "status": "present",
+      "owner": "T1UndoSendConfig",
+      "native": {
+        "types": "d16@0:8",
+        "address": 12798260
+      }
+    },
+    {
+      "file": "src/Hooks/Confirmations.x",
+      "class": "T1UndoSendConfig",
+      "selector": "-isUndoSendTurnedOnForOriginalTweets",
+      "return": "BOOL",
+      "args": "isUndoSendTurnedOnForOriginalTweets",
+      "status": "present",
+      "owner": "T1UndoSendConfig",
+      "native": {
+        "types": "B16@0:8",
+        "address": 12797596
+      }
+    },
+    {
+      "file": "src/Hooks/Confirmations.x",
+      "class": "T1UndoSendConfig",
+      "selector": "-isUndoSendTurnedOnForReplyTweets",
+      "return": "BOOL",
+      "args": "isUndoSendTurnedOnForReplyTweets",
+      "status": "present",
+      "owner": "T1UndoSendConfig",
+      "native": {
+        "types": "B16@0:8",
+        "address": 12797524
+      }
+    },
+    {
+      "file": "src/Hooks/Confirmations.x",
+      "class": "T1UndoSendConfig",
+      "selector": "-isUndoSendTurnedOnForQuoteTweets",
+      "return": "BOOL",
+      "args": "isUndoSendTurnedOnForQuoteTweets",
+      "status": "present",
+      "owner": "T1UndoSendConfig",
+      "native": {
+        "types": "B16@0:8",
+        "address": 12797740
+      }
+    },
+    {
+      "file": "src/Hooks/Confirmations.x",
+      "class": "T1UndoSendConfig",
+      "selector": "-isUndoSendTurnedOnForTweetstormTweets",
+      "return": "BOOL",
+      "args": "isUndoSendTurnedOnForTweetstormTweets",
+      "status": "present",
+      "owner": "T1UndoSendConfig",
+      "native": {
+        "types": "B16@0:8",
+        "address": 12797668
+      }
+    },
+    {
+      "file": "src/Hooks/Confirmations.x",
+      "class": "T1UndoSendConfig",
+      "selector": "-isUndoSendTurnedOnForPollTweets",
+      "return": "BOOL",
+      "args": "isUndoSendTurnedOnForPollTweets",
+      "status": "present",
+      "owner": "T1UndoSendConfig",
+      "native": {
+        "types": "B16@0:8",
+        "address": 12798092
+      }
+    },
+    {
+      "file": "src/Hooks/Confirmations.x",
+      "class": "TFNTwitterComposition",
+      "selector": "-undoTimeInterval",
+      "return": "double",
+      "args": "undoTimeInterval",
+      "status": "present",
+      "owner": "TFNTwitterComposition",
+      "native": {
+        "types": "d16@0:8",
+        "address": 10375528
+      }
+    },
+    {
+      "file": "src/Hooks/Confirmations.x",
+      "class": "TFNTwitterComposition",
+      "selector": "-undoableSendDate",
+      "return": "NSDate*",
+      "args": "undoableSendDate",
+      "status": "present",
+      "owner": "TFNTwitterComposition",
+      "native": {
+        "types": "@16@0:8",
+        "address": 10361336
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSFeatureSwitches",
+      "selector": "-boolForKey:",
+      "return": "BOOL",
+      "args": "boolForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSFeatureSwitches",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 4295839704
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSFeatureSwitches",
+      "selector": "-integerForKey:",
+      "return": "NSInteger",
+      "args": "integerForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSFeatureSwitches",
+      "native": {
+        "types": "q24@0:8@16",
+        "address": 4295839948
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSFeatureSwitches",
+      "selector": "-numberForKey:",
+      "return": "NSNumber*",
+      "args": "numberForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSFeatureSwitches",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 4295840024
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSFeatureSwitches",
+      "selector": "-rawValueForKey:",
+      "return": "id",
+      "args": "rawValueForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSFeatureSwitches",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 4295840276
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSFeatureSwitches",
+      "selector": "-unsafePeekBoolForKey:",
+      "return": "BOOL",
+      "args": "unsafePeekBoolForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSFeatureSwitches",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 4295841236
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSFeatureSwitches",
+      "selector": "-unsafePeekIntegerForKey:",
+      "return": "NSInteger",
+      "args": "unsafePeekIntegerForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSFeatureSwitches",
+      "native": {
+        "types": "q24@0:8@16",
+        "address": 4295840676
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSFeatureSwitches",
+      "selector": "-hasNonDefaultValueForKey:",
+      "return": "BOOL",
+      "args": "hasNonDefaultValueForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSFeatureSwitches",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 4295841476
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSInstrumentedFeatureSwitches",
+      "selector": "-boolForKey:",
+      "return": "BOOL",
+      "args": "boolForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSInstrumentedFeatureSwitches",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 4295877320
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSInstrumentedFeatureSwitches",
+      "selector": "-integerForKey:",
+      "return": "NSInteger",
+      "args": "integerForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSInstrumentedFeatureSwitches",
+      "native": {
+        "types": "q24@0:8@16",
+        "address": 4295877564
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSInstrumentedFeatureSwitches",
+      "selector": "-numberForKey:",
+      "return": "NSNumber*",
+      "args": "numberForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSInstrumentedFeatureSwitches",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 4295877640
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSInstrumentedFeatureSwitches",
+      "selector": "-rawValueForKey:",
+      "return": "id",
+      "args": "rawValueForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSInstrumentedFeatureSwitches",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 4295878368
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSInstrumentedFeatureSwitches",
+      "selector": "-unsafePeekBoolForKey:",
+      "return": "BOOL",
+      "args": "unsafePeekBoolForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSInstrumentedFeatureSwitches",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 4295879080
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSInstrumentedFeatureSwitches",
+      "selector": "-unsafePeekIntegerForKey:",
+      "return": "NSInteger",
+      "args": "unsafePeekIntegerForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSInstrumentedFeatureSwitches",
+      "native": {
+        "types": "q24@0:8@16",
+        "address": 4295878452
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSInstrumentedFeatureSwitches",
+      "selector": "-hasNonDefaultValueForKey:",
+      "return": "BOOL",
+      "args": "hasNonDefaultValueForKey:(NSString*)key",
+      "status": "present",
+      "owner": "TFSInstrumentedFeatureSwitches",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 4295877724
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSAccountFeatureSwitches",
+      "selector": "+isShowsVerticalScrollIndicatorEnabled",
+      "return": "BOOL",
+      "args": "isShowsVerticalScrollIndicatorEnabled",
+      "status": "present",
+      "owner": "TFSAccountFeatureSwitches",
+      "native": {
+        "types": "B16@0:8",
+        "address": 14696496
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSAccountFeatureSwitches",
+      "selector": "-isSubscriptionsSettingsItemEnabledWithProvider:",
+      "return": "BOOL",
+      "args": "isSubscriptionsSettingsItemEnabledWithProvider:(id)provider",
+      "status": "present",
+      "owner": "TFSAccountFeatureSwitches",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 10767328
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSAccountFeatureSwitches",
+      "selector": "-birdwatchHomePageIsEnabled",
+      "return": "BOOL",
+      "args": "birdwatchHomePageIsEnabled",
+      "status": "present",
+      "owner": "TFSAccountFeatureSwitches",
+      "native": {
+        "types": "B16@0:8",
+        "address": 11406608
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSAccountFeatureSwitches",
+      "selector": "-birdwatchHistoryIsEnabled",
+      "return": "BOOL",
+      "args": "birdwatchHistoryIsEnabled",
+      "status": "present",
+      "owner": "TFSAccountFeatureSwitches",
+      "native": {
+        "types": "B16@0:8",
+        "address": 11406472
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSAccountFeatureSwitches",
+      "selector": "-isVideoCacheEnabled",
+      "return": "BOOL",
+      "args": "isVideoCacheEnabled",
+      "status": "present",
+      "owner": "TFSAccountFeatureSwitches",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10519076
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "T1ImageDisplayView",
+      "selector": "-_tfn_shouldUseHighestQualityImage",
+      "return": "BOOL",
+      "args": "_tfn_shouldUseHighestQualityImage",
+      "status": "present",
+      "owner": "T1ImageDisplayView",
+      "native": {
+        "types": "B16@0:8",
+        "address": 3814204
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "T1ImageDisplayView",
+      "selector": "-_tfn_shouldUseHighQualityImage",
+      "return": "BOOL",
+      "args": "_tfn_shouldUseHighQualityImage",
+      "status": "present",
+      "owner": "T1ImageDisplayView",
+      "native": {
+        "types": "B16@0:8",
+        "address": 3814064
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSTwitterEntityMediaVideoInfo",
+      "selector": "-variants",
+      "return": "NSArray*",
+      "args": "variants",
+      "status": "present",
+      "owner": "TFSTwitterEntityMediaVideoInfo",
+      "native": {
+        "types": "@16@0:8",
+        "address": 39598956
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFSTwitterEntityMediaVideoInfo",
+      "selector": "-primaryUrl",
+      "return": "NSString*",
+      "args": "primaryUrl",
+      "status": "present",
+      "owner": "TFSTwitterEntityMediaVideoInfo",
+      "native": {
+        "types": "@16@0:8",
+        "address": 39602144
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFNTwitterAPICommandContext",
+      "selector": "-allowPromotedContent",
+      "return": "BOOL",
+      "args": "allowPromotedContent",
+      "status": "present",
+      "owner": "TFNTwitterAPICommandContext",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10262324
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFNTwitterAccount",
+      "selector": "-isSensitiveTweetWarningsComposeEnabled",
+      "return": "BOOL",
+      "args": "isSensitiveTweetWarningsComposeEnabled",
+      "status": "present",
+      "owner": "TFNTwitterAccount",
+      "native": {
+        "types": "B16@0:8",
+        "address": 1078076
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFNTwitterAccount",
+      "selector": "-isSensitiveTweetWarningsConsumeEnabled",
+      "return": "BOOL",
+      "args": "isSensitiveTweetWarningsConsumeEnabled",
+      "status": "present",
+      "owner": "TFNTwitterAccount",
+      "native": {
+        "types": "B16@0:8",
+        "address": 1078008
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFNTwitterAccount",
+      "selector": "-isAgeAssuranceAgeVerificationFlowEnabled",
+      "return": "BOOL",
+      "args": "isAgeAssuranceAgeVerificationFlowEnabled",
+      "status": "present",
+      "owner": "TFNTwitterAccount",
+      "native": {
+        "types": "B16@0:8",
+        "address": 7337788
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFNTwitterAccount",
+      "selector": "-isVideoDynamicAdEnabled",
+      "return": "BOOL",
+      "args": "isVideoDynamicAdEnabled",
+      "status": "present",
+      "owner": "TFNTwitterAccount",
+      "native": {
+        "types": "B16@0:8",
+        "address": 4962808
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFNTwitterAccount",
+      "selector": "-isDoubleMaxZoomFor4KImagesEnabled",
+      "return": "BOOL",
+      "args": "isDoubleMaxZoomFor4KImagesEnabled",
+      "status": "present",
+      "owner": "TFNTwitterAccount",
+      "native": {
+        "types": "B16@0:8",
+        "address": 1881620
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFNTwitterAccount",
+      "selector": "-photoUploadHighQualityImagesSettingIsVisible",
+      "return": "BOOL",
+      "args": "photoUploadHighQualityImagesSettingIsVisible",
+      "status": "present",
+      "owner": "TFNTwitterAccount",
+      "native": {
+        "types": "B16@0:8",
+        "address": 9734060
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFNTwitterAccount",
+      "selector": "-isLoadingHighestQualityImageVariantPermitted",
+      "return": "BOOL",
+      "args": "isLoadingHighestQualityImageVariantPermitted",
+      "status": "present",
+      "owner": "TFNTwitterAccount",
+      "native": {
+        "types": "B16@0:8",
+        "address": 1059540
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFNTwitterAccount",
+      "selector": "-canAccessXPayments",
+      "return": "BOOL",
+      "args": "canAccessXPayments",
+      "status": "present",
+      "owner": "TFNTwitterAccount",
+      "native": {
+        "types": "B16@0:8",
+        "address": 9783508
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "T1DashContentController",
+      "selector": "-initWithAccount:interactionsTimelineBridge:",
+      "return": "id",
+      "args": "initWithAccount:(id)account\n    interactionsTimelineBridge:(id)interactionsTimelineBridge",
+      "status": "present",
+      "owner": "T1DashContentController",
+      "native": {
+        "types": "@32@0:8@16@24",
+        "address": 8545856
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "T1DashContentController",
+      "selector": "-updateVisiblePanelIDs",
+      "return": "void",
+      "args": "updateVisiblePanelIDs",
+      "status": "present",
+      "owner": "T1DashContentController",
+      "native": {
+        "types": "v16@0:8",
+        "address": 8550024
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "T1DashNavigationViewFactory",
+      "selector": "+buildDashViewControllerForAccount:dashContentController:",
+      "return": "id",
+      "args": "buildDashViewControllerForAccount:(id)account\n                  dashContentController:(id)dashContentController",
+      "status": "present",
+      "owner": "T1DashNavigationViewFactory",
+      "native": {
+        "types": "@32@0:8@16@24",
+        "address": 8637852
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "T1TabbedAppNavigationViewController",
+      "selector": "-visiblePanelIDsForAppNavigation:",
+      "return": "NSArray*",
+      "args": "visiblePanelIDsForAppNavigation:(id)appNavigation",
+      "status": "present",
+      "owner": "T1TabbedAppNavigationViewController",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 487664
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "T1TweetComposeViewController",
+      "selector": "-photoEditorCanEditWithGrok:",
+      "return": "BOOL",
+      "args": "photoEditorCanEditWithGrok:(id)photoEditor",
+      "status": "present",
+      "owner": "T1TweetComposeViewController",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 417932
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "T1StatusPhotoEditorHandler",
+      "selector": "-photoEditorCanEditWithGrok:",
+      "return": "BOOL",
+      "args": "photoEditorCanEditWithGrok:(id)photoEditor",
+      "status": "present",
+      "owner": "T1StatusPhotoEditorHandler",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 2209364
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFNTwitterStatus",
+      "selector": "-hasImageInterstitial",
+      "return": "BOOL",
+      "args": "hasImageInterstitial",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "B16@0:8",
+        "address": 9984960
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFNTwitterStatus",
+      "selector": "-imageInterstitial",
+      "return": "id",
+      "args": "imageInterstitial",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "@16@0:8",
+        "address": 10031648
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "TFNTwitterStatus",
+      "selector": "-innerImageInterstitial",
+      "return": "id",
+      "args": "innerImageInterstitial",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "@16@0:8",
+        "address": 10031704
+      }
+    },
+    {
+      "file": "src/Hooks/FeatureSwitches.x",
+      "class": "HFHealthSafetyFeature",
+      "selector": "+isTweetMedialInterstitialEnabled:",
+      "return": "BOOL",
+      "args": "isTweetMedialInterstitialEnabled:(id)featureSwitches",
+      "status": "present",
+      "owner": "HFHealthSafetyFeature",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 4295738096
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "TFSTwitterUser",
+      "selector": "-isBlueVerified",
+      "return": "id",
+      "args": "isBlueVerified",
+      "status": "present",
+      "owner": "TFSTwitterUser",
+      "native": {
+        "types": "@16@0:8",
+        "address": 43219236
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "TFSTwitterUser",
+      "selector": "-verified",
+      "return": "BOOL",
+      "args": "verified",
+      "status": "present",
+      "owner": "TFSTwitterUser",
+      "native": {
+        "types": "B16@0:8",
+        "address": 43219196
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "_TtC14T1TwitterSwift27TrendsSidebarViewController",
+      "selector": "-viewDidAppear:",
+      "return": "void",
+      "args": "viewDidAppear:(BOOL)animated",
+      "status": "present",
+      "owner": "TFNViewController",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 14673796
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "T1UserRecommendationsViewController",
+      "selector": "-viewDidAppear:",
+      "return": "void",
+      "args": "viewDidAppear:(BOOL)animated",
+      "status": "present",
+      "owner": "TFNDataViewController",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 13490452
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "TFSTwitterUserSource",
+      "selector": "-isBlueVerified",
+      "return": "id",
+      "args": "isBlueVerified",
+      "status": "present",
+      "owner": "TFSTwitterUserSource",
+      "native": {
+        "types": "@16@0:8",
+        "address": 43574052
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "TFSTwitterUserSource",
+      "selector": "-verified",
+      "return": "BOOL",
+      "args": "verified",
+      "status": "present",
+      "owner": "TFSTwitterUserSource",
+      "native": {
+        "types": "B16@0:8",
+        "address": 43573980
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "TFSTwitterTypeaheadUser",
+      "selector": "-isBlueVerified",
+      "return": "id",
+      "args": "isBlueVerified",
+      "status": "present",
+      "owner": "TFSTwitterTypeaheadUser",
+      "native": {
+        "types": "@16@0:8",
+        "address": 40922724
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "TFSTwitterTypeaheadUser",
+      "selector": "-verified",
+      "return": "BOOL",
+      "args": "verified",
+      "status": "present",
+      "owner": "TFSTwitterTypeaheadUser",
+      "native": {
+        "types": "B16@0:8",
+        "address": 40922692
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "TFSDirectMessageUser",
+      "selector": "-isBlueVerified",
+      "return": "id",
+      "args": "isBlueVerified",
+      "status": "present",
+      "owner": "TFSDirectMessageUser",
+      "native": {
+        "types": "@16@0:8",
+        "address": 39341320
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "TFSDirectMessageUser",
+      "selector": "-verified",
+      "return": "BOOL",
+      "args": "verified",
+      "status": "present",
+      "owner": "TFSDirectMessageUser",
+      "native": {
+        "types": "B16@0:8",
+        "address": 39341288
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "T1TwitterCoreStatusViewModelAdapter",
+      "selector": "-isFromUserBlueVerified",
+      "return": "BOOL",
+      "args": "isFromUserBlueVerified",
+      "status": "present",
+      "owner": "T1TwitterCoreStatusViewModelAdapter",
+      "native": {
+        "types": "B16@0:8",
+        "address": 14550212
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "T1TwitterCoreStatusViewModelAdapter",
+      "selector": "-isFromUserVerified",
+      "return": "BOOL",
+      "args": "isFromUserVerified",
+      "status": "present",
+      "owner": "T1TwitterCoreStatusViewModelAdapter",
+      "native": {
+        "types": "B16@0:8",
+        "address": 14550000
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "TTSRecentSearchesDatastore",
+      "selector": "-_tse_setRecentSearch:",
+      "return": "void",
+      "args": "_tse_setRecentSearch:(__unsafe_unretained id)item",
+      "status": "present",
+      "owner": "TTSRecentSearchesDatastore",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 10772328
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "TTSRecentSearchesDatastore",
+      "selector": "-recentSearches",
+      "return": "NSArray*",
+      "args": "recentSearches",
+      "status": "present",
+      "owner": "TTSRecentSearchesDatastore",
+      "native": {
+        "types": "@16@0:8",
+        "address": 10770632
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "_TtC14T1TwitterSwift28GuideContainerViewController",
+      "selector": "-viewDidLoad",
+      "return": "void",
+      "args": "viewDidLoad",
+      "status": "present",
+      "owner": "_TtC14T1TwitterSwift28GuideContainerViewController",
+      "native": {
+        "types": "v16@0:8",
+        "address": 9664532
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "_TtC14T1TwitterSwift28GuideContainerViewController",
+      "selector": "-tfn_navigationBarAccessoryView",
+      "return": "UIView*",
+      "args": "tfn_navigationBarAccessoryView",
+      "status": "present",
+      "owner": "_TtC14T1TwitterSwift28GuideContainerViewController",
+      "native": {
+        "types": "@16@0:8",
+        "address": 9664712
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "TFSTwitterRelationship",
+      "selector": "-superFollowEligibleState",
+      "return": "NSInteger",
+      "args": "superFollowEligibleState",
+      "status": "present",
+      "owner": "TFSTwitterRelationship",
+      "native": {
+        "types": "q16@0:8",
+        "address": 40205796
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "TTAStatusAuthorView",
+      "selector": "-setFollowControlHidden:",
+      "return": "void",
+      "args": "setFollowControlHidden:(BOOL)hidden",
+      "status": "present",
+      "owner": "TTAStatusAuthorView",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 46247776
+      }
+    },
+    {
+      "file": "src/Hooks/HideUI.x",
+      "class": "TTAStatusInlineActionsView",
+      "selector": "+_t1_inlineActionViewClassesForViewModel:options:displayType:account:",
+      "return": "NSArray*",
+      "args": "_t1_inlineActionViewClassesForViewModel:(id)arg1\n                                            options:(NSUInteger)arg2\n                                        displayType:(NSUInteger)arg3\n                                            account:(id)arg4",
+      "status": "present",
+      "owner": "TTAStatusInlineActionsView",
+      "native": {
+        "types": "@48@0:8@16Q24q32@40",
+        "address": 46308808
+      }
+    },
+    {
+      "file": "src/Hooks/ImmersivePlayer.x",
+      "class": "_TtC14T1TwitterSwift32ImmersiveProgressLabelPluginView",
+      "selector": "-setAlpha:",
+      "return": "void",
+      "args": "setAlpha:(CGFloat)alpha",
+      "status": "system-runtime",
+      "owner": "UIView",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/ImmersivePlayer.x",
+      "class": "T1ImmersiveViewController",
+      "selector": "-gestureRecognizerShouldBegin:",
+      "return": "BOOL",
+      "args": "gestureRecognizerShouldBegin:(UIGestureRecognizer*)gesture",
+      "status": "present",
+      "owner": "T1ImmersiveViewController",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 9143664
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "selector": "-numberOfTabsIn:",
+      "return": "NSInteger",
+      "args": "numberOfTabsIn:(id)segmentedController",
+      "status": "present",
+      "owner": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "native": {
+        "types": "q24@0:8@16",
+        "address": 50231392
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "selector": "-segmentedViewController:pageViewControllerAtIndex:",
+      "return": "UIViewController*",
+      "args": "segmentedViewController:(id)controller\n                      pageViewControllerAtIndex:(NSInteger)index",
+      "status": "present",
+      "owner": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "native": {
+        "types": "@32@0:8@16q24",
+        "address": 50231572
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "selector": "-segmentedViewController:descriptorAtIndex:",
+      "return": "id",
+      "args": "segmentedViewController:(id)controller\n             descriptorAtIndex:(NSInteger)index",
+      "status": "present",
+      "owner": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "native": {
+        "types": "@32@0:8@16q24",
+        "address": 50231732
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "selector": "-segmentedViewController:willSelectViewController:atIndex:indexChanged:",
+      "return": "void",
+      "args": "segmentedViewController:(id)controller\n          willSelectViewController:(UIViewController*)viewController\n                           atIndex:(NSInteger)index\n                      indexChanged:(BOOL)indexChanged",
+      "status": "present",
+      "owner": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "native": {
+        "types": "v44@0:8@16@24q32B40",
+        "address": 50231860
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "selector": "-segmentedViewController:didSelectViewController:atIndex:previousIndex:trigger:",
+      "return": "void",
+      "args": "segmentedViewController:(id)controller\n           didSelectViewController:(UIViewController*)viewController\n                           atIndex:(NSInteger)index\n                     previousIndex:(NSInteger)previousIndex\n                           trigger:(NSInteger)trigger",
+      "status": "present",
+      "owner": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "native": {
+        "types": "v56@0:8@16@24q32q40q48",
+        "address": 50231944
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "selector": "-segmentedViewController:didScrollToFractionalIndex:",
+      "return": "void",
+      "args": "segmentedViewController:(id)controller\n        didScrollToFractionalIndex:(double)index",
+      "status": "present",
+      "owner": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "native": {
+        "types": "v32@0:8@16d24",
+        "address": 50232076
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "selector": "-segmentedViewController:didTapTabAtIndex:",
+      "return": "void",
+      "args": "segmentedViewController:(id)controller\n                  didTapTabAtIndex:(NSInteger)index",
+      "status": "present",
+      "owner": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "native": {
+        "types": "v32@0:8@16q24",
+        "address": 50232176
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "selector": "-segmentedViewController:didLongPressAtIndex:",
+      "return": "void",
+      "args": "segmentedViewController:(id)controller\n                didLongPressAtIndex:(NSInteger)index",
+      "status": "present",
+      "owner": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "native": {
+        "types": "v32@0:8@16q24",
+        "address": 50232320
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "selector": "-viewDidLoad",
+      "return": "void",
+      "args": "viewDidLoad",
+      "status": "present",
+      "owner": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "native": {
+        "types": "v16@0:8",
+        "address": 50214544
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "selector": "-viewDidAppear:",
+      "return": "void",
+      "args": "viewDidAppear:(BOOL)animated",
+      "status": "present",
+      "owner": "_TtC16XActivityHistory38ActivityHistoryContainerViewController",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 50214820
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC14T1TwitterSwift30BookmarksAppNavigationTabEntry",
+      "selector": "-contentControllerFactory",
+      "return": "id",
+      "args": "contentControllerFactory",
+      "status": "present",
+      "owner": "_TtC14T1TwitterSwift30BookmarksAppNavigationTabEntry",
+      "native": {
+        "types": "@16@0:8",
+        "address": 18548168
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC14T1TwitterSwift30BookmarksAppNavigationTabEntry",
+      "selector": "-createContentController",
+      "return": "UIViewController*",
+      "args": "createContentController",
+      "status": "present",
+      "owner": "_TtC14T1TwitterSwift30BookmarksAppNavigationTabEntry",
+      "native": {
+        "types": "@16@0:8",
+        "address": 18548172
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC14T1TwitterSwift30BookmarksAppNavigationTabEntry",
+      "selector": "-rootTabViewController",
+      "return": "UIViewController*",
+      "args": "rootTabViewController",
+      "status": "present",
+      "owner": "_TtC14T1TwitterSwift30BookmarksAppNavigationTabEntry",
+      "native": {
+        "types": "@16@0:8",
+        "address": 18548776
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC14T1TwitterSwift29BookmarksNavigationController",
+      "selector": "-initWithAccount:tabView:",
+      "return": "id",
+      "args": "initWithAccount:(id)account tabView:(T1TabView*)tabView",
+      "status": "present",
+      "owner": "_TtC14T1TwitterSwift29BookmarksNavigationController",
+      "native": {
+        "types": "@32@0:8@16@24",
+        "address": 18549372
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC14T1TwitterSwift29BookmarksNavigationController",
+      "selector": "-viewDidLoad",
+      "return": "void",
+      "args": "viewDidLoad",
+      "status": "present",
+      "owner": "TFNNavigationController",
+      "native": {
+        "types": "v16@0:8",
+        "address": 14277316
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "_TtC14T1TwitterSwift29BookmarksNavigationController",
+      "selector": "-viewWillAppear:",
+      "return": "void",
+      "args": "viewWillAppear:(BOOL)animated",
+      "status": "present",
+      "owner": "TFNNavigationController",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 14278912
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "TFNItemsDataViewController",
+      "selector": "-setSections:restoreScrollPosition:",
+      "return": "void",
+      "args": "setSections:(NSArray*)sections restoreScrollPosition:(BOOL)restoreScrollPosition",
+      "status": "present",
+      "owner": "TFNItemsDataViewController",
+      "native": {
+        "types": "v28@0:8@16B24",
+        "address": 13881704
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "TFNItemsDataViewController",
+      "selector": "-updateSections:reconfigureItemIdentifiers:withRowAnimation:completion:",
+      "return": "void",
+      "args": "updateSections:(NSArray*)sections\n    reconfigureItemIdentifiers:(NSArray*)identifiers\n              withRowAnimation:(long long)animation\n                    completion:(id)completion",
+      "status": "present",
+      "owner": "TFNItemsDataViewController",
+      "native": {
+        "types": "v48@0:8@16@24q32@?40",
+        "address": 13889996
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "T1TabView",
+      "selector": "-title",
+      "return": "NSString*",
+      "args": "title",
+      "status": "present",
+      "owner": "T1TabView",
+      "native": {
+        "types": "@16@0:8",
+        "address": 5031816
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "T1TabView",
+      "selector": "-imageName",
+      "return": "NSString*",
+      "args": "imageName",
+      "status": "present",
+      "owner": "T1TabView",
+      "native": {
+        "types": "@16@0:8",
+        "address": 5045964
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "T1TabView",
+      "selector": "-_t1_updateTitleLabel",
+      "return": "void",
+      "args": "_t1_updateTitleLabel",
+      "status": "present",
+      "owner": "T1TabView",
+      "native": {
+        "types": "v16@0:8",
+        "address": 5033504
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "T1TabView",
+      "selector": "-_t1_updateImageViewAnimated:",
+      "return": "void",
+      "args": "_t1_updateImageViewAnimated:(BOOL)animated",
+      "status": "present",
+      "owner": "T1TabView",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 5033892
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "T1TabView",
+      "selector": "-setSelected:",
+      "return": "void",
+      "args": "setSelected:(BOOL)selected",
+      "status": "present",
+      "owner": "T1TabView",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 5033368
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "T1TabView",
+      "selector": "-layoutSubviews",
+      "return": "void",
+      "args": "layoutSubviews",
+      "status": "present",
+      "owner": "T1TabView",
+      "native": {
+        "types": "v16@0:8",
+        "address": 5042360
+      }
+    },
+    {
+      "file": "src/Hooks/Likes.x",
+      "class": "T1TabBarViewController",
+      "selector": "-viewDidLayoutSubviews",
+      "return": "void",
+      "args": "viewDidLayoutSubviews",
+      "status": "system-runtime",
+      "owner": "UIViewController",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "_TtC21TweetMediaAttachments14MultiMediaView",
+      "selector": "-layoutSubviews",
+      "return": "void",
+      "args": "layoutSubviews",
+      "status": "present",
+      "owner": "_TtC21TweetMediaAttachments14MultiMediaView",
+      "native": {
+        "types": "v16@0:8",
+        "address": 45184184
+      }
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "_TtC21TweetMediaAttachments14MultiMediaView",
+      "selector": "-bhtHandleVideoDownloadLongPress:",
+      "return": "void",
+      "args": "bhtHandleVideoDownloadLongPress:\n    (UILongPressGestureRecognizer*)recognizer",
+      "status": "new",
+      "owner": "UIView",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "_TtC21TweetMediaAttachments22MultiMediaCarouselView",
+      "selector": "-layoutSubviews",
+      "return": "void",
+      "args": "layoutSubviews",
+      "status": "present",
+      "owner": "_TtC21TweetMediaAttachments22MultiMediaCarouselView",
+      "native": {
+        "types": "v16@0:8",
+        "address": 45166752
+      }
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "_TtC21TweetMediaAttachments22MultiMediaCarouselView",
+      "selector": "-bhtHandleCarouselDownloadLongPress:",
+      "return": "void",
+      "args": "bhtHandleCarouselDownloadLongPress:\n    (UILongPressGestureRecognizer*)recognizer",
+      "status": "new",
+      "owner": "UIView",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "T1InlineMediaView",
+      "selector": "-layoutSubviews",
+      "return": "void",
+      "args": "layoutSubviews",
+      "status": "present",
+      "owner": "T1InlineMediaView",
+      "native": {
+        "types": "v16@0:8",
+        "address": 2824236
+      }
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "T1InlineMediaView",
+      "selector": "-bhtHandleInlineVideoDownloadLongPress:",
+      "return": "void",
+      "args": "bhtHandleInlineVideoDownloadLongPress:\n    (UILongPressGestureRecognizer*)recognizer",
+      "status": "new",
+      "owner": "UIView",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "TFSTwitterEntityMedia",
+      "selector": "-allowDownload",
+      "return": "BOOL",
+      "args": "allowDownload",
+      "status": "present",
+      "owner": "TFSTwitterEntityMedia",
+      "native": {
+        "types": "B16@0:8",
+        "address": 39468688
+      }
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "T1VideoDownloadViewModel",
+      "selector": "+makeVideDownloaderWithAccount:fromViewController:mediaEntity:statusViewModel:",
+      "return": "id",
+      "args": "makeVideDownloaderWithAccount:(id)account\n                 fromViewController:(UIViewController*)viewController\n                        mediaEntity:\n                            (TFSTwitterEntityMedia*)mediaEntity\n                    statusViewModel:(id)statusViewModel",
+      "status": "present",
+      "owner": "T1VideoDownloadViewModel",
+      "native": {
+        "types": "@48@0:8@16@24@32@40",
+        "address": 6481024
+      }
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "T1VideoDownloadViewModel",
+      "selector": "-tappedDownload",
+      "return": "void",
+      "args": "tappedDownload",
+      "status": "present",
+      "owner": "T1VideoDownloadViewModel",
+      "native": {
+        "types": "v16@0:8",
+        "address": 6482968
+      }
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "_TtC16ChatConversation21MessageAttachmentView",
+      "selector": "-layoutSubviews",
+      "return": "void",
+      "args": "layoutSubviews",
+      "status": "present",
+      "owner": "_TtC16ChatConversation21MessageAttachmentView",
+      "native": {
+        "types": "v16@0:8",
+        "address": 9764456
+      }
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "_TtC16ChatConversation21MessageAttachmentView",
+      "selector": "-contextMenuInteraction:configurationForMenuAtLocation:",
+      "return": "UIContextMenuConfiguration*",
+      "args": "contextMenuInteraction:(UIContextMenuInteraction*)interaction\n                       configurationForMenuAtLocation:(CGPoint)location",
+      "status": "new",
+      "owner": "UIView",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "T1MediaAttachmentsViewCell",
+      "selector": "-updateCellElements",
+      "return": "void",
+      "args": "updateCellElements",
+      "status": "present",
+      "owner": "T1MediaAttachmentsViewCell",
+      "native": {
+        "types": "v16@0:8",
+        "address": 152800
+      }
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "T1MediaAttachmentsViewCell",
+      "selector": "-handleUploadButton:",
+      "return": "void",
+      "args": "handleUploadButton:(UIButton*)sender",
+      "status": "new",
+      "owner": "UICollectionViewCell",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "T1MediaAttachmentsViewCell",
+      "selector": "-imagePickerController:didFinishPickingMediaWithInfo:",
+      "return": "void",
+      "args": "imagePickerController:(UIImagePickerController*)picker\n    didFinishPickingMediaWithInfo:(NSDictionary<UIImagePickerControllerInfoKey, id>*)info",
+      "status": "new",
+      "owner": "UICollectionViewCell",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "T1MediaAttachmentsViewCell",
+      "selector": "-imagePickerControllerDidCancel:",
+      "return": "void",
+      "args": "imagePickerControllerDidCancel:(UIImagePickerController*)picker",
+      "status": "new",
+      "owner": "UICollectionViewCell",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "TTAStatusInlineShareButton",
+      "selector": "-didLongPressActionButton:",
+      "return": "void",
+      "args": "didLongPressActionButton:(UILongPressGestureRecognizer*)gestureRecognizer",
+      "status": "present",
+      "owner": "TTAStatusInlineShareButton",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 46333752
+      }
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "UIViewController",
+      "selector": "-t1_mediaActivityViewActionItemsForStatus:account:image:mediaInfo:shortTitles:sourceView:",
+      "return": "NSArray*",
+      "args": "t1_mediaActivityViewActionItemsForStatus:(id)status\n                                             account:(id)account\n                                               image:(UIImage*)image\n                                           mediaInfo:(id)mediaInfo\n                                         shortTitles:(BOOL)shortTitles\n                                          sourceView:(UIView*)sourceView",
+      "status": "present",
+      "owner": "UIViewController",
+      "native": {
+        "types": "@60@0:8@16@24@32@40B48@52",
+        "address": 3208044
+      }
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "UIViewController",
+      "selector": "-t1_mediaActivityViewActionItemsForStatus:account:image:mediaInfo:shortTitles:",
+      "return": "NSArray*",
+      "args": "t1_mediaActivityViewActionItemsForStatus:(id)status\n                                             account:(id)account\n                                               image:(UIImage*)image\n                                           mediaInfo:(id)mediaInfo\n                                         shortTitles:(BOOL)shortTitles",
+      "status": "present",
+      "owner": "UIViewController",
+      "native": {
+        "types": "@52@0:8@16@24@32@40B48",
+        "address": 3208036
+      }
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "UIViewController",
+      "selector": "-_t1_actionItemsForStatus:account:shareableEntity:entityURL:source:options:scribeComponent:doneBlock:",
+      "return": "NSArray*",
+      "args": "_t1_actionItemsForStatus:(__unsafe_unretained id)status\n                             account:(__unsafe_unretained id)account\n                     shareableEntity:(__unsafe_unretained id)shareableEntity\n                           entityURL:(__unsafe_unretained id)entityURL\n                              source:(__unsafe_unretained id)source\n                             options:(NSUInteger)options\n                     scribeComponent:(__unsafe_unretained id)scribeComponent\n                           doneBlock:\n                               (void (^ __autoreleasing *)(void))doneBlock",
+      "status": "present",
+      "owner": "UIViewController",
+      "native": {
+        "types": "@80@0:8@16@24@32@40@48Q56@64N^@?72",
+        "address": 3168308
+      }
+    },
+    {
+      "file": "src/Hooks/MediaDownloads.x",
+      "class": "TFNPreviewConfiguration",
+      "selector": "+configurationWithPreviewViewControllerBlock:actionItems:sourceView:sourceRect:",
+      "return": "id",
+      "args": "configurationWithPreviewViewControllerBlock:\n          (UIViewController* (^)(void))previewViewControllerBlock\n                                      actionItems:\n                                          (__unsafe_unretained NSArray*)actionItems\n                                       sourceView:\n                                           (__unsafe_unretained UIView*)sourceView\n                                       sourceRect:(CGRect)sourceRect",
+      "status": "present",
+      "owner": "TFNPreviewConfiguration",
+      "native": {
+        "types": "@72@0:8@?16@24@32{CGRect={CGPoint=dd}{CGSize=dd}}40",
+        "address": 14388172
+      }
+    },
+    {
+      "file": "src/Hooks/Misc.x",
+      "class": "T1SafariViewController",
+      "selector": "-tfnPresentedCustomPresentFromViewController:animated:completion:",
+      "return": "void",
+      "args": "tfnPresentedCustomPresentFromViewController:(UIViewController*)fromViewController\n                                           animated:(BOOL)animated\n                                         completion:(void (^)(void))completion",
+      "status": "present",
+      "owner": "T1SafariViewController",
+      "native": {
+        "types": "v36@0:8@16B24@?28",
+        "address": 4112000
+      }
+    },
+    {
+      "file": "src/Hooks/Misc.x",
+      "class": "TUIFollowControlCustomScreenshot",
+      "selector": "-didMoveToWindow",
+      "return": "void",
+      "args": "didMoveToWindow",
+      "status": "system-runtime",
+      "owner": "UIView",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Misc.x",
+      "class": "SFSafariViewController",
+      "selector": "-viewWillAppear:",
+      "return": "void",
+      "args": "viewWillAppear:(BOOL)animated",
+      "status": "system-runtime",
+      "owner": "SFSafariViewController",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Misc.x",
+      "class": "TFSTwitterEntityURL",
+      "selector": "-url",
+      "return": "NSString*",
+      "args": "url",
+      "status": "present",
+      "owner": "TFSTwitterEntityURL",
+      "native": {
+        "types": "@16@0:8",
+        "address": 39706888
+      }
+    },
+    {
+      "file": "src/Hooks/Misc.x",
+      "class": "TFNAttributedTextModel",
+      "selector": "-setAttributedString:",
+      "return": "void",
+      "args": "setAttributedString:(NSAttributedString*)attributedString",
+      "status": "present",
+      "owner": "TFNAttributedTextModel",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 13287392
+      }
+    },
+    {
+      "file": "src/Hooks/Misc.x",
+      "class": "TFNTwitterStatus",
+      "selector": "-twitterURLForShareWithSParam:",
+      "return": "NSString*",
+      "args": "twitterURLForShareWithSParam:(unsigned int)sParam",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "@24@0:8Q16",
+        "address": 4856388
+      }
+    },
+    {
+      "file": "src/Hooks/Misc.x",
+      "class": "TFNTwitterStatus",
+      "selector": "+twitterURLForShareWithSParam:username:statusID:",
+      "return": "NSString*",
+      "args": "twitterURLForShareWithSParam:(unsigned int)sParam\n                                 username:(NSString*)username\n                                 statusID:(long long)statusID",
+      "status": "present",
+      "owner": "TFNTwitterStatus",
+      "native": {
+        "types": "@40@0:8Q16@24q32",
+        "address": 4855572
+      }
+    },
+    {
+      "file": "src/Hooks/Misc.x",
+      "class": "TFSTwitterUserReference",
+      "selector": "-twitterURLForShare",
+      "return": "NSString*",
+      "args": "twitterURLForShare",
+      "status": "present",
+      "owner": "TFSTwitterUserReference",
+      "native": {
+        "types": "@16@0:8",
+        "address": 142848
+      }
+    },
+    {
+      "file": "src/Hooks/Misc.x",
+      "class": "TFSTwitterUserReference",
+      "selector": "-twitterURLForCopy",
+      "return": "NSString*",
+      "args": "twitterURLForCopy",
+      "status": "present",
+      "owner": "TFSTwitterUserReference",
+      "native": {
+        "types": "@16@0:8",
+        "address": 142856
+      }
+    },
+    {
+      "file": "src/Hooks/Misc.x",
+      "class": "NSNotificationCenter",
+      "selector": "-addObserverForName:object:queue:usingBlock:",
+      "return": "id",
+      "args": "addObserverForName:(NSNotificationName)name\n                  object:(id)obj\n                   queue:(NSOperationQueue*)queue\n              usingBlock:(void (^)(NSNotification* note))block",
+      "status": "system-runtime",
+      "owner": "NSNotificationCenter",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Misc.x",
+      "class": "NSNotificationCenter",
+      "selector": "-addObserver:selector:name:object:",
+      "return": "void",
+      "args": "addObserver:(id)observer\n           selector:(SEL)aSelector\n               name:(NSNotificationName)aName\n             object:(id)anObject",
+      "status": "system-runtime",
+      "owner": "NSNotificationCenter",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Profile.x",
+      "class": "T1ProfileDisplayNormalMainContentProvider",
+      "selector": "-contentMainEntries",
+      "return": "NSArray*",
+      "args": "contentMainEntries",
+      "status": "present",
+      "owner": "T1ProfileDisplayNormalMainContentProvider",
+      "native": {
+        "types": "@16@0:8",
+        "address": 2267368
+      }
+    },
+    {
+      "file": "src/Hooks/Profile.x",
+      "class": "T1ProfileDisplayNormalMainContentProvider",
+      "selector": "-_generatePhotoViewController",
+      "return": "UIViewController*",
+      "args": "_generatePhotoViewController",
+      "status": "present",
+      "owner": "T1ProfileDisplayNormalMainContentProvider",
+      "native": {
+        "types": "@16@0:8",
+        "address": 2275512
+      }
+    },
+    {
+      "file": "src/Hooks/Profile.x",
+      "class": "T1ProfileDisplayNormalMainContentProvider",
+      "selector": "-_generateVideoViewController",
+      "return": "UIViewController*",
+      "args": "_generateVideoViewController",
+      "status": "present",
+      "owner": "T1ProfileDisplayNormalMainContentProvider",
+      "native": {
+        "types": "@16@0:8",
+        "address": 2276368
+      }
+    },
+    {
+      "file": "src/Hooks/Profile.x",
+      "class": "T1ProfileHeaderViewController",
+      "selector": "-actionButtonProviders",
+      "return": "NSArray*",
+      "args": "actionButtonProviders",
+      "status": "guarded-runtime-alternative",
+      "owner": "UIViewController",
+      "native": null,
+      "runtime_guard": "BHTLegacyProfileActionProviders"
+    },
+    {
+      "file": "src/Hooks/Profile.x",
+      "class": "TFNTwitterCanonicalUser",
+      "selector": "-isProfileBioTranslatable",
+      "return": "BOOL",
+      "args": "isProfileBioTranslatable",
+      "status": "present",
+      "owner": "TFNTwitterCanonicalUser",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10211700
+      }
+    },
+    {
+      "file": "src/Hooks/Profile.x",
+      "class": "T1ProfileSummaryView",
+      "selector": "-shouldShowGetVerifiedButton",
+      "return": "BOOL",
+      "args": "shouldShowGetVerifiedButton",
+      "status": "present",
+      "owner": "T1ProfileSummaryView",
+      "native": {
+        "types": "B16@0:8",
+        "address": 4646460
+      }
+    },
+    {
+      "file": "src/Hooks/Profile.x",
+      "class": "T1ProfileFriendsFollowingViewModel",
+      "selector": "-_t1_followCountTextWithLabel:singularLabel:count:highlighted:",
+      "return": "id",
+      "args": "_t1_followCountTextWithLabel:(__unsafe_unretained id)label\n                     singularLabel:(__unsafe_unretained id)singularLabel\n                             count:(NSNumber*)count\n                       highlighted:(BOOL)highlighted",
+      "status": "present",
+      "owner": "T1ProfileFriendsFollowingViewModel",
+      "native": {
+        "types": "@44@0:8@16@24@32B40",
+        "address": 2705272
+      }
+    },
+    {
+      "file": "src/Hooks/RefreshSounds.x",
+      "class": "TFNPullToRefreshControl",
+      "selector": "-_setStatus:fromScrolling:",
+      "return": "void",
+      "args": "_setStatus:(unsigned long long)status fromScrolling:(BOOL)fromScrolling",
+      "status": "present",
+      "owner": "TFNPullToRefreshControl",
+      "native": {
+        "types": "v28@0:8Q16B24",
+        "address": 14414888
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyApplicationDiagnostics.x",
+      "class": "TNLRequestOperation",
+      "selector": "-initWithRequest:responseClass:configuration:delegate:",
+      "return": "id",
+      "args": "initWithRequest:(__unsafe_unretained id)request\n        responseClass:(Class)responseClass\n        configuration:(__unsafe_unretained id)configuration\n             delegate:(__unsafe_unretained id)delegate",
+      "status": "present",
+      "owner": "TNLRequestOperation",
+      "native": {
+        "types": "@48@0:8@16#24@32@40",
+        "address": 15808900
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyApplicationDiagnostics.x",
+      "class": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "selector": "-modelWithParseError:APIErrors:",
+      "return": "id",
+      "args": "modelWithParseError:(id __autoreleasing*)parseError\n                APIErrors:(id __autoreleasing*)APIErrors",
+      "status": "present",
+      "owner": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "native": {
+        "types": "@32@0:8^@16^@24",
+        "address": 16952496
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyApplicationDiagnostics.x",
+      "class": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "selector": "-prepare",
+      "return": "void",
+      "args": "prepare",
+      "status": "present",
+      "owner": "TFSTwitterAPIEndpointResponse",
+      "native": {
+        "types": "v16@0:8",
+        "address": 35714012
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyDiagnostics.x",
+      "class": "TTAStatusInlineReplyButton",
+      "selector": "-didTap",
+      "return": "void",
+      "args": "didTap",
+      "status": "present",
+      "owner": "TTAStatusInlineActionButton",
+      "native": {
+        "types": "v16@0:8",
+        "address": 46289912
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyDiagnostics.x",
+      "class": "TFNTwitterCompositionUpdateStatusOperation",
+      "selector": "-_tfn_main_statusesUpdateCommandDidUpdateStatus:error:",
+      "return": "void",
+      "args": "_tfn_main_statusesUpdateCommandDidUpdateStatus:\n            (__unsafe_unretained id)status\n                                                   error:\n            (__unsafe_unretained id)error",
+      "status": "present",
+      "owner": "TFNTwitterCompositionUpdateStatusOperation",
+      "native": {
+        "types": "v32@0:8@16@24",
+        "address": 9652196
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyDiagnostics.x",
+      "class": "T1TweetComposeViewController",
+      "selector": "-_t1_checkForValidTweetsAndSend",
+      "return": "void",
+      "args": "_t1_checkForValidTweetsAndSend",
+      "status": "present",
+      "owner": "T1TweetComposeViewController",
+      "native": {
+        "types": "v16@0:8",
+        "address": 374748
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyDiagnostics.x",
+      "class": "T1TweetComposeViewController",
+      "selector": "-_t1_sendCompositions:",
+      "return": "void",
+      "args": "_t1_sendCompositions:(__unsafe_unretained id)compositions",
+      "status": "present",
+      "owner": "T1TweetComposeViewController",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 379064
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyDiagnostics.x",
+      "class": "T1TweetComposeContainerViewController",
+      "selector": "-tweetComposeViewControllerDidCompleteComposing:",
+      "return": "void",
+      "args": "tweetComposeViewControllerDidCompleteComposing:\n    (__unsafe_unretained id)composer",
+      "status": "present",
+      "owner": "T1TweetComposeContainerViewController",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 3857836
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyDiagnostics.x",
+      "class": "T1TweetComposeContainerViewController",
+      "selector": "-tweetComposeViewControllerDidCancelComposing:",
+      "return": "void",
+      "args": "tweetComposeViewControllerDidCancelComposing:\n    (__unsafe_unretained id)composer",
+      "status": "present",
+      "owner": "T1TweetComposeContainerViewController",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 3857656
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyDiagnostics.x",
+      "class": "T1StatusViewInlineActionTapEventHandler",
+      "selector": "-performReplyActionWithAccount:event:controller:scribeContext:scribeElement:parameters:originalStatus:",
+      "return": "void",
+      "args": "performReplyActionWithAccount:(__unsafe_unretained id)account\n                                event:(__unsafe_unretained id)event\n                           controller:(__unsafe_unretained id)controller\n                        scribeContext:(__unsafe_unretained id)scribeContext\n                        scribeElement:(__unsafe_unretained id)scribeElement\n                           parameters:(__unsafe_unretained id)parameters\n                       originalStatus:(__unsafe_unretained id)originalStatus",
+      "status": "present",
+      "owner": "T1StatusViewInlineActionTapEventHandler",
+      "native": {
+        "types": "v72@0:8@16@24@32@40@48@56@64",
+        "address": 1453228
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyDiagnostics.x",
+      "class": "T1TweetComposeViewController",
+      "selector": "-viewDidAppear:",
+      "return": "void",
+      "args": "viewDidAppear:(BOOL)animated",
+      "status": "present",
+      "owner": "T1TweetComposeViewController",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 279616
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyDiagnostics.x",
+      "class": "T1TweetComposeViewController",
+      "selector": "-viewDidDisappear:",
+      "return": "void",
+      "args": "viewDidDisappear:(BOOL)animated",
+      "status": "present",
+      "owner": "TFNViewController",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 14674328
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyDiagnostics.x",
+      "class": "T1PersistentComposeViewController",
+      "selector": "-viewDidAppear:",
+      "return": "void",
+      "args": "viewDidAppear:(BOOL)animated",
+      "status": "present",
+      "owner": "T1ComposeViewController",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 3979372
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyDiagnostics.x",
+      "class": "T1PersistentComposeViewController",
+      "selector": "-persistentComposeViewDidTap:",
+      "return": "void",
+      "args": "persistentComposeViewDidTap:(__unsafe_unretained id)sender",
+      "status": "present",
+      "owner": "T1PersistentComposeViewController",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 2682100
+      }
+    },
+    {
+      "file": "src/Hooks/ReplyNetworkDiagnostics.x",
+      "class": "NSURLSession",
+      "selector": "-dataTaskWithRequest:",
+      "return": "NSURLSessionDataTask*",
+      "args": "dataTaskWithRequest:(NSURLRequest*)request",
+      "status": "system-runtime",
+      "owner": "NSURLSession",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/ReplyNetworkDiagnostics.x",
+      "class": "NSURLSession",
+      "selector": "-dataTaskWithRequest:completionHandler:",
+      "return": "NSURLSessionDataTask*",
+      "args": "dataTaskWithRequest:(NSURLRequest*)request\n                           completionHandler:(id)completionHandler",
+      "status": "system-runtime",
+      "owner": "NSURLSession",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/ReplyNetworkDiagnostics.x",
+      "class": "NSURLSession",
+      "selector": "-uploadTaskWithRequest:fromData:",
+      "return": "NSURLSessionUploadTask*",
+      "args": "uploadTaskWithRequest:(NSURLRequest*)request\n                                        fromData:(NSData*)bodyData",
+      "status": "system-runtime",
+      "owner": "NSURLSession",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/ReplyNetworkDiagnostics.x",
+      "class": "NSURLSession",
+      "selector": "-uploadTaskWithRequest:fromData:completionHandler:",
+      "return": "NSURLSessionUploadTask*",
+      "args": "uploadTaskWithRequest:(NSURLRequest*)request\n                                        fromData:(NSData*)bodyData\n                               completionHandler:(id)completionHandler",
+      "status": "system-runtime",
+      "owner": "NSURLSession",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/ReplyNetworkDiagnostics.x",
+      "class": "NSURLSession",
+      "selector": "-uploadTaskWithRequest:fromFile:",
+      "return": "NSURLSessionUploadTask*",
+      "args": "uploadTaskWithRequest:(NSURLRequest*)request\n                                        fromFile:(NSURL*)fileURL",
+      "status": "system-runtime",
+      "owner": "NSURLSession",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/ReplyNetworkDiagnostics.x",
+      "class": "NSURLSession",
+      "selector": "-uploadTaskWithRequest:fromFile:completionHandler:",
+      "return": "NSURLSessionUploadTask*",
+      "args": "uploadTaskWithRequest:(NSURLRequest*)request\n                                        fromFile:(NSURL*)fileURL\n                               completionHandler:(id)completionHandler",
+      "status": "system-runtime",
+      "owner": "NSURLSession",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/ReplyNetworkDiagnostics.x",
+      "class": "TNLURLSessionTaskOperation",
+      "selector": "-_network_finalizeDidCompleteTask:URLSession:error:",
+      "return": "void",
+      "args": "_network_finalizeDidCompleteTask:(NSURLSessionTask*)task\n                              URLSession:(NSURLSession*)session\n                                   error:(NSError*)error",
+      "status": "guarded-runtime-alternative",
+      "owner": "NSOperation",
+      "native": null,
+      "runtime_guard": "BHTNativeReplyTNLCompletionHooks"
+    },
+    {
+      "file": "src/Hooks/ReplyNetworkDiagnostics.x",
+      "class": "TNLURLSessionTaskOperation",
+      "selector": "-URLSession:task:didCompleteWithError:",
+      "return": "void",
+      "args": "URLSession:(NSURLSession*)session\n              task:(NSURLSessionTask*)task\ndidCompleteWithError:(NSError*)error",
+      "status": "present",
+      "owner": "TNLURLSessionTaskOperation",
+      "native": {
+        "types": "v40@0:8@16@24@32",
+        "address": 15896544
+      }
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "T1GenericSettingsViewController",
+      "selector": "-viewWillAppear:",
+      "return": "void",
+      "args": "viewWillAppear:(BOOL)animated",
+      "status": "present",
+      "owner": "T1GenericSettingsViewController",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 12064548
+      }
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "TFNItemsDataViewController",
+      "selector": "-updatedSections:forStyle:",
+      "return": "NSArray*",
+      "args": "updatedSections:(NSArray*)sections forStyle:(NSInteger)style",
+      "status": "present",
+      "owner": "TFNItemsDataViewController",
+      "native": {
+        "types": "@32@0:8@16q24",
+        "address": 13879528
+      }
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "UIFontPickerViewController",
+      "selector": "-viewWillAppear:",
+      "return": "void",
+      "args": "viewWillAppear:(BOOL)arg1",
+      "status": "system-runtime",
+      "owner": "UIFontPickerViewController",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "UIFontPickerViewController",
+      "selector": "-customFontsHandler",
+      "return": "void",
+      "args": "customFontsHandler",
+      "status": "new",
+      "owner": "UIFontPickerViewController",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "TFNUIDefaultFontGroup",
+      "selector": "-fontOfSize:",
+      "return": "UIFont*",
+      "args": "fontOfSize:(CGFloat)size",
+      "status": "present",
+      "owner": "TFNUIDefaultFontGroup",
+      "native": {
+        "types": "@24@0:8d16",
+        "address": 3554144
+      }
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "TFNUIDefaultFontGroup",
+      "selector": "-mediumFontOfSize:",
+      "return": "UIFont*",
+      "args": "mediumFontOfSize:(CGFloat)size",
+      "status": "present",
+      "owner": "TFNUIDefaultFontGroup",
+      "native": {
+        "types": "@24@0:8d16",
+        "address": 3554164
+      }
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "TFNUIDefaultFontGroup",
+      "selector": "-boldFontOfSize:",
+      "return": "UIFont*",
+      "args": "boldFontOfSize:(CGFloat)size",
+      "status": "present",
+      "owner": "TFNUIDefaultFontGroup",
+      "native": {
+        "types": "@24@0:8d16",
+        "address": 3554184
+      }
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "TFNUIDefaultFontGroup",
+      "selector": "-heavyFontOfSize:",
+      "return": "UIFont*",
+      "args": "heavyFontOfSize:(CGFloat)size",
+      "status": "present",
+      "owner": "TFNUIDefaultFontGroup",
+      "native": {
+        "types": "@24@0:8d16",
+        "address": 3554204
+      }
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "TFNUIDefaultFontGroup",
+      "selector": "-monospacedDigitFontOfSize:weight:",
+      "return": "UIFont*",
+      "args": "monospacedDigitFontOfSize:(CGFloat)size weight:(CGFloat)weight",
+      "status": "present",
+      "owner": "TFNUIDefaultFontGroup",
+      "native": {
+        "types": "@32@0:8d16d24",
+        "address": 3554224
+      }
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "XFontCatalog",
+      "selector": "+fontForToken:",
+      "return": "UIFont*",
+      "args": "fontForToken:(NSInteger)token",
+      "status": "present",
+      "owner": "XFontCatalog",
+      "native": {
+        "types": "@24@0:8q16",
+        "address": 3568632
+      }
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "XFontCatalog",
+      "selector": "+customFontOfSize:weight:scalesWithDynamicType:",
+      "return": "UIFont*",
+      "args": "customFontOfSize:(CGFloat)size\n                    weight:(NSInteger)weight\n     scalesWithDynamicType:(BOOL)scalesWithDynamicType",
+      "status": "present",
+      "owner": "XFontCatalog",
+      "native": {
+        "types": "@36@0:8d16q24B32",
+        "address": 3569444
+      }
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "XFontCatalog",
+      "selector": "+spoofingResistantUsernameFontForToken:",
+      "return": "UIFont*",
+      "args": "spoofingResistantUsernameFontForToken:(NSInteger)token",
+      "status": "present",
+      "owner": "XFontCatalog",
+      "native": {
+        "types": "@24@0:8q16",
+        "address": 3570452
+      }
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "XFontCatalog",
+      "selector": "+monospaceFixedFontOfSize:",
+      "return": "UIFont*",
+      "args": "monospaceFixedFontOfSize:(CGFloat)size",
+      "status": "present",
+      "owner": "XFontCatalog",
+      "native": {
+        "types": "@24@0:8d16",
+        "address": 3571076
+      }
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "XFontCatalog",
+      "selector": "+contentFontWithOffset:weight:",
+      "return": "UIFont*",
+      "args": "contentFontWithOffset:(CGFloat)offset weight:(NSInteger)weight",
+      "status": "present",
+      "owner": "XFontCatalog",
+      "native": {
+        "types": "@32@0:8d16q24",
+        "address": 3571508
+      }
+    },
+    {
+      "file": "src/Hooks/Settings.x",
+      "class": "XFontCatalog",
+      "selector": "+tabularDigitsFontOfSize:weight:",
+      "return": "UIFont*",
+      "args": "tabularDigitsFontOfSize:(CGFloat)size weight:(CGFloat)weight",
+      "status": "present",
+      "owner": "XFontCatalog",
+      "native": {
+        "types": "@32@0:8d16d24",
+        "address": 3571848
+      }
+    },
+    {
+      "file": "src/Hooks/SourceLabels.x",
+      "class": "T1ConversationFooterTextView",
+      "selector": "-updateFooterTextView",
+      "return": "void",
+      "args": "updateFooterTextView",
+      "status": "present",
+      "owner": "T1ConversationFooterTextView",
+      "native": {
+        "types": "v16@0:8",
+        "address": 1924104
+      }
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "TAEColorSettings",
+      "selector": "-setPrimaryColorOption:",
+      "return": "void",
+      "args": "setPrimaryColorOption:(NSInteger)colorOption",
+      "status": "present",
+      "owner": "TAEColorSettings",
+      "native": {
+        "types": "v24@0:8q16",
+        "address": 38149528
+      }
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "TAEColorSettings",
+      "selector": "-primaryColorOption",
+      "return": "NSInteger",
+      "args": "primaryColorOption",
+      "status": "present",
+      "owner": "TAEColorSettings",
+      "native": {
+        "types": "q16@0:8",
+        "address": 38149844
+      }
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabbedAppNavigationViewController",
+      "selector": "-setVisibleTabEntries:",
+      "return": "void",
+      "args": "setVisibleTabEntries:(NSArray*)entries",
+      "status": "present",
+      "owner": "T1TabbedAppNavigationViewController",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 511988
+      }
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabBarViewController",
+      "selector": "-viewDidLoad",
+      "return": "void",
+      "args": "viewDidLoad",
+      "status": "present",
+      "owner": "T1TabBarViewController",
+      "native": {
+        "types": "v16@0:8",
+        "address": 2175692
+      }
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabBarViewController",
+      "selector": "-viewDidLayoutSubviews",
+      "return": "void",
+      "args": "viewDidLayoutSubviews",
+      "status": "system-runtime",
+      "owner": "UIViewController",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabBarViewController",
+      "selector": "-traitCollectionDidChange:",
+      "return": "void",
+      "args": "traitCollectionDidChange:\n    (UITraitCollection*)previousTraits",
+      "status": "system-runtime",
+      "owner": "UIViewController",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabBarViewController",
+      "selector": "-tfn_supportsTabBarCollapsing",
+      "return": "BOOL",
+      "args": "tfn_supportsTabBarCollapsing",
+      "status": "present",
+      "owner": "UIViewController",
+      "native": {
+        "types": "B16@0:8",
+        "address": 14300144
+      }
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabBarViewController",
+      "selector": "-tfn_prefersTabBarPinned",
+      "return": "BOOL",
+      "args": "tfn_prefersTabBarPinned",
+      "status": "present",
+      "owner": "UIViewController",
+      "native": {
+        "types": "B16@0:8",
+        "address": 14786728
+      }
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabBarViewController",
+      "selector": "-setTabBarCollapseRatio:",
+      "return": "void",
+      "args": "setTabBarCollapseRatio:(double)ratio",
+      "status": "present",
+      "owner": "T1TabBarViewController",
+      "native": {
+        "types": "v24@0:8d16",
+        "address": 2177048
+      }
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabView",
+      "selector": "-_t1_updateImageViewAnimated:",
+      "return": "void",
+      "args": "_t1_updateImageViewAnimated:(BOOL)animated",
+      "status": "present",
+      "owner": "T1TabView",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 5033892
+      }
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabView",
+      "selector": "-_t1_updateTitleLabel",
+      "return": "void",
+      "args": "_t1_updateTitleLabel",
+      "status": "present",
+      "owner": "T1TabView",
+      "native": {
+        "types": "v16@0:8",
+        "address": 5033504
+      }
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabView",
+      "selector": "-showsTitleInDisplayMode:",
+      "return": "BOOL",
+      "args": "showsTitleInDisplayMode:(long long)displayMode",
+      "status": "present",
+      "owner": "T1TabView",
+      "native": {
+        "types": "B24@0:8q16",
+        "address": 5040372
+      }
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabView",
+      "selector": "-applyCurrentThemeToIcon",
+      "return": "void",
+      "args": "applyCurrentThemeToIcon",
+      "status": "new",
+      "owner": "UIView",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabBarHostView",
+      "selector": "-didMoveToWindow",
+      "return": "void",
+      "args": "didMoveToWindow",
+      "status": "system-runtime",
+      "owner": "UIView",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabBarHostView",
+      "selector": "-layoutSubviews",
+      "return": "void",
+      "args": "layoutSubviews",
+      "status": "system-runtime",
+      "owner": "UIView",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabBarHostView",
+      "selector": "-traitCollectionDidChange:",
+      "return": "void",
+      "args": "traitCollectionDidChange:(UITraitCollection*)previousTraits",
+      "status": "system-runtime",
+      "owner": "UIView",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabBarHostView",
+      "selector": "-didAddSubview:",
+      "return": "void",
+      "args": "didAddSubview:(UIView*)subview",
+      "status": "system-runtime",
+      "owner": "UIView",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "T1TabBarHostView",
+      "selector": "-setTabBarViewController:",
+      "return": "void",
+      "args": "setTabBarViewController:(id)controller",
+      "status": "present",
+      "owner": "T1TabBarHostView",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 2173192
+      }
+    },
+    {
+      "file": "src/Hooks/Theme.x",
+      "class": "_TtC11TwitterHome39HomeDefaultNavigationBarTitleViewPlugin",
+      "selector": "-titleView",
+      "return": "UIView*",
+      "args": "titleView",
+      "status": "present",
+      "owner": "_TtC11TwitterHome39HomeDefaultNavigationBarTitleViewPlugin",
+      "native": {
+        "types": "@16@0:8",
+        "address": 18812580
+      }
+    },
+    {
+      "file": "src/Hooks/ThemeAccent.x",
+      "class": "UIColor",
+      "selector": "+colorNamed:inBundle:compatibleWithTraitCollection:",
+      "return": "UIColor*",
+      "args": "colorNamed:(NSString*)name\n              inBundle:(NSBundle*)bundle\ncompatibleWithTraitCollection:(UITraitCollection*)traitCollection",
+      "status": "system-runtime",
+      "owner": "UIColor",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/ThemeAccent.x",
+      "class": "TAEColorSettings",
+      "selector": "-currentColorPalette",
+      "return": "TAETwitterColorPaletteSettingInfo*",
+      "args": "currentColorPalette",
+      "status": "present",
+      "owner": "TAEColorSettings",
+      "native": {
+        "types": "@16@0:8",
+        "address": 38147912
+      }
+    },
+    {
+      "file": "src/Hooks/ThemeAccent.x",
+      "class": "TAEColorSettings",
+      "selector": "-setCurrentColorPalette:",
+      "return": "void",
+      "args": "setCurrentColorPalette:(TAETwitterColorPaletteSettingInfo*)info",
+      "status": "present",
+      "owner": "TAEColorSettings",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 38148296
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "T1TimelineFactory",
+      "selector": "-homeTimelineForAccount:",
+      "return": "id",
+      "args": "homeTimelineForAccount:(id)account",
+      "status": "present",
+      "owner": "T1TimelineFactory",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 52852
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "T1TimelineFactory",
+      "selector": "-homeCountryFilteredTimelineForAccount:",
+      "return": "id",
+      "args": "homeCountryFilteredTimelineForAccount:(id)account",
+      "status": "present",
+      "owner": "T1TimelineFactory",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 53032
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "T1TimelineFactory",
+      "selector": "-homeTopicFilteredTimelineForAccount:",
+      "return": "id",
+      "args": "homeTopicFilteredTimelineForAccount:(id)account",
+      "status": "present",
+      "owner": "T1TimelineFactory",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 53156
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "T1TimelineFactory",
+      "selector": "-homeLatestTimelineForAccount:",
+      "return": "id",
+      "args": "homeLatestTimelineForAccount:(id)account",
+      "status": "present",
+      "owner": "T1TimelineFactory",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 53280
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "T1TimelineFactory",
+      "selector": "-homeRankedFollowingTimelineForAccount:",
+      "return": "id",
+      "args": "homeRankedFollowingTimelineForAccount:(id)account",
+      "status": "present",
+      "owner": "T1TimelineFactory",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 53288
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "T1TimelineFactory",
+      "selector": "-rootViewControllerForHomeTimeline:homeCountryFilteredTimeline:homeLatestTimeline:homeRankedFollowingTimeline:account:",
+      "return": "id",
+      "args": "rootViewControllerForHomeTimeline:(id)homeTimeline\n            homeCountryFilteredTimeline:(id)homeCountryFilteredTimeline\n                     homeLatestTimeline:(id)homeLatestTimeline\n            homeRankedFollowingTimeline:(id)homeRankedFollowingTimeline\n                                account:(id)account",
+      "status": "present",
+      "owner": "T1TimelineFactory",
+      "native": {
+        "types": "@56@0:8@16@24@32@40@48",
+        "address": 52564
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "TFNTwitterHomeTimeline",
+      "selector": "-deserializeStream",
+      "return": "id",
+      "args": "deserializeStream",
+      "status": "present",
+      "owner": "TFNTwitterHomeTimeline",
+      "native": {
+        "types": "@16@0:8",
+        "address": 18851932
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "_TtC32TwitterHomeFeatureImplementation35HomeTimelineContainerViewController",
+      "selector": "-pinnedTimelinesRepository:didChangeWithPinnedTimelineModels:",
+      "return": "void",
+      "args": "pinnedTimelinesRepository:(id)repository\n    didChangeWithPinnedTimelineModels:(NSArray*)models",
+      "status": "present",
+      "owner": "_TtC32TwitterHomeFeatureImplementation35HomeTimelineContainerViewController",
+      "native": {
+        "types": "v32@0:8@16@24",
+        "address": 4295921796
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "_TtC32TwitterHomeFeatureImplementation35HomeTimelineContainerViewController",
+      "selector": "-tfn_navigationBarAccessoryView",
+      "return": "id",
+      "args": "tfn_navigationBarAccessoryView",
+      "status": "present",
+      "owner": "_TtC32TwitterHomeFeatureImplementation35HomeTimelineContainerViewController",
+      "native": {
+        "types": "@16@0:8",
+        "address": 4295959496
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "_TtC32TwitterHomeFeatureImplementation35HomeTimelineContainerViewController",
+      "selector": "-viewDidAppear:",
+      "return": "void",
+      "args": "viewDidAppear:(BOOL)animated",
+      "status": "present",
+      "owner": "_TtC32TwitterHomeFeatureImplementation35HomeTimelineContainerViewController",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 4295955736
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "_TtC32TwitterHomeFeatureImplementation35HomeTimelineContainerViewController",
+      "selector": "-tfn_supportsTabBarCollapsing",
+      "return": "BOOL",
+      "args": "tfn_supportsTabBarCollapsing",
+      "status": "present",
+      "owner": "_TtC32TwitterHomeFeatureImplementation35HomeTimelineContainerViewController",
+      "native": {
+        "types": "B16@0:8",
+        "address": 4295958280
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "_TtC32TwitterHomeFeatureImplementation35HomeTimelineContainerViewController",
+      "selector": "-tfn_prefersTabBarPinned",
+      "return": "BOOL",
+      "args": "tfn_prefersTabBarPinned",
+      "status": "present",
+      "owner": "_TtC32TwitterHomeFeatureImplementation35HomeTimelineContainerViewController",
+      "native": {
+        "types": "B16@0:8",
+        "address": 4295963584
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "HomeTimelineContainerViewController",
+      "selector": "-pinnedTimelinesRepository:didChangeWithPinnedTimelineModels:",
+      "return": "void",
+      "args": "pinnedTimelinesRepository:(id)repository\n    didChangeWithPinnedTimelineModels:(NSArray*)models",
+      "status": "guarded-legacy-alias",
+      "owner": "HomeTimelineContainerViewController",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "HomeTimelineContainerViewController",
+      "selector": "-tfn_navigationBarAccessoryView",
+      "return": "id",
+      "args": "tfn_navigationBarAccessoryView",
+      "status": "guarded-legacy-alias",
+      "owner": "HomeTimelineContainerViewController",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "HomeTimelineContainerViewController",
+      "selector": "-viewDidAppear:",
+      "return": "void",
+      "args": "viewDidAppear:(BOOL)animated",
+      "status": "guarded-legacy-alias",
+      "owner": "HomeTimelineContainerViewController",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "HomeTimelineContainerViewController",
+      "selector": "-tfn_supportsTabBarCollapsing",
+      "return": "BOOL",
+      "args": "tfn_supportsTabBarCollapsing",
+      "status": "guarded-legacy-alias",
+      "owner": "HomeTimelineContainerViewController",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "HomeTimelineContainerViewController",
+      "selector": "-tfn_prefersTabBarPinned",
+      "return": "BOOL",
+      "args": "tfn_prefersTabBarPinned",
+      "status": "guarded-legacy-alias",
+      "owner": "HomeTimelineContainerViewController",
+      "native": null
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "_TtC32TwitterHomeFeatureImplementation31CachedPinnedTimelinesRepository",
+      "selector": "-updatePinnedTimelines:",
+      "return": "void",
+      "args": "updatePinnedTimelines:(id)timelines",
+      "status": "present",
+      "owner": "_TtC32TwitterHomeFeatureImplementation31CachedPinnedTimelinesRepository",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 4295769840
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "T1StandardStatusAttachmentViewAdapter",
+      "selector": "-displayType",
+      "return": "NSUInteger",
+      "args": "displayType",
+      "status": "present",
+      "owner": "T1StandardStatusAttachmentViewAdapter",
+      "native": {
+        "types": "Q16@0:8",
+        "address": 3270656
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "T1FleetLineHeaderController",
+      "selector": "-_t1_shouldShowFleetLine",
+      "return": "BOOL",
+      "args": "_t1_shouldShowFleetLine",
+      "status": "present",
+      "owner": "T1FleetLineHeaderController",
+      "native": {
+        "types": "B16@0:8",
+        "address": 1600448
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "TUIUpdateIndicator",
+      "selector": "-viewDidLayoutSubviews",
+      "return": "void",
+      "args": "viewDidLayoutSubviews",
+      "status": "present",
+      "owner": "TUIUpdateIndicator",
+      "native": {
+        "types": "v16@0:8",
+        "address": 4297251380
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "T1URTViewController",
+      "selector": "-viewWillAppear:",
+      "return": "void",
+      "args": "viewWillAppear:(BOOL)animated",
+      "status": "present",
+      "owner": "T1URTViewController",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 17028580
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "T1URTViewController",
+      "selector": "-tableViewHeightForItem:atIndexPath:",
+      "return": "double",
+      "args": "tableViewHeightForItem:(id)item\n                     atIndexPath:(NSIndexPath*)indexPath",
+      "status": "present",
+      "owner": "TFNItemsDataViewController",
+      "native": {
+        "types": "d32@0:8@16@24",
+        "address": 13890804
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "T1URTViewController",
+      "selector": "-estimatedTableViewHeightForItem:atIndexPath:",
+      "return": "double",
+      "args": "estimatedTableViewHeightForItem:(id)item\n                              atIndexPath:(NSIndexPath*)indexPath",
+      "status": "present",
+      "owner": "TFNItemsDataViewController",
+      "native": {
+        "types": "d32@0:8@16@24",
+        "address": 13891424
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "TFNItemsDataViewController",
+      "selector": "-setSections:restoreScrollPosition:",
+      "return": "void",
+      "args": "setSections:(NSArray*)sections restoreScrollPosition:(BOOL)restoreScrollPosition",
+      "status": "present",
+      "owner": "TFNItemsDataViewController",
+      "native": {
+        "types": "v28@0:8@16B24",
+        "address": 13881704
+      }
+    },
+    {
+      "file": "src/Hooks/Timeline.x",
+      "class": "TFNItemsDataViewController",
+      "selector": "-updateSections:reconfigureItemIdentifiers:withRowAnimation:completion:",
+      "return": "void",
+      "args": "updateSections:(NSArray*)sections\n    reconfigureItemIdentifiers:(NSArray*)identifiers\n              withRowAnimation:(long long)animation\n                    completion:(id)completion",
+      "status": "present",
+      "owner": "TFNItemsDataViewController",
+      "native": {
+        "types": "v48@0:8@16@24q32@?40",
+        "address": 13889996
+      }
+    }
+  ],
+  "sidebar_swift_setters": {
+    "_$s11TwitterDash0B10DataSourceC11folderItemsSayAA0B10FolderItemVGvs": [
+      [
+        "Payload/Twitter.app/Frameworks/XAppLibraries.framework/XAppLibraries",
+        47155836
+      ]
+    ],
+    "_$s11TwitterDash0B10DataSourceC12primaryItemsSayAA0B11PrimaryItemVGvs": [
+      [
+        "Payload/Twitter.app/Frameworks/XAppLibraries.framework/XAppLibraries",
+        47154988
+      ]
+    ],
+    "_$s11TwitterDash0B10DataSourceC13tertiaryItemsSayAA0B12TertiaryItemVGvs": [
+      [
+        "Payload/Twitter.app/Frameworks/XAppLibraries.framework/XAppLibraries",
+        47156684
+      ]
+    ]
+  },
+  "runtime_probes": [
+    {
+      "feature": "ads",
+      "class": "TFNItemsDataViewAdapterRegistry",
+      "selector": "-dataViewAdapterForItem:",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 13879268
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "TFNTwitterAPICommandContext",
+      "selector": "-allowPromotedContent",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10262324
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "TFNItemsDataViewController",
+      "selector": "-setSections:restoreScrollPosition:",
+      "native": {
+        "types": "v28@0:8@16B24",
+        "address": 13881704
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "TFNItemsDataViewController",
+      "selector": "-updateSections:reconfigureItemIdentifiers:withRowAnimation:completion:",
+      "native": {
+        "types": "v48@0:8@16@24q32@?40",
+        "address": 13889996
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "TFNItemsDataViewController",
+      "selector": "-itemAtIndexPath:",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 13882136
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "TFNItemsDataViewController",
+      "selector": "-tableViewCellForItem:atIndexPath:",
+      "native": {
+        "types": "@32@0:8@16@24",
+        "address": 13893216
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "TFNItemsDataViewController",
+      "selector": "-tableView:heightForRowAtIndexPath:",
+      "native": {
+        "types": "d32@0:8@16@24",
+        "address": 13890632
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "T1URTTimelineStatusItemViewModel",
+      "selector": "-isPromoted",
+      "native": null
+    },
+    {
+      "feature": "ads",
+      "class": "T1URTTimelineStatusItemViewModel",
+      "selector": "-status",
+      "native": null
+    },
+    {
+      "feature": "ads",
+      "class": "TwitterURT.URTTimelineGoogleNativeAdViewModel",
+      "selector": "-init",
+      "native": {
+        "types": "@16@0:8",
+        "address": 49947044
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "T1TwitterSwift.GoogleNativeAdCell",
+      "selector": "-preferredLayoutAttributesFittingAttributes:",
+      "native": null
+    },
+    {
+      "feature": "ads",
+      "class": "UICollectionViewCell",
+      "selector": "-preferredLayoutAttributesFittingAttributes:",
+      "native": null
+    },
+    {
+      "feature": "ads",
+      "class": "TwitterURT.PromotableTrend",
+      "selector": "-promotedTrendID",
+      "native": {
+        "types": "@16@0:8",
+        "address": 50179504
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "T1TwitterSwift.ImmersiveGoogleNativeAdCardViewModel",
+      "selector": "-init",
+      "native": null
+    },
+    {
+      "feature": "ads",
+      "class": "T1TwitterSwift.ExplorePromotedViewModel",
+      "selector": "-init",
+      "native": null
+    },
+    {
+      "feature": "ads",
+      "class": "T1PlayerMediaEntitySessionProducible",
+      "selector": "-mediaEntity",
+      "native": {
+        "types": "@16@0:8",
+        "address": 1038600
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "T1PlayerMediaEntitySessionProducible",
+      "selector": "-initWithMediaEntity:contentMediaIdentifier:ownerIdentifier:baseScribeItem:promotedContent:",
+      "native": {
+        "types": "@56@0:8@16@24@32@40@48",
+        "address": 1037768
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "TFSTwitterSspMetadata",
+      "selector": "-isPrerollEligible",
+      "native": {
+        "types": "B16@0:8",
+        "address": 40421304
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "TFSTwitterSspMetadata",
+      "selector": "-adTagURL",
+      "native": {
+        "types": "@16@0:8",
+        "address": 40421496
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "TFNTwitterStatus",
+      "selector": "-allowDynamicAd",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10006892
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "TFNTwitterStatus",
+      "selector": "-isAdsVideoCard",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10006832
+      }
+    },
+    {
+      "feature": "ads",
+      "class": "T1StatusTableSlideshowManager",
+      "selector": "-_t1_isPromotedTweetMediaDisabledInMultiStatusSlideshow",
+      "native": null
+    },
+    {
+      "feature": "images",
+      "class": "T1ImageDisplayView",
+      "selector": "-_tfn_shouldUseHighestQualityImage",
+      "native": {
+        "types": "B16@0:8",
+        "address": 3814204
+      }
+    },
+    {
+      "feature": "images",
+      "class": "T1ImageDisplayView",
+      "selector": "-_tfn_shouldUseHighQualityImage",
+      "native": {
+        "types": "B16@0:8",
+        "address": 3814064
+      }
+    },
+    {
+      "feature": "images",
+      "class": "T1SlideshowViewController",
+      "selector": "-_t1_shouldDisplayLoadHighQualityImageItemForImageDisplayView:highestQuality:",
+      "native": null
+    },
+    {
+      "feature": "images",
+      "class": "T1StandardStatusAttachmentViewAdapter",
+      "selector": "-displayType",
+      "native": {
+        "types": "Q16@0:8",
+        "address": 3270656
+      }
+    },
+    {
+      "feature": "images",
+      "class": "TFNTwitterAccount",
+      "selector": "-isLoadingHighestQualityImageVariantPermitted",
+      "native": {
+        "types": "B16@0:8",
+        "address": 1059540
+      }
+    },
+    {
+      "feature": "images",
+      "class": "TFNTwitterAccount",
+      "selector": "-photoUploadHighQualityImagesSettingIsVisible",
+      "native": {
+        "types": "B16@0:8",
+        "address": 9734060
+      }
+    },
+    {
+      "feature": "images",
+      "class": "TFNTwitterAccount",
+      "selector": "-isDoubleMaxZoomFor4KImagesEnabled",
+      "native": {
+        "types": "B16@0:8",
+        "address": 1881620
+      }
+    },
+    {
+      "feature": "video",
+      "class": "TFSTwitterEntityMediaVideoInfo",
+      "selector": "-variants",
+      "native": {
+        "types": "@16@0:8",
+        "address": 39598956
+      }
+    },
+    {
+      "feature": "video",
+      "class": "TFSTwitterEntityMediaVideoInfo",
+      "selector": "-primaryUrl",
+      "native": {
+        "types": "@16@0:8",
+        "address": 39602144
+      }
+    },
+    {
+      "feature": "video",
+      "class": "TFSTwitterEntityMedia",
+      "selector": "-allowDownload",
+      "native": {
+        "types": "B16@0:8",
+        "address": 39468688
+      }
+    },
+    {
+      "feature": "video",
+      "class": "T1VideoDownloadViewModel",
+      "selector": "+makeVideDownloaderWithAccount:fromViewController:mediaEntity:statusViewModel:",
+      "native": {
+        "types": "@48@0:8@16@24@32@40",
+        "address": 6481024
+      }
+    },
+    {
+      "feature": "video",
+      "class": "T1VideoDownloadViewModel",
+      "selector": "-tappedDownload",
+      "native": {
+        "types": "v16@0:8",
+        "address": 6482968
+      }
+    },
+    {
+      "feature": "video",
+      "class": "T1TwitterSwift.VideoControlsView",
+      "selector": "-init",
+      "native": {
+        "types": "@16@0:8",
+        "address": 16588732
+      }
+    },
+    {
+      "feature": "video",
+      "class": "TweetMediaAttachments.MultiMediaView",
+      "selector": "-inlineMediaInfos",
+      "native": {
+        "types": "@16@0:8",
+        "address": 45186116
+      }
+    },
+    {
+      "feature": "video",
+      "class": "TweetMediaAttachments.MultiMediaCarouselView",
+      "selector": "-inlineMediaInfos",
+      "native": {
+        "types": "@16@0:8",
+        "address": 45155020
+      }
+    },
+    {
+      "feature": "video",
+      "class": "T1InlineMediaView",
+      "selector": "-viewModel",
+      "native": {
+        "types": "@16@0:8",
+        "address": 2836068
+      }
+    },
+    {
+      "feature": "mediaActions",
+      "class": "UIViewController",
+      "selector": "-t1_mediaActivityViewActionItemsForStatus:account:image:mediaInfo:shortTitles:sourceView:",
+      "native": {
+        "types": "@60@0:8@16@24@32@40B48@52",
+        "address": 3208044
+      }
+    },
+    {
+      "feature": "mediaActions",
+      "class": "UIViewController",
+      "selector": "-t1_mediaActivityViewActionItemsForStatus:account:image:mediaInfo:shortTitles:",
+      "native": {
+        "types": "@52@0:8@16@24@32@40B48",
+        "address": 3208036
+      }
+    },
+    {
+      "feature": "mediaActions",
+      "class": "UIViewController",
+      "selector": "-_t1_actionItemsForStatus:account:shareableEntity:entityURL:source:options:scribeComponent:doneBlock:",
+      "native": {
+        "types": "@80@0:8@16@24@32@40@48Q56@64N^@?72",
+        "address": 3168308
+      }
+    },
+    {
+      "feature": "mediaActions",
+      "class": "TFNPreviewConfiguration",
+      "selector": "+configurationWithPreviewViewControllerBlock:actionItems:sourceView:sourceRect:",
+      "native": {
+        "types": "@72@0:8@?16@24@32{CGRect={CGPoint=dd}{CGSize=dd}}40",
+        "address": 14388172
+      }
+    },
+    {
+      "feature": "mediaActions",
+      "class": "TFNMenuSheetViewController",
+      "selector": "-initWithTitle:actionItems:",
+      "native": {
+        "types": "@32@0:8@16@24",
+        "address": 14153332
+      }
+    },
+    {
+      "feature": "mediaActions",
+      "class": "TFNMenuSheetViewController",
+      "selector": "-tfnPresentedCustomPresentFromViewController:animated:completion:",
+      "native": {
+        "types": "v36@0:8@16B24@?28",
+        "address": 14167820
+      }
+    },
+    {
+      "feature": "dmDownloads",
+      "class": "ChatConversation.MessageAttachmentView",
+      "selector": "-layoutSubviews",
+      "native": {
+        "types": "v16@0:8",
+        "address": 9764456
+      }
+    },
+    {
+      "feature": "dmDownloads",
+      "class": "DMConversation.MessageSaveActionPlugin",
+      "selector": "-init",
+      "native": null
+    },
+    {
+      "feature": "dmDownloads",
+      "class": "TweetMediaAttachments.MultiMediaView",
+      "selector": "-inlineMediaInfos",
+      "native": {
+        "types": "@16@0:8",
+        "address": 45186116
+      }
+    },
+    {
+      "feature": "messages",
+      "class": "_TtC14DMConversation26ConversationViewController",
+      "selector": "-viewDidLoad",
+      "native": {
+        "types": "v16@0:8",
+        "address": 4301990672
+      }
+    },
+    {
+      "feature": "likes",
+      "class": "T1ActivityHistoryBridge",
+      "selector": "+makeActivityHistoryViewControllerWithAccount:initialTab:",
+      "native": {
+        "types": "@32@0:8@16q24",
+        "address": 18510864
+      }
+    },
+    {
+      "feature": "likes",
+      "class": "T1URTFavoritesViewControllerFactory",
+      "selector": "+makeViewControllerWithAccount:",
+      "native": null
+    },
+    {
+      "feature": "likes",
+      "class": "T1URTFavoritesViewControllerFactory",
+      "selector": "+viewControllerWithAccount:",
+      "native": null
+    },
+    {
+      "feature": "likes",
+      "class": "T1TabbedAppNavigationViewController",
+      "selector": "-setVisibleTabEntries:",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 511988
+      }
+    },
+    {
+      "feature": "likes",
+      "class": "T1TabbedAppNavigationViewController",
+      "selector": "-recalculateVisiblePanels",
+      "native": {
+        "types": "v16@0:8",
+        "address": 488096
+      }
+    },
+    {
+      "feature": "likes",
+      "class": "T1TabView",
+      "selector": "-scribePage",
+      "native": {
+        "types": "@16@0:8",
+        "address": 5045920
+      }
+    },
+    {
+      "feature": "likes",
+      "class": "T1TabView",
+      "selector": "-setSelected:",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 5033368
+      }
+    },
+    {
+      "feature": "likes",
+      "class": "T1TabView",
+      "selector": "-_t1_updateTitleLabel",
+      "native": {
+        "types": "v16@0:8",
+        "address": 5033504
+      }
+    },
+    {
+      "feature": "likes",
+      "class": "T1TabView",
+      "selector": "-_t1_updateImageViewAnimated:",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 5033892
+      }
+    },
+    {
+      "feature": "likes",
+      "class": "T1TwitterSwift.GrokAppNavigationTabEntry",
+      "selector": "-rootTabViewController",
+      "native": {
+        "types": "@16@0:8",
+        "address": 15445320
+      }
+    },
+    {
+      "feature": "sourceLabels",
+      "class": "TFNTwitterStatus",
+      "selector": "-composerSource",
+      "native": {
+        "types": "@16@0:8",
+        "address": 10004748
+      }
+    },
+    {
+      "feature": "sourceLabels",
+      "class": "T1ConversationFooterTextView",
+      "selector": "-updateFooterTextView",
+      "native": {
+        "types": "v16@0:8",
+        "address": 1924104
+      }
+    },
+    {
+      "feature": "sourceLabels",
+      "class": "T1ConversationFooterTextView",
+      "selector": "-viewModel",
+      "native": {
+        "types": "@16@0:8",
+        "address": 1928944
+      }
+    },
+    {
+      "feature": "home",
+      "class": "HomeTimelineContainerViewController",
+      "selector": "-pinnedTimelinesRepository:didChangeWithPinnedTimelineModels:",
+      "native": null
+    },
+    {
+      "feature": "home",
+      "class": "TwitterHomeFeatureImplementation.HomeTimelineContainerViewController",
+      "selector": "-pinnedTimelinesRepository:didChangeWithPinnedTimelineModels:",
+      "native": {
+        "types": "v32@0:8@16@24",
+        "address": 4295921796
+      }
+    },
+    {
+      "feature": "home",
+      "class": "TwitterHomeFeatureImplementation.HomeTimelineContainerViewController",
+      "selector": "-tfn_supportsTabBarCollapsing",
+      "native": {
+        "types": "B16@0:8",
+        "address": 4295958280
+      }
+    },
+    {
+      "feature": "home",
+      "class": "T1TabBarViewController",
+      "selector": "-tfn_prefersTabBarPinned",
+      "native": {
+        "types": "B16@0:8",
+        "address": 14786728
+      }
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "T1TimelineFactory",
+      "selector": "-homeTimelineForAccount:",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 52852
+      }
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "T1TimelineFactory",
+      "selector": "-homeCountryFilteredTimelineForAccount:",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 53032
+      }
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "T1TimelineFactory",
+      "selector": "-homeTopicFilteredTimelineForAccount:",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 53156
+      }
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "T1TimelineFactory",
+      "selector": "-homeLatestTimelineForAccount:",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 53280
+      }
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "T1TimelineFactory",
+      "selector": "-homeRankedFollowingTimelineForAccount:",
+      "native": {
+        "types": "@24@0:8@16",
+        "address": 53288
+      }
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "T1TimelineFactory",
+      "selector": "-rootViewControllerForHomeTimeline:homeCountryFilteredTimeline:homeLatestTimeline:homeRankedFollowingTimeline:account:",
+      "native": {
+        "types": "@56@0:8@16@24@32@40@48",
+        "address": 52564
+      }
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "TFNTwitterHomeTimeline",
+      "selector": "-deserializeStream",
+      "native": {
+        "types": "@16@0:8",
+        "address": 18851932
+      }
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "T1URTViewController",
+      "selector": "-adDisplayLocation",
+      "native": {
+        "types": "@16@0:8",
+        "address": 17066156
+      }
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "T1URTViewController",
+      "selector": "-urtTimeline",
+      "native": null
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "T1URTTimelineStatusItemViewModel",
+      "selector": "-tweet",
+      "native": null
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "TFNTwitterStatus",
+      "selector": "-representedStatus",
+      "native": {
+        "types": "@16@0:8",
+        "address": 10003032
+      }
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "TFNTwitterStatus",
+      "selector": "-retweetedStatus",
+      "native": {
+        "types": "@16@0:8",
+        "address": 10030112
+      }
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "TFNTwitterStatus",
+      "selector": "-fullText",
+      "native": {
+        "types": "@16@0:8",
+        "address": 10000984
+      }
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "TFNTwitterStatus",
+      "selector": "-fromUserName",
+      "native": {
+        "types": "@16@0:8",
+        "address": 10005528
+      }
+    },
+    {
+      "feature": "forYouFilters",
+      "class": "TFNTwitterStatus",
+      "selector": "-fromUserFullName",
+      "native": {
+        "types": "@16@0:8",
+        "address": 10005728
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "T1TabBarHostView",
+      "selector": "-logoImageView",
+      "native": null
+    },
+    {
+      "feature": "appearance",
+      "class": "T1TabBarHostView",
+      "selector": "-tabBarViewController",
+      "native": {
+        "types": "@16@0:8",
+        "address": 2173160
+      }
+    },
+    {
+      "feature": "home",
+      "class": "T1FleetLineHeaderController",
+      "selector": "-_t1_shouldShowFleetLine",
+      "native": {
+        "types": "B16@0:8",
+        "address": 1600448
+      }
+    },
+    {
+      "feature": "home",
+      "class": "TUIUpdateIndicator",
+      "selector": "-_recreatePillControlForContentNotification:hideOnScroll:",
+      "native": {
+        "types": "v28@0:8@16B24",
+        "address": 4297256684
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "TwitterHome.HomeDefaultNavigationBarTitleViewPlugin",
+      "selector": "-titleView",
+      "native": {
+        "types": "@16@0:8",
+        "address": 18812580
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "T1AnimatedLaunchScreenView",
+      "selector": "-layoutSubviews",
+      "native": {
+        "types": "v16@0:8",
+        "address": 16822728
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "T1AnimatedLaunchScreenView",
+      "selector": "-animateRevealWithCompletion:",
+      "native": {
+        "types": "v24@0:8@?16",
+        "address": 16826232
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "TAEColorSettings",
+      "selector": "-currentColorPalette",
+      "native": {
+        "types": "@16@0:8",
+        "address": 38147912
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "TAEColorSettings",
+      "selector": "-setCurrentColorPalette:",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 38148296
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "TAEColorSettings",
+      "selector": "-applyCurrentColorPalette",
+      "native": {
+        "types": "v16@0:8",
+        "address": 38148628
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "T1ColorSettings",
+      "selector": "+_t1_applyTheme",
+      "native": null
+    },
+    {
+      "feature": "appearance",
+      "class": "T1ColorSettings",
+      "selector": "+_t1_applyPrimaryColorOption",
+      "native": {
+        "types": "v16@0:8",
+        "address": 1984232
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "T1ColorSettings",
+      "selector": "+_t1_updateOverrideUserInterfaceStyle",
+      "native": {
+        "types": "v16@0:8",
+        "address": 1984300
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "UIView",
+      "selector": "-_t1_updateDynamicColors",
+      "native": null
+    },
+    {
+      "feature": "appearance",
+      "class": "UIColor",
+      "selector": "+twitterColors",
+      "native": {
+        "types": "@16@0:8",
+        "address": 38284896
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "UIColor",
+      "selector": "+setTwitterColors:",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 38284984
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "UIColor",
+      "selector": "+tfnuiColors",
+      "native": {
+        "types": "@16@0:8",
+        "address": 14658136
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "UIColor",
+      "selector": "+xds_backgroundPrimary",
+      "native": {
+        "types": "@16@0:8",
+        "address": 14718964
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "UIColor",
+      "selector": "+xds_backgroundSheets",
+      "native": {
+        "types": "@16@0:8",
+        "address": 14719000
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "UIColor",
+      "selector": "+xds_foregroundPrimary",
+      "native": {
+        "types": "@16@0:8",
+        "address": 14719096
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "UIColor",
+      "selector": "+xds_borderNormal",
+      "native": {
+        "types": "@16@0:8",
+        "address": 14719228
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "UIColor",
+      "selector": "+colorNamed:inBundle:compatibleWithTraitCollection:",
+      "native": null
+    },
+    {
+      "feature": "appearance",
+      "class": "T1TabBarViewController",
+      "selector": "-nativeTabBar",
+      "native": null
+    },
+    {
+      "feature": "appearance",
+      "class": "T1TabBarViewController",
+      "selector": "-tabBarBackgroundView",
+      "native": {
+        "types": "@16@0:8",
+        "address": 2182420
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "T1TabBarViewController",
+      "selector": "-tabBarDivider",
+      "native": {
+        "types": "@16@0:8",
+        "address": 2182452
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "T1TabBarViewController",
+      "selector": "-_t1_configureNativeTabBar",
+      "native": null
+    },
+    {
+      "feature": "home",
+      "class": "T1TwitterSwift.URTTimelineTopicCollectionViewModel",
+      "selector": "-init",
+      "native": null
+    },
+    {
+      "feature": "search",
+      "class": "TTSRecentSearchesDatastore",
+      "selector": "-_tse_setRecentSearch:",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 10772328
+      }
+    },
+    {
+      "feature": "search",
+      "class": "TTSRecentSearchesDatastore",
+      "selector": "-recentSearches",
+      "native": {
+        "types": "@16@0:8",
+        "address": 10770632
+      }
+    },
+    {
+      "feature": "search",
+      "class": "T1TwitterSwift.GuideContainerViewController",
+      "selector": "-viewDidLoad",
+      "native": {
+        "types": "v16@0:8",
+        "address": 9664532
+      }
+    },
+    {
+      "feature": "profiles",
+      "class": "T1ProfileHeaderViewController",
+      "selector": "-actionButtonProviders",
+      "native": null
+    },
+    {
+      "feature": "profiles",
+      "class": "T1ProfileFriendsFollowingViewModel",
+      "selector": "-_t1_followCountTextWithLabel:singularLabel:count:highlighted:",
+      "native": {
+        "types": "@44@0:8@16@24@32B40",
+        "address": 2705272
+      }
+    },
+    {
+      "feature": "profiles",
+      "class": "TFNTwitterCanonicalUser",
+      "selector": "-isProfileBioTranslatable",
+      "native": {
+        "types": "B16@0:8",
+        "address": 10211700
+      }
+    },
+    {
+      "feature": "profiles",
+      "class": "TFNTwitterCanonicalUser",
+      "selector": "-isProfileTranslationEnabled",
+      "native": null
+    },
+    {
+      "feature": "profiles",
+      "class": "TTAStatusAuthorView",
+      "selector": "-setFollowControlHidden:",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 46247776
+      }
+    },
+    {
+      "feature": "profiles",
+      "class": "TFSTwitterRelationship",
+      "selector": "-superFollowEligibleState",
+      "native": {
+        "types": "q16@0:8",
+        "address": 40205796
+      }
+    },
+    {
+      "feature": "confirmations",
+      "class": "TTAStatusInlineActionButton",
+      "selector": "-didTap",
+      "native": {
+        "types": "v16@0:8",
+        "address": 46289912
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "TFNUIDefaultFontGroup",
+      "selector": "+sharedFontGroup",
+      "native": {
+        "types": "@16@0:8",
+        "address": 3553968
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "XFontCatalog",
+      "selector": "+fontForToken:",
+      "native": {
+        "types": "@24@0:8q16",
+        "address": 3568632
+      }
+    },
+    {
+      "feature": "appearance",
+      "class": "XFontCatalog",
+      "selector": "+customFontOfSize:weight:scalesWithDynamicType:",
+      "native": {
+        "types": "@36@0:8d16q24B32",
+        "address": 3569444
+      }
+    },
+    {
+      "feature": "sidebar",
+      "class": "T1DashContentController",
+      "selector": "-updateVisiblePanelIDs",
+      "native": {
+        "types": "v16@0:8",
+        "address": 8550024
+      }
+    },
+    {
+      "feature": "sidebar",
+      "class": "T1DashNavigationViewFactory",
+      "selector": "+buildDashViewControllerForAccount:dashContentController:",
+      "native": {
+        "types": "@32@0:8@16@24",
+        "address": 8637852
+      }
+    },
+    {
+      "feature": "badges",
+      "class": "TFSTwitterUser",
+      "selector": "-isBlueVerified",
+      "native": {
+        "types": "@16@0:8",
+        "address": 43219236
+      }
+    },
+    {
+      "feature": "badges",
+      "class": "TFSTwitterUserSource",
+      "selector": "-isBlueVerified",
+      "native": {
+        "types": "@16@0:8",
+        "address": 43574052
+      }
+    },
+    {
+      "feature": "badges",
+      "class": "TFSTwitterTypeaheadUser",
+      "selector": "-isBlueVerified",
+      "native": {
+        "types": "@16@0:8",
+        "address": 40922724
+      }
+    },
+    {
+      "feature": "badges",
+      "class": "TFSDirectMessageUser",
+      "selector": "-isBlueVerified",
+      "native": {
+        "types": "@16@0:8",
+        "address": 39341320
+      }
+    },
+    {
+      "feature": "badges",
+      "class": "T1TwitterCoreStatusViewModelAdapter",
+      "selector": "-isFromUserBlueVerified",
+      "native": {
+        "types": "B16@0:8",
+        "address": 14550212
+      }
+    },
+    {
+      "feature": "grok",
+      "class": "GrokAnalyzeButtonManager",
+      "selector": "-init",
+      "native": null
+    },
+    {
+      "feature": "grok",
+      "class": "TTAStatusInlineAnalyticsButton",
+      "selector": "-init",
+      "native": {
+        "types": "@16@0:8",
+        "address": 46348612
+      }
+    },
+    {
+      "feature": "grok",
+      "class": "T1StatusPhotoEditorHandler",
+      "selector": "-photoEditorCanEditWithGrok:",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 2209364
+      }
+    },
+    {
+      "feature": "settings",
+      "class": "T1GenericSettingsViewController",
+      "selector": "-viewWillAppear:",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 12064548
+      }
+    },
+    {
+      "feature": "settings",
+      "class": "TFSFeatureSwitches",
+      "selector": "-boolForKey:",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 4295839704
+      }
+    },
+    {
+      "feature": "settings",
+      "class": "TFSInstrumentedFeatureSwitches",
+      "selector": "-boolForKey:",
+      "native": {
+        "types": "B24@0:8@16",
+        "address": 4295877320
+      }
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "TTAStatusInlineReplyButton",
+      "selector": "-didTap",
+      "native": {
+        "types": "v16@0:8",
+        "address": 46289912
+      }
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1StatusViewInlineActionTapEventHandler",
+      "selector": "-performReplyActionWithAccount:event:controller:scribeContext:scribeElement:parameters:originalStatus:",
+      "native": {
+        "types": "v72@0:8@16@24@32@40@48@56@64",
+        "address": 1453228
+      }
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1TweetComposeViewController",
+      "selector": "-viewDidAppear:",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 279616
+      }
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1TweetComposeViewController",
+      "selector": "-_t1_didTapSendButton:",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 369212
+      }
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1TweetComposeViewController",
+      "selector": "-_tweetButtonTapped:",
+      "native": null
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1TweetComposeViewController",
+      "selector": "-_t1_main_sendTweet",
+      "native": null
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1TweetComposeViewController",
+      "selector": "-_t1_checkForValidTweetsAndSend",
+      "native": {
+        "types": "v16@0:8",
+        "address": 374748
+      }
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1TweetComposeViewController",
+      "selector": "-_t1_sendCompositions:",
+      "native": {
+        "types": "v24@0:8@16",
+        "address": 379064
+      }
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1TweetComposeViewController",
+      "selector": "-_t1_sendReply",
+      "native": null
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1TweetComposeViewController",
+      "selector": "-_t1_compositionDidSend:",
+      "native": null
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1TweetComposeViewController",
+      "selector": "-didFailToSendComposition:",
+      "native": null
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1TweetComposeViewController",
+      "selector": "-viewDidDisappear:",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 14674328
+      }
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1PersistentComposeViewController",
+      "selector": "-statusViewModel",
+      "native": {
+        "types": "@16@0:8",
+        "address": 2691076
+      }
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1PersistentComposeViewController",
+      "selector": "-viewDidAppear:",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 3979372
+      }
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1ComposePresenter",
+      "selector": "-showComposerWithSessionConfig:",
+      "native": null
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1ComposePresenter",
+      "selector": "-presentComposer",
+      "native": null
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1TweetComposeReplyContextViewController",
+      "selector": "-setReplyToStatus:",
+      "native": null
+    },
+    {
+      "feature": "replyWorkflow",
+      "class": "T1TweetComposeReplyContextViewController",
+      "selector": "-setReplyToStatusInfo:",
+      "native": null
+    },
+    {
+      "feature": "nativeReplyNetwork",
+      "class": "NSURLSession",
+      "selector": "-dataTaskWithRequest:",
+      "native": null
+    },
+    {
+      "feature": "nativeReplyNetwork",
+      "class": "NSURLSession",
+      "selector": "-dataTaskWithRequest:completionHandler:",
+      "native": null
+    },
+    {
+      "feature": "nativeReplyNetwork",
+      "class": "NSURLSession",
+      "selector": "-uploadTaskWithRequest:fromData:",
+      "native": null
+    },
+    {
+      "feature": "nativeReplyNetwork",
+      "class": "NSURLSession",
+      "selector": "-uploadTaskWithRequest:fromData:completionHandler:",
+      "native": null
+    },
+    {
+      "feature": "nativeReplyNetwork",
+      "class": "NSURLSession",
+      "selector": "-uploadTaskWithRequest:fromFile:",
+      "native": null
+    },
+    {
+      "feature": "nativeReplyNetwork",
+      "class": "NSURLSession",
+      "selector": "-uploadTaskWithRequest:fromFile:completionHandler:",
+      "native": null
+    },
+    {
+      "feature": "nativeReplyNetwork",
+      "class": "TNLURLSessionTaskOperation",
+      "selector": "-_network_finalizeDidCompleteTask:URLSession:error:",
+      "native": null
+    },
+    {
+      "feature": "nativeReplyNetwork",
+      "class": "TNLURLSessionTaskOperation",
+      "selector": "-URLSession:task:didCompleteWithError:",
+      "native": {
+        "types": "v40@0:8@16@24@32",
+        "address": 15896544
+      }
+    },
+    {
+      "feature": "nativeReplyApplication",
+      "class": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "selector": "-modelWithParseError:APIErrors:",
+      "native": {
+        "types": "@32@0:8^@16^@24",
+        "address": 16952496
+      }
+    },
+    {
+      "feature": "nativeReplyApplication",
+      "class": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "selector": "-prepare",
+      "native": {
+        "types": "v16@0:8",
+        "address": 35714012
+      }
+    },
+    {
+      "feature": "nativeReplyApplication",
+      "class": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "selector": "-originalRequest",
+      "native": {
+        "types": "@16@0:8",
+        "address": 15854724
+      }
+    },
+    {
+      "feature": "nativeReplyApplication",
+      "class": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "selector": "-model",
+      "native": {
+        "types": "@16@0:8",
+        "address": 35714904
+      }
+    },
+    {
+      "feature": "nativeReplyApplication",
+      "class": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "selector": "-parseError",
+      "native": {
+        "types": "@16@0:8",
+        "address": 35715072
+      }
+    },
+    {
+      "feature": "nativeReplyApplication",
+      "class": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "selector": "-operationError",
+      "native": {
+        "types": "@16@0:8",
+        "address": 35715240
+      }
+    },
+    {
+      "feature": "nativeReplyApplication",
+      "class": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "selector": "-APIErrors",
+      "native": {
+        "types": "@16@0:8",
+        "address": 35715408
+      }
+    },
+    {
+      "feature": "nativeReplyApplication",
+      "class": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "selector": "-finalModel",
+      "native": {
+        "types": "@16@0:8",
+        "address": 35716264
+      }
+    },
+    {
+      "feature": "nativeReplyApplication",
+      "class": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "selector": "-finalParseError",
+      "native": {
+        "types": "@16@0:8",
+        "address": 35716292
+      }
+    },
+    {
+      "feature": "nativeReplyApplication",
+      "class": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "selector": "-finalOperationError",
+      "native": {
+        "types": "@16@0:8",
+        "address": 35716320
+      }
+    },
+    {
+      "feature": "nativeReplyApplication",
+      "class": "_TtC14GraphQLActions23GraphQLEndpointResponse",
+      "selector": "-finalAPIErrors",
+      "native": {
+        "types": "@16@0:8",
+        "address": 35716348
+      }
+    },
+    {
+      "feature": "nativeReplyApplication",
+      "class": "TFSAPIRequest",
+      "selector": "-URL",
+      "native": {
+        "types": "@16@0:8",
+        "address": 35601364
+      }
+    },
+    {
+      "feature": "webReplyAccountBound",
+      "class": "T1WebViewController",
+      "selector": "-initWithRootURL:account:shouldAuthenticate:shouldPresentAsNativePage:sourceStatus:scribeComponent:scribeParameters:",
+      "native": {
+        "types": "@64@0:8@16@24B32B36@40@48@56",
+        "address": 5578912
+      }
+    },
+    {
+      "feature": "webReplyAccountBound",
+      "class": "T1WebViewController",
+      "selector": "-account",
+      "native": {
+        "types": "@16@0:8",
+        "address": 5608776
+      }
+    },
+    {
+      "feature": "webReplyAccountBound",
+      "class": "T1WebViewController",
+      "selector": "-doesURLResultTypeOpenInWebview:",
+      "native": {
+        "types": "B24@0:8q16",
+        "address": 5603796
+      }
+    },
+    {
+      "feature": "compatibilitySignIn",
+      "class": "TFSTwitterAPIXAuthPasswordCommand",
+      "selector": "-initWithContext:accountID:authContext:identifier:password:simCountryCode:httpRequestConfiguration:supportOneFactorAuthorization:knownDeviceToken:uiMetrics:authTokenStorage:source:responseModelBuilder:completionBlock:",
+      "native": {
+        "types": "@124@0:8@16@24@32@40@48@56@64B72@76@84@92Q100@108@?116",
+        "address": 43800796
+      }
+    },
+    {
+      "feature": "compatibilitySignIn",
+      "class": "TFSTwitterServiceRunner",
+      "selector": "+APICommandContext",
+      "native": {
+        "types": "@16@0:8",
+        "address": 4295812316
+      }
+    },
+    {
+      "feature": "compatibilitySignIn",
+      "class": "TFSTwitterServiceRunner",
+      "selector": "+APICommandLoader",
+      "native": {
+        "types": "@16@0:8",
+        "address": 4295812312
+      }
+    },
+    {
+      "feature": "compatibilitySignIn",
+      "class": "TNUServiceHTTPConfiguration",
+      "selector": "+configurationForForegroundRetriableRequest",
+      "native": {
+        "types": "@16@0:8",
+        "address": 36022112
+      }
+    },
+    {
+      "feature": "compatibilitySignIn",
+      "class": "TFNTwitterAccount",
+      "selector": "-initWithUsername:userID:",
+      "native": {
+        "types": "@32@0:8@16q24",
+        "address": 9768252
+      }
+    },
+    {
+      "feature": "compatibilitySignIn",
+      "class": "TFNTwitterAccount",
+      "selector": "-updateUserInfoAndCredentialsWithToken:secret:username:",
+      "native": {
+        "types": "v40@0:8@16@24@32",
+        "address": 9787368
+      }
+    },
+    {
+      "feature": "compatibilitySignIn",
+      "class": "T1LoginChallengeFactory",
+      "selector": "+loginChallengeWithMode:loginType:requestID:user:userID:URLString:loginCause:",
+      "native": {
+        "types": "@72@0:8q16q24@32@40q48@56q64",
+        "address": 1543184
+      }
+    },
+    {
+      "feature": "compatibilitySignIn",
+      "class": "T1AccountsViewController",
+      "selector": "-viewWillAppear:",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 1089640
+      }
+    },
+    {
+      "feature": "compatibilitySignIn",
+      "class": "T1AccountsViewController",
+      "selector": "-viewDidAppear:",
+      "native": {
+        "types": "v20@0:8B16",
+        "address": 13490452
+      }
+    },
+    {
+      "feature": "compatibilitySignIn",
+      "class": "T1AccountsViewController",
+      "selector": "-didAddAccountBlock",
+      "native": {
+        "types": "@?16@0:8",
+        "address": 1099996
+      }
+    }
+  ],
+  "limitations": "Metadata presence is not device execution. System framework hooks and dynamic theme providers require runtime checks. Legacy aliases and alternative probes may deliberately be absent."
+}

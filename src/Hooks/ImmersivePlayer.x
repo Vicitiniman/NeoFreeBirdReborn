@@ -126,15 +126,4 @@ static BOOL isImmersiveCardPan(id viewController,
 
 %end
 
-%hook T1ImmersiveViewControllerV2
-
-- (BOOL)gestureRecognizerShouldBegin:(UIGestureRecognizer*)gesture {
-    if ([BHTSettings boolForKey:@"disable_immersive_scroll"] &&
-        isImmersiveCardPan(self, gesture)) {
-        return NO;
-    }
-
-    return %orig;
-}
-
-%end
+// T1ImmersiveViewControllerV2 was removed in X 12.24.1.

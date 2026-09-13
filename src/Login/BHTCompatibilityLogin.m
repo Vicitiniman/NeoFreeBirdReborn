@@ -1,5 +1,7 @@
 #import "Login/BHTCompatibilityLogin.h"
 
+#import "Reply/BHTDetailedReplyDiagnostics.h"
+
 #import "Compatibility/BHTCompatibilityReporter.h"
 #import "Core/BHTBundle.h"
 
@@ -11,8 +13,9 @@
 #import <stdbool.h>
 #import <stdint.h>
 #import <string.h>
+#import <math.h>
 
-static NSString* const BHTCompatibilityTargetVersion = @"12.9";
+static NSString* const BHTCompatibilityTargetVersion = @"12.24.1";
 static NSString* const BHTMetricsHandlerName = @"bht";
 static const NSTimeInterval BHTCompatibilityMinimumPreflightDuration = 12.0;
 
@@ -97,6 +100,8 @@ static NSString* BHTCompatibilityLastCommandPayloadClass = @"none";
 static NSString* BHTCompatibilityLastCommandFailureClass = @"none";
 static NSString* BHTCompatibilityLastCommandFailureDomain = @"none";
 static NSInteger BHTCompatibilityLastCommandFailureCode;
+static NSInteger BHTCompatibilityLastCommandAPIErrorCode = -1;
+static BOOL BHTCompatibilityLastCommandUsedMetrics;
 static __weak UIViewController*
     BHTCompatibilityPresentedSignInController;
 static char BHTCompatibilityEntryButtonKey;
@@ -170,6 +175,34 @@ static NSInteger BHTCompatibilityFailureCode(id failure) {
                : 0;
 }
 
+// X 12.24.1's APICommandErrorFromAPIResponse: stores the HTTP status in
+// NSError.code and the API reason in this fixed numeric user-info field.
+// Read only that number; never copy or export the dictionary or its message.
+static NSInteger BHTCompatibilityAPIErrorCode(id failure) {
+    if (![failure isKindOfClass:NSError.class]) return -1;
+    NSError* error = failure;
+    if (![error.domain isEqualToString:
+            @"com.twitter.TFSTwitterAPICommand.error"]) return -1;
+    id value = error.userInfo[@"TFSTwitterAPICommandError.apiErrorCode"];
+    if (![value isKindOfClass:NSNumber.class] ||
+        CFGetTypeID((__bridge CFTypeRef)value) == CFBooleanGetTypeID()) return -1;
+    double code = [value doubleValue];
+    return isfinite(code) && code >= 0 && code <= 99999 && floor(code) == code
+               ? (NSInteger)code : -1;
+}
+
+// Keep the server-generated value byte-for-byte. A failed page, an empty
+// result or a non-JSON callback must not become authentication input.
+static NSString* BHTCompatibilityValidatedMetrics(id value) {
+    if (![value isKindOfClass:NSString.class] ||
+        [value length] == 0 || [value length] > 65536) return nil;
+    NSData* data = [value dataUsingEncoding:NSUTF8StringEncoding];
+    if (!data || data.length > 65536) return nil;
+    id object = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+    return [object isKindOfClass:NSDictionary.class] && [object count] > 0
+               ? [value copy] : nil;
+}
+
 static void BHTCompatibilityRecordCommandCompletion(
     BOOL success, id payload, id failure) {
     BHTCompatibilityRecord(
@@ -199,6 +232,8 @@ static void BHTCompatibilityRecordCommandCompletion(
             BHTCompatibilityBoundedFailureDomain(failure);
         BHTCompatibilityLastCommandFailureCode =
             BHTCompatibilityFailureCode(failure);
+        BHTCompatibilityLastCommandAPIErrorCode =
+            BHTCompatibilityAPIErrorCode(failure);
     }
 }
 
@@ -207,6 +242,14 @@ static NSString* BHTCompatibilityFailureCategory(
     if ([failure isKindOfClass:NSError.class] &&
         [((NSError*)failure).domain isEqualToString:NSURLErrorDomain]) {
         return @"network_failure";
+    }
+    if ([failure isKindOfClass:NSError.class] &&
+        [((NSError*)failure).domain isEqualToString:
+            @"com.twitter.TFSTwitterAPICommand.error"]) {
+        NSInteger status = ((NSError*)failure).code;
+        if (status == 429) return @"rate_limited";
+        if (status >= 500 && status <= 599) return @"service_unavailable";
+        if (status == 404 || status == 410) return @"request_unavailable";
     }
     return payloadPresent
                ? @"authentication_rejected_with_payload"
@@ -803,8 +846,8 @@ static BOOL BHTCompatibilityMetricsURLIsAllowed(NSURL* URL) {
         componentsWithURL:URL resolvingAgainstBaseURL:NO];
     for (NSURLQueryItem* item in components.queryItems ?: @[]) {
         if (![item.name isEqualToString:@"result"]) continue;
-        NSString* metrics = item.value;
-        if (metrics.length == 0 || metrics.length > 65536) {
+        NSString* metrics = BHTCompatibilityValidatedMetrics(item.value);
+        if (!metrics) {
             continue;
         }
         BHTCompatibilityRecord(
@@ -906,8 +949,8 @@ static BOOL BHTCompatibilityMetricsURLIsAllowed(NSURL* URL) {
         return;
     }
 
-    NSString* metrics = (NSString*)message.body;
-    if (metrics.length > 0 && metrics.length <= 65536) {
+    NSString* metrics = BHTCompatibilityValidatedMetrics(message.body);
+    if (metrics) {
         BHTCompatibilityRecord(
             BHTCompatibilityLoginEventMetricsResolved,
             @"metrics_resolved", nil);
@@ -1484,6 +1527,8 @@ static BOOL BHTPresentNativeLoginChallenge(
                         }
                         return;
                     }
+                    BHTDetailedReplyDiagnosticsNoteCompatibilityAccount(
+                        account);
                     BHTCompatibilityRecord(
                         BHTCompatibilityLoginEventAuthenticated,
                         @"authenticated", nil);
@@ -1875,6 +1920,15 @@ static BOOL BHTPresentNativeLoginChallenge(
 }
 
 - (NSString*)messageForFailureCategory:(NSString*)category {
+    if ([category isEqualToString:@"request_unavailable"]) {
+        return BHTCompatibilityLocalized(@"COMPATIBILITY_SIGN_IN_REQUEST_ERROR");
+    }
+    if ([category isEqualToString:@"rate_limited"]) {
+        return BHTCompatibilityLocalized(@"COMPATIBILITY_SIGN_IN_RATE_LIMIT_ERROR");
+    }
+    if ([category isEqualToString:@"service_unavailable"]) {
+        return BHTCompatibilityLocalized(@"COMPATIBILITY_SIGN_IN_SERVICE_ERROR");
+    }
     if ([category isEqualToString:@"unsupported_version"]) {
         return BHTCompatibilityLocalized(
             @"COMPATIBILITY_SIGN_IN_VERSION_ERROR");
@@ -2024,6 +2078,10 @@ static BOOL BHTPresentNativeLoginChallenge(
                     : fallbackUsername,
                 userID);
             registered = BHTRegisterNativeAccount(account);
+            if (registered) {
+                BHTDetailedReplyDiagnosticsNoteCompatibilityAccount(
+                    account);
+            }
         } @catch (__unused NSException* exception) {
             registered = NO;
         }
@@ -2069,9 +2127,14 @@ static BOOL BHTPresentNativeLoginChallenge(
     self.requestStarted = YES;
     self.navigationItem.leftBarButtonItem.enabled = NO;
     __weak typeof(self) weakSelf = self;
+    // Only the first completion may present a challenge or register an
+    // account, even if a loader unexpectedly delivers another callback.
+    __block BOOL completionDelivered = NO;
     void (^completion)(BOOL, id, id) =
         ^(BOOL success, id response, id error) {
             dispatch_async(dispatch_get_main_queue(), ^{
+                if (completionDelivered) return;
+                completionDelivered = YES;
                 BHTCompatibilityLoginViewController* strongSelf =
                     weakSelf;
                 if (!strongSelf || strongSelf.cancelled) return;
@@ -2091,15 +2154,20 @@ static BOOL BHTPresentNativeLoginChallenge(
 
     id command = nil;
     @try {
+        @synchronized(BHTCompatibilityLoginLock()) {
+            BHTCompatibilityLastCommandUsedMetrics = metrics.length > 0;
+        }
         command = BHTCreatePasswordCommand(
             username, password, metrics, completion);
         if (!command || !BHTStartPasswordCommand(command)) {
+            completionDelivered = YES;
             self.requestStarted = NO;
             [self finishWithSuccess:NO
                    failureCategory:@"command_start_failed"];
             return;
         }
     } @catch (__unused NSException* exception) {
+        completionDelivered = YES;
         self.requestStarted = NO;
         [self finishWithSuccess:NO
                failureCategory:@"command_exception"];
@@ -2148,7 +2216,7 @@ static BOOL BHTPresentNativeLoginChallenge(
 
     BHTCompatibilityRecord(
         BHTCompatibilityLoginEventAttempted,
-        @"preparing_metrics", nil);
+        @"preparing_metrics", @"none");
     self.passwordField.text = @"";
     [self.view endEditing:YES];
     [self setBusy:YES
@@ -2162,7 +2230,8 @@ static BOOL BHTPresentNativeLoginChallenge(
         NSProcessInfo.processInfo.systemUptime;
     __weak typeof(self) weakSelf = self;
     [self.metricsCollector
-        startWithCompletion:^(__unused NSString* metrics) {
+        startWithCompletion:^(NSString* metrics) {
+            NSString* validatedMetrics = BHTCompatibilityValidatedMetrics(metrics);
             NSTimeInterval elapsed =
                 NSProcessInfo.processInfo.systemUptime -
                 preflightStartedAt;
@@ -2181,13 +2250,13 @@ static BOOL BHTPresentNativeLoginChallenge(
                     BHTCompatibilityRecord(
                         BHTCompatibilityLoginEventMinimumPreflightElapsed,
                         @"preflight_complete", nil);
-                    // The successful beta 29 and beta 36 device reports both
-                    // reached X only after this preflight window and supplied
-                    // nil uiMetrics. Keep the captured value diagnostic-only.
+                    // The nil-metrics workaround from X 12.9 no longer signs
+                    // in on the reported 12.24.1 installation. Supply the fresh
+                    // verification result when valid; never synthesize one.
                     [strongSelf
                         startPasswordCommandForUsername:username
                                                password:password
-                                                metrics:nil];
+                                                metrics:validatedMetrics];
                 });
         }];
 }
@@ -2877,6 +2946,8 @@ BHTCompatibilitySignInDiagnosticSnapshot(void) {
     NSString* lastCommandFailureClass;
     NSString* lastCommandFailureDomain;
     NSInteger lastCommandFailureCode;
+    NSInteger lastCommandAPIErrorCode;
+    BOOL lastCommandUsedMetrics;
     @synchronized(BHTCompatibilityLoginLock()) {
         lastStage = [BHTCompatibilityLoginLastStage copy] ?: @"idle";
         lastFailure =
@@ -2895,6 +2966,8 @@ BHTCompatibilitySignInDiagnosticSnapshot(void) {
             [BHTCompatibilityLastCommandFailureDomain copy] ?: @"none";
         lastCommandFailureCode =
             BHTCompatibilityLastCommandFailureCode;
+        lastCommandAPIErrorCode = BHTCompatibilityLastCommandAPIErrorCode;
+        lastCommandUsedMetrics = BHTCompatibilityLastCommandUsedMetrics;
     }
     Class accountsClass =
         NSClassFromString(@"T1AccountsViewController");
@@ -2936,6 +3009,8 @@ BHTCompatibilitySignInDiagnosticSnapshot(void) {
         @"lastCommandFailureClass": lastCommandFailureClass,
         @"lastCommandFailureDomain": lastCommandFailureDomain,
         @"lastCommandFailureCode": @(lastCommandFailureCode),
+        @"lastCommandAPIErrorCode": @(lastCommandAPIErrorCode),
+        @"lastCommandUsedMetrics": @(lastCommandUsedMetrics),
         @"counters": [counters copy],
         @"compatibilitySignInMode": @"dedicated_xauth_password",
         @"nativeSignInRemainsDefault": @YES,
@@ -2944,7 +3019,7 @@ BHTCompatibilitySignInDiagnosticSnapshot(void) {
         @"credentialEntryOwner": @"compatibility_screen_ephemeral",
         @"credentialPersistence": @"x_native_account_storage",
         @"xAuthClientMetadataPolicy":
-            @"native_x_12_9",
+            @"native_x_12_24_1",
         @"xAuthClientMetadataTargetVersion":
             BHTCompatibilityTargetVersion,
         @"xAuthClientMetadataOverrideInstalled": @NO,
@@ -2952,15 +3027,15 @@ BHTCompatibilitySignInDiagnosticSnapshot(void) {
         @"xAuthClientMetadataOverrideApplied": @0,
         @"xAuthClientMetadataScopeTimedOut": @0,
         @"compatibilityRequestProfile":
-            @"beta29_native_12_9_preflight",
+            @"beta55_native_12_24_1_validated_metrics",
         @"preflightPolicy":
-            @"minimum_12_second_then_nil_metrics",
+            @"minimum_12_second_then_validated_metrics",
         @"preflightMinimumDelaySeconds":
             @(BHTCompatibilityMinimumPreflightDuration),
         @"attestationOverridesIncluded": @NO,
         @"credentialBackupIncluded": @NO,
-        @"uiMetricsPolicy": @"compatibility_nil",
-        @"capturedMetricsUsedForAuthentication": @NO,
+        @"uiMetricsPolicy": @"validated_json_else_nil",
+        @"capturedMetricsUsedForAuthentication": @YES,
         @"capturesCredentials": @NO,
         @"capturesIdentifiers": @NO,
         @"capturesPayloadContents": @NO,

@@ -3,7 +3,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-// Reports whether the guarded X 12.9 compatibility password flow can run.
+// Reports whether the guarded X 12.24.1 compatibility password flow can run.
 // Credentials exist only in the temporary compatibility controller and are
 // cleared before the private X command starts; they are never persisted.
 BOOL BHTCompatibilitySignInIsAvailable(void);

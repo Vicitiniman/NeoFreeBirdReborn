@@ -37,6 +37,7 @@ NSString* const BHTSidebarChatItemID = @"chat";
 NSString* const BHTSidebarNotificationsItemID = @"notifications";
 NSString* const BHTSidebarSpacesItemID = @"spaces";
 NSString* const BHTSidebarFollowRequestsItemID = @"follow_requests";
+NSString* const BHTSidebarGrokBotItemID = @"grok_bot";
 NSString* const BHTSidebarNavigationSettingsDidChangeNotification =
     @"BHTSidebarNavigationSettingsDidChangeNotification";
 
@@ -87,18 +88,9 @@ void BHTRecordSidebarAddAccountRefreshRequested(void) {
 @implementation BHTSidebarNavigationUtility
 
 + (NSArray<NSString*>*)canonicalItemIDs {
-    return @[
-        BHTSidebarProfileItemID,
-        BHTSidebarBlueItemID,
-        BHTSidebarHistoryItemID,
-        BHTSidebarCommunitiesItemID,
-        BHTSidebarNewsItemID,
-        BHTSidebarListsItemID,
-        BHTSidebarChatItemID,
-        BHTSidebarNotificationsItemID,
-        BHTSidebarSpacesItemID,
-        BHTSidebarFollowRequestsItemID
-    ];
+    // Only create selectable tiles that have a title and icon. Legacy Grok
+    // rows are controlled independently by the navigation editor's switch.
+    return [[self availableItems] valueForKey:TabPageKey];
 }
 
 + (NSArray<NSDictionary*>*)availableItems {

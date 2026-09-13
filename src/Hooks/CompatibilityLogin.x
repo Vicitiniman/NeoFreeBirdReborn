@@ -57,7 +57,7 @@
 %ctor {
     NSString* version = [NSBundle.mainBundle
         objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-    if ([version isEqualToString:@"12.9"]) {
+    if ([version isEqualToString:@"12.24.1"]) {
         %init(BHTCompatibilityLoginHooks);
 
         Class accountsController =

@@ -24,6 +24,8 @@ typedef NS_ENUM(NSUInteger, BHTForYouFilterDiagnosticEvent) {
     BHTForYouFilterDiagnosticNoMatch,
     BHTForYouFilterDiagnosticRenderRowCollapsed,
     BHTForYouFilterDiagnosticRenderReloaded,
+    BHTForYouFilterDiagnosticProviderOwnerResolved,
+    BHTForYouFilterDiagnosticProviderOwnerMissing,
     BHTForYouFilterDiagnosticEventCount,
 };
 

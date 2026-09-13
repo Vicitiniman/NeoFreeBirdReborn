@@ -156,12 +156,7 @@ static NSArray* sectionsWithNeoFreeBirdEntry(TFNItemsDataViewController* setting
 }
 %end
 
-%hook T1SettingsViewController
-- (void)viewWillAppear:(BOOL)animated {
-    %orig;
-    insertNeoFreeBirdSettingsIfRoot(self);
-}
-%end
+// T1SettingsViewController was removed in X 12.24.1.
 
 // Every sections rebuild runs through this transform right before setSections:,
 // so hooking it on the base class covers both settings roots.

@@ -12,6 +12,8 @@
 #import "CustomTabBarViewController.h"
 #import <objc/runtime.h>
 #import "Core/BHTBundle.h"
+#import "Core/BHTSettings.h"
+#import "Sidebar/BHTSidebarNavigationUtility.h"
 #import "Core/TwitterChirpFont.h"
 #import "CustomTabBarCell.h"
 #import "CustomTabBarNativeColors.h"
@@ -78,6 +80,7 @@ static void BHTPulseCustomTabBarSearchTarget(UIView* target) {
 @property (nonatomic, strong) UICollectionView* gridView;
 @property (nonatomic, strong) UICollectionView* previewView;
 @property (nonatomic, strong) UIView* separator;
+@property (nonatomic, weak) UISwitch* grokSidebarSwitch;
 
 // All available tab pageIDs; and the selected ones in tab-bar order (Home
 // first).
@@ -121,6 +124,17 @@ static void BHTPulseCustomTabBarSearchTarget(UIView* target) {
 - (void)revealSettingsSearchTargetIfNeeded {
     NSString* target = self.settingsSearchTargetIdentifier;
     if (target.length == 0 || !self.gridView.window) return;
+
+    if ([target isEqualToString:@"hide_grok_sidebar"]) {
+        self.settingsSearchTargetIdentifier = nil;
+        [self.gridView setContentOffset:CGPointMake(0, MAX(
+            -self.gridView.adjustedContentInset.top,
+            self.gridView.contentSize.height - self.gridView.bounds.size.height +
+                self.gridView.adjustedContentInset.bottom)) animated:NO];
+        [self.gridView layoutIfNeeded];
+        BHTPulseCustomTabBarSearchTarget(self.grokSidebarSwitch);
+        return;
+    }
 
     NSUInteger index = [self.allPages indexOfObject:target];
     self.settingsSearchTargetIdentifier = nil;
@@ -344,6 +358,15 @@ static void BHTPulseCustomTabBarSearchTarget(UIView* target) {
 
 #pragma mark - Save / Reset
 
+- (void)grokSidebarChanged:(UISwitch*)sender {
+    [[NSUserDefaults standardUserDefaults] setBool:sender.on
+                                           forKey:@"hide_grok_sidebar"];
+    [[NSNotificationCenter defaultCenter]
+        postNotificationName:BHTSidebarNavigationSettingsDidChangeNotification
+                      object:nil];
+    [BHTSidebarNavigationUtility refreshRegisteredDashContentControllers];
+}
+
 - (void)saveButtonTapped {
     [self persistChanges];
 
@@ -406,19 +429,21 @@ static UIViewController* findViewControllerOfClass(UIViewController* vc,
     UIAlertController* alert = [UIAlertController
         alertControllerWithTitle:
             [[BHTBundle sharedBundle]
-                localizedTwitterStringForKey:
-                    @"SUBSCRIPTION_TAB_CUSTOMIZATION_RESTORE_BUTTON_TITLE"]
+                localizedStringForKey:
+                    @"BHT_RESTORE_DEFAULTS"]
                          message:[[BHTBundle sharedBundle]
                                      localizedStringForKey:
                                          @"CUSTOM_TAB_BAR_RESET_MESSAGE"]
                   preferredStyle:UIAlertControllerStyleAlert];
     [alert addAction:[UIAlertAction
                          actionWithTitle:[[BHTBundle sharedBundle]
-                                             localizedTwitterStringForKey:
-                                                 @"CONTINUE_ACTION_LABEL"]
+                                             localizedStringForKey:
+                                                 @"BHT_RESTORE_DEFAULTS"]
                                    style:UIAlertActionStyleDestructive
                                  handler:^(UIAlertAction* _Nonnull action) {
                                      [CustomTabBarUtility resetSelection];
+                                     [[NSUserDefaults standardUserDefaults]
+                                         removeObjectForKey:@"hide_grok_sidebar"];
                                      [self loadData];
                                      [self recomputeChanges];
                                  }]];
@@ -553,8 +578,8 @@ static UIViewController* findViewControllerOfClass(UIViewController* vc,
     [footer.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
 
     NSString* title = [[BHTBundle sharedBundle]
-        localizedTwitterStringForKey:
-            @"SUBSCRIPTION_TAB_CUSTOMIZATION_RESTORE_BUTTON_TITLE"];
+        localizedStringForKey:
+            @"BHT_RESTORE_DEFAULTS"];
     UIButton* restore = [objc_getClass("TFNButton") buttonWithTitle:title
                                                          imageNamed:nil
                                                               style:2
@@ -564,9 +589,38 @@ static UIViewController* findViewControllerOfClass(UIViewController* vc,
                   action:@selector(restoreTapped)
         forControlEvents:UIControlEventTouchUpInside];
     [footer addSubview:restore];
+    BHTBundle* bundle = [BHTBundle sharedBundle];
+    UILabel* grokTitle = [UILabel new];
+    grokTitle.text = [bundle localizedStringForKey:@"NAV_HIDE_GROK_BOT_TITLE"];
+    grokTitle.font = [UIFont preferredFontForTextStyle:UIFontTextStyleBody];
+    grokTitle.textColor = UIColor.labelColor;
+    grokTitle.numberOfLines = 0;
+    UISwitch* grokSwitch = [UISwitch new];
+    grokSwitch.on = [BHTSettings boolForKey:@"hide_grok_sidebar"];
+    grokSwitch.accessibilityLabel = grokTitle.text;
+    grokSwitch.onTintColor = CurrentAccentColor();
+    [grokSwitch addTarget:self action:@selector(grokSidebarChanged:)
+        forControlEvents:UIControlEventValueChanged];
+    self.grokSidebarSwitch = grokSwitch;
+    UIStackView* row = [[UIStackView alloc] initWithArrangedSubviews:@[grokTitle, grokSwitch]];
+    row.alignment = UIStackViewAlignmentCenter;
+    row.spacing = 12;
+    UILabel* detail = [UILabel new];
+    detail.text = [bundle localizedStringForKey:@"NAV_HIDE_GROK_BOT_DETAIL"];
+    detail.font = [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote];
+    detail.textColor = UIColor.secondaryLabelColor;
+    detail.numberOfLines = 0;
+    UIStackView* controls = [[UIStackView alloc] initWithArrangedSubviews:@[row, detail]];
+    controls.axis = UILayoutConstraintAxisVertical;
+    controls.spacing = 6;
+    controls.translatesAutoresizingMaskIntoConstraints = NO;
+    [footer addSubview:controls];
     [NSLayoutConstraint activateConstraints:@[
+        [controls.topAnchor constraintEqualToAnchor:footer.topAnchor constant:8],
+        [controls.leadingAnchor constraintEqualToAnchor:footer.leadingAnchor constant:20],
+        [controls.trailingAnchor constraintEqualToAnchor:footer.trailingAnchor constant:-20],
         [restore.centerXAnchor constraintEqualToAnchor:footer.centerXAnchor],
-        [restore.centerYAnchor constraintEqualToAnchor:footer.centerYAnchor]
+        [restore.topAnchor constraintEqualToAnchor:controls.bottomAnchor constant:24]
     ]];
     return footer;
 }
@@ -682,7 +736,19 @@ static UIViewController* findViewControllerOfClass(UIViewController* vc,
     if (collectionView != self.gridView) {
         return CGSizeZero;
     }
-    return CGSizeMake(CGRectGetWidth(collectionView.bounds), 72);
+    CGFloat width = CGRectGetWidth(collectionView.bounds);
+    BHTBundle* bundle = [BHTBundle sharedBundle];
+    CGFloat titleHeight = [[bundle localizedStringForKey:@"NAV_HIDE_GROK_BOT_TITLE"]
+        boundingRectWithSize:CGSizeMake(MAX(80, width - 105), CGFLOAT_MAX)
+        options:NSStringDrawingUsesLineFragmentOrigin
+        attributes:@{NSFontAttributeName: [UIFont preferredFontForTextStyle:UIFontTextStyleBody]}
+        context:nil].size.height;
+    CGFloat detailHeight = [[bundle localizedStringForKey:@"NAV_HIDE_GROK_BOT_DETAIL"]
+        boundingRectWithSize:CGSizeMake(MAX(100, width - 40), CGFLOAT_MAX)
+        options:NSStringDrawingUsesLineFragmentOrigin
+        attributes:@{NSFontAttributeName: [UIFont preferredFontForTextStyle:UIFontTextStyleFootnote]}
+        context:nil].size.height;
+    return CGSizeMake(width, ceil(MAX(31, titleHeight) + detailHeight + 100));
 }
 
 @end

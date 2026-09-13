@@ -92,7 +92,7 @@
 /* Compatibility sign-in */
 "COMPATIBILITY_SIGN_IN_TITLE" = "Compatibility Sign-in";
 "COMPATIBILITY_SIGN_IN_HEADING" = "Compatibility Sign-in";
-"COMPATIBILITY_SIGN_IN_DETAIL" = "Uses X 12.9's guarded legacy account service when the normal sign-in screen does not finish.";
+"COMPATIBILITY_SIGN_IN_DETAIL" = "Tries an alternative sign-in with X 12.24.1's account service. Complete any verification X requests. If it fails, Share Report helps identify the cause.";
 "COMPATIBILITY_SIGN_IN_USERNAME_PLACEHOLDER" = "Username, email, or phone";
 "COMPATIBILITY_SIGN_IN_PASSWORD_PLACEHOLDER" = "Password";
 "COMPATIBILITY_SIGN_IN_ACTION" = "Sign in";
@@ -100,9 +100,12 @@
 "COMPATIBILITY_SIGN_IN_PREPARING" = "Preparing X's sign-in request…";
 "COMPATIBILITY_SIGN_IN_CONTACTING_X" = "Contacting X…";
 "COMPATIBILITY_SIGN_IN_REQUIRED_ERROR" = "Enter both your account identifier and password.";
-"COMPATIBILITY_SIGN_IN_VERSION_ERROR" = "Compatibility Sign-in is available only for X 12.9. Your normal X sign-in has not been changed.";
+"COMPATIBILITY_SIGN_IN_VERSION_ERROR" = "This version of Compatibility Sign-in supports X 12.24.1. Install the matching NeoFreeBird build to continue.";
 "COMPATIBILITY_SIGN_IN_RUNTIME_ERROR" = "The guarded compatibility account service is unavailable in this X build. Export a pre-login compatibility report so its selector checks can be reviewed.";
-"COMPATIBILITY_SIGN_IN_REJECTED_ERROR" = "X did not accept this sign-in. Check your details or use X's normal sign-in.";
+"COMPATIBILITY_SIGN_IN_REJECTED_ERROR" = "X did not accept this sign-in. If your details work on x.com, use Share Report so we can check why the app was rejected.";
+"COMPATIBILITY_SIGN_IN_REQUEST_ERROR" = "X could not complete this compatibility request. This does not confirm an incorrect password. Use Share Report to help diagnose the failure.";
+"COMPATIBILITY_SIGN_IN_RATE_LIMIT_ERROR" = "X has limited sign-in attempts. Wait before trying again.";
+"COMPATIBILITY_SIGN_IN_SERVICE_ERROR" = "X's sign-in service is temporarily unavailable. Please try again later.";
 "COMPATIBILITY_SIGN_IN_NETWORK_ERROR" = "X could not be reached. Check your connection and try again.";
 "COMPATIBILITY_SIGN_IN_GENERIC_ERROR" = "The compatibility sign-in could not finish safely. Try X's normal sign-in or export a compatibility report.";
 "COMPATIBILITY_SIGN_IN_OK" = "OK";
@@ -142,6 +145,12 @@
 
 "HIDE_GROK_SIDEBAR_TITLE" = "Hide Grok in sidebar";
 "HIDE_GROK_SIDEBAR_DETAIL" = "Remove the Grok destination from X's side menu.";
+"NAV_HIDE_GROK_BOT_TITLE" = "Hide Try Grok Bot";
+"NAV_HIDE_GROK_BOT_DETAIL" = "Hide the promotion in the sidebar. Saves automatically; close and reopen the app to apply.";
+"PROFILE_MEDIA_WATERFALL_TITLE" = "Profile media waterfall";
+"PROFILE_MEDIA_WATERFALL_DETAIL" = "Browse profile photos and videos at their natural proportions. Pinch to change columns; tap to open full screen. Applies when you reopen a profile.";
+"PROFILE_MEDIA_DEFAULT_PHOTOS_TITLE" = "Default to Photos";
+"PROFILE_MEDIA_DEFAULT_PHOTOS_DETAIL" = "Show Photos first in the profile media menu. You can still switch to Videos. Applies when you reopen a profile.";
 
 "HIDE_GROK_CREATE_TITLE" = "Hide Grok creation buttons";
 "HIDE_GROK_CREATE_DETAIL" = "Removes the options to create or edit images and videos with Grok.";
@@ -258,7 +267,13 @@
 "HIDE_PROMOTED_TITLE" = "No ads";
 "HIDE_PROMOTED_DETAIL" = "Remove all ads.";
 
-"UNDO_TWEET_TITLE" = "Undo Tweet";
+"UNDO_TWEET_TITLE" = "Undo send";
+"UNDO_SEND_OFF" = "Off — send immediately";
+"UNDO_SEND_SECONDS_FORMAT" = "%ld seconds";
+"UNDO_SEND_DESCRIPTION" = "Choose how long to hold a post before sending, giving you time to undo it.";
+"BHT_DOWNLOAD_PROGRESS" = "Downloading…";
+"BHT_RESTORE_DEFAULTS" = "Restore defaults";
+"SIDEBAR_GROK_BOT_TITLE" = "Try Grok Bot";
 
 "DOWNLOAD_VIDEOS_TITLE" = "Download media";
 "DOWNLOAD_VIDEOS_DETAIL" = "Save videos or GIFs right from the Tweet overflow menu.";
@@ -553,7 +568,7 @@
 "LIKES_MEDIA_WATERFALL_DETAIL" = "Add a Posts/Media selector with a pinch-adjustable 2–5 column gallery.";
 "LIKES_NAVIGATION_EDITOR_TITLE" = "Edit Likes navigation bar";
 "LIKES_NAVIGATION_SETTINGS_TITLE" = "Likes navigation";
-"LIKES_NAVIGATION_GRID_DETAIL" = "Tap a destination to show or hide it. Drag the tiles or the bar below to reorder the Likes section.";
+"LIKES_NAVIGATION_GRID_DETAIL" = "Tap a destination to show or hide it. Drag to reorder. Changes are saved automatically.";
 "LIKES_NAVIGATION_RESET_MESSAGE" = "Restore the Likes section and waterfall viewer to their default layout?";
 "LIKES_NAV_BOOKMARKS_TITLE" = "Bookmarks";
 "LIKES_NAV_VIDEOS_TITLE" = "Videos";
@@ -561,7 +576,7 @@
 "LIKES_NAV_LIKES_TITLE" = "Likes";
 "SIDEBAR_NAVIGATION_EDITOR_TITLE" = "Edit sidebar";
 "SIDEBAR_NAVIGATION_SETTINGS_TITLE" = "Sidebar";
-"SIDEBAR_NAVIGATION_GRID_DETAIL" = "Tap an item to show or hide it. Drag the tiles or the bar below to reorder X's sidebar.";
+"SIDEBAR_NAVIGATION_GRID_DETAIL" = "Tap an item to show or hide it. Drag the tiles or the bar below to reorder X's sidebar. Changes are saved automatically.";
 "SIDEBAR_NAVIGATION_RESET_MESSAGE" = "Restore the sidebar to its default layout?";
 "SIDEBAR_PROFILE_TITLE" = "Profile";
 "SIDEBAR_BLUE_TITLE" = "Blue";
@@ -591,14 +606,14 @@
 "HIDE_SCREENSHOT_BRANDING_DETAIL" = "Hide X's custom overlay on timeline screenshots.";
 "EXPORT_COMPATIBILITY_REPORT_TITLE" = "Export compatibility report";
 "EXPORT_COMPATIBILITY_REPORT_DETAIL" = "Share the X 12.9 runtime hook report for troubleshooting.";
-"DETAILED_REPLY_DIAGNOSTICS_TITLE" = "Detailed reply diagnostics (one reply)";
-"DETAILED_REPLY_DIAGNOSTICS_DETAIL" = "Temporary testing mode. Captures personal CreateTweet response and error details for the next native reply, then turns itself off.";
-"DETAILED_REPLY_DIAGNOSTICS_WARNING_TITLE" = "Capture detailed reply diagnostics?";
-"DETAILED_REPLY_DIAGNOSTICS_WARNING_MESSAGE" = "The next native reply may record reply text returned by X, your account handle and ID, post or media IDs, GraphQL response data, and private X error descriptions. Passwords, authentication tokens, cookies, and authentication headers are always excluded. Do not put secrets in the test reply. The capture turns itself off after one reply and is only for this beta.";
+"DETAILED_REPLY_DIAGNOSTICS_TITLE" = "Compare native posting and replies";
+"DETAILED_REPLY_DIAGNOSTICS_DETAIL" = "Temporary testing mode. Send one normal post first, verify it is visible, then send one native reply and export the compatibility report.";
+"DETAILED_REPLY_DIAGNOSTICS_WARNING_TITLE" = "Compare one post and one reply?";
+"DETAILED_REPLY_DIAGNOSTICS_WARNING_MESSAGE" = "First send one normal post and verify that it appears, then send one native reply. NeoFreeBird retains only known structural field names, a generic placeholder for unknown fields, value types, boolean feature-count buckets, safe fingerprints, and fixed result categories. It does not retain text, account or post IDs, URLs, body sizes, string lengths, headers, cookies, passwords, or authentication tokens. The capture turns itself off after both requests or ten minutes; replying first rejects the test.";
 "DETAILED_REPLY_DIAGNOSTICS_ENABLE_ONCE" = "Enable Once";
 "DETAILED_REPLY_DIAGNOSTICS_CANCEL" = "Cancel";
-"DETAILED_REPLY_DIAGNOSTICS_EXPORT_WARNING_TITLE" = "This report contains personal reply data";
-"DETAILED_REPLY_DIAGNOSTICS_EXPORT_WARNING_MESSAGE" = "The detailed section can identify your account and the post you replied to. It still excludes passwords, tokens, cookies, request headers, and authentication headers. Review the JSON before sharing it.";
+"DETAILED_REPLY_DIAGNOSTICS_EXPORT_WARNING_TITLE" = "Share the post/reply comparison?";
+"DETAILED_REPLY_DIAGNOSTICS_EXPORT_WARNING_MESSAGE" = "The detailed section contains value-free request schemas, a generic placeholder for unknown fields, safe fingerprints, and fixed error categories. It excludes text, account and post IDs, URLs, body sizes, string lengths, passwords, tokens, cookies, and request headers. You can still review the JSON before sharing it.";
 "DETAILED_REPLY_DIAGNOSTICS_SHARE_DETAILED" = "Share Detailed Report";
 "DETAILED_REPLY_DIAGNOSTICS_SHARE_STANDARD" = "Share Standard Report";
 "DETAILED_REPLY_DIAGNOSTICS_EXPORT_ERROR_TITLE" = "Report unavailable";

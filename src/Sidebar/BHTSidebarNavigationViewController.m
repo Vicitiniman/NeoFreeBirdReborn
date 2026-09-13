@@ -136,10 +136,10 @@ static void BHTPulseSidebarSearchTarget(UIView* target) {
 
 - (void)setupSaveButton {
     UIBarButtonItem* save = [[UIBarButtonItem alloc]
-        initWithBarButtonSystemItem:UIBarButtonSystemItemSave
+        initWithBarButtonSystemItem:UIBarButtonSystemItemDone
                              target:self
                              action:@selector(saveTapped)];
-    save.enabled = NO;
+    save.enabled = YES;
     self.navigationItem.rightBarButtonItem = save;
 }
 
@@ -271,16 +271,14 @@ static void BHTPulseSidebarSearchTarget(UIView* target) {
 }
 
 - (void)recomputeChanges {
-    self.navigationItem.rightBarButtonItem.enabled =
-        ![self.selectedItems isEqualToArray:self.originalSelection];
+    if ([self.selectedItems isEqualToArray:self.originalSelection]) return;
+    [BHTSidebarNavigationUtility setVisibleItemIDs:self.selectedItems];
+    self.originalSelection = [self.selectedItems copy];
 }
 
 #pragma mark - Save and restore
 
 - (void)saveTapped {
-    [BHTSidebarNavigationUtility
-        setVisibleItemIDs:self.selectedItems];
-    self.originalSelection = [self.selectedItems copy];
     [self recomputeChanges];
     [self.navigationController popViewControllerAnimated:YES];
 }
@@ -289,8 +287,8 @@ static void BHTPulseSidebarSearchTarget(UIView* target) {
     UIAlertController* alert = [UIAlertController
         alertControllerWithTitle:
             [[BHTBundle sharedBundle]
-                localizedTwitterStringForKey:
-                    @"SUBSCRIPTION_TAB_CUSTOMIZATION_RESTORE_BUTTON_TITLE"]
+                localizedStringForKey:
+                    @"BHT_RESTORE_DEFAULTS"]
                          message:[[BHTBundle sharedBundle]
                                      localizedStringForKey:
                                          @"SIDEBAR_NAVIGATION_RESET_MESSAGE"]
@@ -298,8 +296,8 @@ static void BHTPulseSidebarSearchTarget(UIView* target) {
     __weak typeof(self) weakSelf = self;
     [alert addAction:[UIAlertAction
         actionWithTitle:[[BHTBundle sharedBundle]
-                            localizedTwitterStringForKey:
-                                @"CONTINUE_ACTION_LABEL"]
+                            localizedStringForKey:
+                                @"BHT_RESTORE_DEFAULTS"]
                   style:UIAlertActionStyleDestructive
                 handler:^(__unused UIAlertAction* action) {
                     typeof(self) strongSelf = weakSelf;
@@ -440,8 +438,8 @@ static void BHTPulseSidebarSearchTarget(UIView* target) {
     [footer.subviews
         makeObjectsPerformSelector:@selector(removeFromSuperview)];
     NSString* title = [[BHTBundle sharedBundle]
-        localizedTwitterStringForKey:
-            @"SUBSCRIPTION_TAB_CUSTOMIZATION_RESTORE_BUTTON_TITLE"];
+        localizedStringForKey:
+            @"BHT_RESTORE_DEFAULTS"];
     UIButton* restore = [objc_getClass("TFNButton")
         buttonWithTitle:title
              imageNamed:nil

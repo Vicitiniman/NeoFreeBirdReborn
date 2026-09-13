@@ -358,8 +358,8 @@ static NSString* BHTPhotoExtension(NSURL* sourceURL,
     [self.hud hide];
     self.hud = [[objc_getClass("TFNHUD") alloc]
         initWithText:[[BHTBundle sharedBundle]
-                         localizedTwitterStringForKey:
-                             @"DOWNLOAD_LIVE_ACTIVITY_DOWNLOADING"]];
+                         localizedStringForKey:
+                             @"BHT_DOWNLOAD_PROGRESS"]];
     [self.hud show];
 
     BOOL exportAsGIF = BHTMediaLooksLikeGIF(media);
@@ -540,8 +540,8 @@ static NSString* BHTPhotoExtension(NSURL* sourceURL,
     [self.hud hide];
     self.hud = [[objc_getClass("TFNHUD") alloc]
         initWithText:[[BHTBundle sharedBundle]
-                         localizedTwitterStringForKey:
-                             @"DOWNLOAD_LIVE_ACTIVITY_DOWNLOADING"]];
+                         localizedStringForKey:
+                             @"BHT_DOWNLOAD_PROGRESS"]];
     [self.hud show];
 
     NSURLSessionDownloadTask* task =
@@ -709,7 +709,7 @@ static NSString* BHTPhotoExtension(NSURL* sourceURL,
         };
 
         NSString* downloadingText = [[BHTBundle sharedBundle]
-            localizedTwitterStringForKey:@"DOWNLOAD_LIVE_ACTIVITY_DOWNLOADING"];
+            localizedStringForKey:@"BHT_DOWNLOAD_PROGRESS"];
 
         void (^presentError)(NSString*) = ^(NSString* message) {
             dispatch_async(dispatch_get_main_queue(), ^{

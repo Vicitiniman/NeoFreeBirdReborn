@@ -84,19 +84,7 @@ static void ShowConfirmation(void (^confirmed)(void)) {
 %end
 
 // The fullscreen media viewer's heart has its own action path.
-%hook T1SlideshowStatusView
-
-- (void)_favoriteAction:(id)sender {
-    if (![BHTSettings boolForKey:@"like_confirm"]) {
-        return %orig;
-    }
-
-    ShowConfirmation(^{
-        %orig;
-    });
-}
-
-%end
+// T1SlideshowStatusView was removed in X 12.24.1.
 
 // Double tap to like in the immersive video player; the gesture never unlikes.
 %hook _TtC14T1TwitterSwift32ImmersiveDoubleTapLikePluginView

@@ -12,6 +12,7 @@ extern NSString* const BHTSidebarChatItemID;
 extern NSString* const BHTSidebarNotificationsItemID;
 extern NSString* const BHTSidebarSpacesItemID;
 extern NSString* const BHTSidebarFollowRequestsItemID;
+extern NSString* const BHTSidebarGrokBotItemID;
 extern NSString* const BHTSidebarNavigationSettingsDidChangeNotification;
 
 FOUNDATION_EXPORT void BHTRecordSidebarDeferredApplyScheduled(void);

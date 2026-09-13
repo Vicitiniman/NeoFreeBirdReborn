@@ -4,6 +4,66 @@
 //
 
 #import "HookHelpers.h"
+#import "Likes/BHTLikesTab.h"
+
+static char kBHTProfilePhotosFirstKey;
+
+static NSArray* BHTProfileMainEntriesWithPhotosFirst(NSArray* groups,
+                                                    id photoEntry,
+                                                    id videoEntry) {
+    if (![groups isKindOfClass:NSArray.class] || !photoEntry || !videoEntry) return groups;
+    for (NSUInteger index = 0; index < groups.count; index++) {
+        id group = groups[index];
+        if (![group isKindOfClass:NSArray.class]) continue;
+        NSUInteger photoIndex = [group indexOfObjectIdenticalTo:photoEntry];
+        NSUInteger videoIndex = [group indexOfObjectIdenticalTo:videoEntry];
+        if (photoIndex == NSNotFound || videoIndex == NSNotFound || photoIndex == 0) continue;
+        NSMutableArray* mediaGroup = [group mutableCopy];
+        [mediaGroup removeObjectAtIndex:photoIndex];
+        [mediaGroup insertObject:photoEntry atIndex:0];
+        NSMutableArray* result = [groups mutableCopy];
+        result[index] = [mediaGroup copy];
+        return [result copy];
+    }
+    return groups;
+}
+
+// Keep the profile's native Photos/Videos tabs and account-scoped feeds.
+// Only their presentation is wrapped; the native provider still decides
+// whether media is accessible and performs authenticated cursor loading.
+%hook T1ProfileDisplayNormalMainContentProvider
+
+- (NSArray*)contentMainEntries {
+    NSArray* groups = %orig;
+    // X selects inner index zero by default. Keep this order stable for the
+    // life of the provider so a settings change cannot reinterpret an active
+    // Videos selection as Photos. New profiles pick up the current setting.
+    NSNumber* photosFirst = objc_getAssociatedObject(self, &kBHTProfilePhotosFirstKey);
+    if (!photosFirst) {
+        photosFirst = @([BHTSettings boolForKey:@"profile_media_default_photos"]);
+        objc_setAssociatedObject(self, &kBHTProfilePhotosFirstKey, photosFirst,
+                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    SEL photos = NSSelectorFromString(@"photoEntry");
+    SEL videos = NSSelectorFromString(@"videoEntry");
+    if (!photosFirst.boolValue || ![(id)self respondsToSelector:photos] ||
+        ![(id)self respondsToSelector:videos]) return groups;
+    id photoEntry = ((id (*)(id, SEL))objc_msgSend)(self, photos);
+    id videoEntry = ((id (*)(id, SEL))objc_msgSend)(self, videos);
+    return BHTProfileMainEntriesWithPhotosFirst(groups, photoEntry, videoEntry);
+}
+
+- (UIViewController*)_generatePhotoViewController {
+    UIViewController* nativeController = %orig;
+    return BHTProfileMediaController(nativeController, @"photos");
+}
+
+- (UIViewController*)_generateVideoViewController {
+    UIViewController* nativeController = %orig;
+    return BHTProfileMediaController(nativeController, @"videos");
+}
+
+%end
 
 // MARK: - Copy profile info
 
@@ -97,6 +157,8 @@ static char kCopyProviderKey;
 
 @end
 
+%group BHTLegacyProfileActionProviders
+
 %hook T1ProfileHeaderViewController
 
 - (NSArray*)actionButtonProviders {
@@ -115,6 +177,8 @@ static char kCopyProviderKey;
     }
     return [providers arrayByAddingObject:copyProvider];
 }
+
+%end
 
 %end
 
@@ -181,3 +245,13 @@ static char kCopyProviderKey;
 }
 
 %end
+
+// Older profile layouts expose this provider list. Do not create a replacement
+// method with no native implementation on the current catalog-based header.
+%ctor {
+    %init;
+    Class header = NSClassFromString(@"T1ProfileHeaderViewController");
+    if (class_getInstanceMethod(header, @selector(actionButtonProviders))) {
+        %init(BHTLegacyProfileActionProviders);
+    }
+}

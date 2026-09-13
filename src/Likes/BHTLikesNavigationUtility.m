@@ -128,7 +128,7 @@ static NSString* const kBHTLikesVisibleTabsKey =
 }
 
 + (NSArray<NSString*>*)visiblePageIDsForOriginalCount:(NSInteger)originalCount {
-    // The mapping is deliberately enabled only for the verified X 12.9
+    // The mapping is deliberately enabled only for the verified X 12.24.1
     // Activity History shape. A later build with a different native tab count
     // keeps its stock ordering instead of receiving an unsafe guessed index.
     if (originalCount != (NSInteger)[self canonicalPageIDs].count) {

@@ -42,18 +42,6 @@ static BOOL BHTIsDownloadableVideoEntity(id media) {
     return variants.count > 0;
 }
 
-static BOOL BHTVideoVariantIsMP4(id variant) {
-    NSString* contentType =
-        [BHTObjectForSelector(variant, @selector(contentType))
-            lowercaseString];
-    if ([contentType hasPrefix:@"video/mp4"]) {
-        return YES;
-    }
-    NSString* rawURL = BHTObjectForSelector(variant, @selector(url));
-    NSURL* url =
-        rawURL.length > 0 ? [NSURL URLWithString:rawURL] : nil;
-    return [url.pathExtension.lowercaseString isEqualToString:@"mp4"];
-}
 
 static void BHTPrioritizeDownloadLongPress(
     UIView* root,
@@ -251,26 +239,6 @@ static BOOL BHTMediaEntityLooksLikeGIF(id media) {
     return [primaryURL containsString:@"/tweet_video/"];
 }
 
-static NSURL* BHTPreferredDownloadURL(TFSTwitterEntityMedia* media) {
-    if (!BHTIsDownloadableVideoEntity(media)) {
-        return nil;
-    }
-    TFSTwitterEntityMediaVideoVariant* bestMP4 = nil;
-    TFSTwitterEntityMediaVideoVariant* fallback = nil;
-    for (TFSTwitterEntityMediaVideoVariant* variant in
-         media.videoInfo.variants) {
-        if (variant.url.length == 0) continue;
-        if (!fallback) fallback = variant;
-        if (BHTVideoVariantIsMP4(variant) &&
-            (!bestMP4 || variant.bitrate > bestMP4.bitrate)) {
-            bestMP4 = variant;
-        }
-    }
-    NSString* rawURL = bestMP4.url;
-    if (rawURL.length == 0) rawURL = fallback.url;
-    if (rawURL.length == 0) rawURL = media.videoInfo.primaryUrl;
-    return rawURL.length > 0 ? [NSURL URLWithString:rawURL] : nil;
-}
 
 // MARK: - Tweet video/GIF long press
 
@@ -441,22 +409,12 @@ static NSURL* BHTPreferredDownloadURL(TFSTwitterEntityMedia* media) {
 %end
 
 %hook T1VideoDownloadViewModel
-+ (NSURL*)urlIfCanDownloadWithAccount:(id)account
-                          mediaEntity:
-                              (TFSTwitterEntityMedia*)mediaEntity {
-    if ([BHTSettings boolForKey:@"download_videos"]) {
-        NSURL* url = BHTPreferredDownloadURL(mediaEntity);
-        if (url) return url;
-    }
-    return %orig;
-}
 
 + (id)makeVideDownloaderWithAccount:(id)account
                  fromViewController:(UIViewController*)viewController
                         mediaEntity:
                             (TFSTwitterEntityMedia*)mediaEntity
-                    statusViewModel:(id)statusViewModel
-                      scribeContext:(id)scribeContext {
+                    statusViewModel:(id)statusViewModel {
     id downloader = %orig;
     if (downloader &&
         [BHTSettings boolForKey:@"download_videos"] &&
@@ -514,7 +472,7 @@ static NSArray* DMVideoEntities(UIView* attachmentView) {
     return [entities copy];
 }
 
-%hook _TtC14DMConversation21MessageAttachmentView
+%hook _TtC16ChatConversation21MessageAttachmentView
 %property (nonatomic, strong) UIContextMenuInteraction* downloadMenuInteraction;
 %property (nonatomic, strong) DownloadInlineButton* downloadHandler;
 - (void)layoutSubviews {

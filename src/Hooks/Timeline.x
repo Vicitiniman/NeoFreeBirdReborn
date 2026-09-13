@@ -656,7 +656,41 @@ static BOOL BHTIsPrimaryForYouURTController(id urtController) {
         return NO;
     }
 
-    // X 12.9 exposes `urtTimeline` as a Swift-backed ivar with an empty
+    // Prefer the current Home provider's explicit primary controller. Both
+    // eager and lazy providers separate it from Following and custom feeds.
+    // Do not use the selected index or infer the feed from a localized title.
+    Class homeClass = NSClassFromString(
+        @"TwitterHomeFeatureImplementation.HomeTimelineContainerViewController");
+    Class bridge = NSClassFromString(@"BHTHomeTimelineRuntime");
+    SEL primarySelector = NSSelectorFromString(
+        @"primaryTimelineControllerInContainer:");
+    NSMutableArray<UIViewController*>* ancestors = [NSMutableArray array];
+    UIViewController* ancestor = urtController;
+    for (NSUInteger depth = 0; ancestor && depth < 16; depth++) {
+        if (homeClass && [ancestor isKindOfClass:homeClass] &&
+            [bridge respondsToSelector:primarySelector]) {
+            id primary = ((id (*)(id, SEL, id))objc_msgSend)(
+                bridge, primarySelector, ancestor);
+            if ([primary isKindOfClass:UIViewController.class]) {
+                BOOL ownsPrimary = [ancestors indexOfObjectIdenticalTo:primary] != NSNotFound;
+                BHTRecordForYouFilterDiagnostic(
+                    BHTForYouFilterDiagnosticProviderOwnerResolved);
+                BHTRecordForYouFilterDiagnostic(
+                    ownsPrimary ? BHTForYouFilterDiagnosticControllerPrimary
+                                : BHTForYouFilterDiagnosticControllerNonForYou);
+                return ownsPrimary;
+            }
+            BHTRecordForYouFilterDiagnostic(
+                BHTForYouFilterDiagnosticProviderOwnerMissing);
+            break;
+        }
+        [ancestors addObject:ancestor];
+        UIViewController* parent = ancestor.parentViewController;
+        if (parent == ancestor) break;
+        ancestor = parent;
+    }
+
+    // Older Home construction paths expose `urtTimeline` as a Swift-backed ivar with an empty
     // Objective-C type encoding and no accessor. A typed future accessor/ivar
     // remains preferred. For this exact runtime shape, compare the raw pointer
     // with the weak registry of objects returned by X's verified deserializer
@@ -733,14 +767,22 @@ static BOOL IsPrimaryForYouTimelineController(
     return BHTIsPrimaryForYouURTController(urtController);
 }
 
+static BOOL BHTIsKeywordStatusViewModel(id viewModel) {
+    Class statusItem = BHTStatusItemViewModelClass();
+    Class status = BHTTwitterStatusClass();
+    Class composition = NSClassFromString(@"T1CompositionStatusViewModel");
+    return (statusItem && [viewModel isKindOfClass:statusItem]) ||
+           (status && [viewModel isKindOfClass:status]) ||
+           (composition && [viewModel isKindOfClass:composition]);
+}
+
 static id StatusFromTimelineItem(id item) {
     id viewModel = unwrapDataViewItem(item);
-    Class statusItemClass = BHTStatusItemViewModelClass();
     Class statusClass = BHTTwitterStatusClass();
-    if (!statusItemClass || !statusClass ||
-        ![viewModel isKindOfClass:statusItemClass]) {
+    if (!statusClass || !BHTIsKeywordStatusViewModel(viewModel)) {
         return nil;
     }
+    if ([viewModel isKindOfClass:statusClass]) return viewModel;
 
     // Prefer X 12.9's compatibility accessor because its Objective-C return
     // signature can be verified before messaging it.
@@ -916,6 +958,34 @@ static NSArray<NSString*>* PostTextCandidates(id status) {
     NSMutableArray<NSString*>* candidates =
         [NSMutableArray arrayWithCapacity:10];
 
+    // fullText/displayText can omit reply mentions. The canonical model owns
+    // the original primary post text; it is separate from any quoted post.
+    id canonical = ItemObjectValue(
+        status, NSSelectorFromString(@"canonicalStatus"), "_canonicalStatus");
+    AddPostTextCandidate(candidates, ItemReadableTextValue(
+        canonical, NSSelectorFromString(@"originalText"), "originalText"));
+
+    // A hydrated post can have mention entities before its original text.
+    // Prefer X's unmention-aware list and accept only native mention entities.
+    SEL entitySelector = NSSelectorFromString(@"entitiesRemovingUnmentioned");
+    id entities = MethodReturnsObject(status, entitySelector)
+        ? ItemObjectValue(status, entitySelector, "entitiesRemovingUnmentioned")
+        : ItemObjectValue(status, NSSelectorFromString(@"entities"), "entities");
+    Class mentionClass = NSClassFromString(@"TFSTwitterEntityUserMention");
+    if (mentionClass && [entities isKindOfClass:NSArray.class]) {
+        NSUInteger inspected = 0;
+        for (id entity in entities) {
+            if (inspected++ >= 128) break;
+            if (![entity isKindOfClass:mentionClass]) continue;
+            NSString* handle = ItemStringValue(
+                entity, NSSelectorFromString(@"username"), "username");
+            if (handle.length > 0 && handle.length <= BHTTwitterHandleMaximumLength) {
+                AddPostTextCandidate(candidates,
+                    [@"@" stringByAppendingString:handle]);
+            }
+        }
+    }
+
     // Note Tweets can expose a shortened legacy `text`, while X's display
     // model can omit leading reply mentions. Inspect every trusted primary
     // representation instead of returning the first nonempty one.
@@ -988,9 +1058,7 @@ static BOOL ShouldHideForYouKeywordItem(
     id item, NSUInteger generation, BOOL hasUsernameFilters,
     BOOL hasPostTextFilters) {
     id cacheOwner = unwrapDataViewItem(item);
-    Class statusItemClass = BHTStatusItemViewModelClass();
-    if (!statusItemClass ||
-        ![cacheOwner isKindOfClass:statusItemClass]) {
+    if (!BHTIsKeywordStatusViewModel(cacheOwner)) {
         return NO;
     }
 

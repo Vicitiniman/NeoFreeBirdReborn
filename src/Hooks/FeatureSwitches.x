@@ -139,6 +139,12 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         return [BHTSettings boolForKey:@"disable_auto_translate"] ? @NO : nil;
     }
 
+    // X 12.24.1 creates a separate GrokBotSidebarUpsell, outside the
+    // TwitterDash item arrays. Its failable initializer checks this exact key.
+    if ([key isEqualToString:@"grok_ios_grok_bot_sidebar_enabled"]) {
+        return [BHTSettings boolForKey:@"hide_grok_sidebar"] ? @NO : nil;
+    }
+
     // Grok buttons
     if ([key isEqualToString:@"grok_ask_grok_button_under_post_focal_enabled"] ||
         [key
@@ -566,22 +572,7 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
 
 %end
 
-%hook T1SlideshowViewController
-
-- (BOOL)_t1_shouldDisplayLoadHighQualityImageItemForImageDisplayView:(id)imageView
-                                                      highestQuality:(BOOL)highestQuality {
-    return [BHTSettings boolForKey:@"auto_highest_load"] ? YES : %orig;
-}
-
-- (id)_t1_loadHighQualityActionItemWithTitle:(id)title
-                         forImageDisplayView:(id)imageView
-                              highestQuality:(BOOL)highestQuality {
-    return %orig(title, imageView,
-                 [BHTSettings boolForKey:@"auto_highest_load"] ? YES
-                                                                : highestQuality);
-}
-
-%end
+// T1SlideshowViewController was removed in X 12.24.1.
 
 // MARK: - Highest available video quality
 

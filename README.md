@@ -2,22 +2,38 @@
 
 [![Build NeoFreeBird](https://github.com/Vicitiniman/NeoFreeBirdReborn/actions/workflows/build.yml/badge.svg)](https://github.com/Vicitiniman/NeoFreeBirdReborn/actions/workflows/build.yml)
 
-NeoFreeBird is a modular enhancement tweak for X 12.9. It restores familiar
+NeoFreeBird is a modular enhancement tweak for X 12.24.1. It restores familiar
 Twitter branding and adds themes, navigation controls, media tools, timeline
 filters, and guarded compatibility options for modified installations.
 
-> **Beta software:** NeoFreeBird is developed and tested for X 12.9. Other X
+> **Beta software:** NeoFreeBird is built for X 12.24.1 build 1. Other X
 > versions may not be compatible.
 
 NeoFreeBird does not include or distribute the X app. Sideloaded and TrollStore
-builds require a decrypted X 12.9 IPA that you are legally authorized to use.
+builds require a decrypted X 12.24.1 IPA that you are legally authorized to use.
 
 ## Compatibility
 
+Beta 55 updates Compatibility Sign-in to send validated verification data
+from X instead of discarding it. Reports distinguish the HTTP status from
+X's numeric error reason; request failures, rate limits and service failures
+now have separate messages. Successful login on a device remains unverified.
+
+Beta 54 corrects the profile waterfall's alignment below the header, adds
+**Profiles > Default to Photos**, and removes the blank sidebar editor tile.
+The profile keeps its native header, Follow action, loading and access states.
+**Hide Try Grok Bot** now lives in **Edit navigation bar** and targets the
+separate sidebar promotion in X 12.24.1. Reopen X after changing this switch.
+Earlier Likes navigation, scrolling, filtering, download-label and sidebar
+persistence fixes remain included.
+See the [12.24.1 audit](docs/X12_24_1_FEATURE_AUDIT.md) for the static checks and
+the remaining device validation.
+
+
 | Component | Supported target |
 | --- | --- |
-| Host app | X 12.9 |
-| Audited build | X 12.9 build 10 |
+| Host app | X 12.24.1 |
+| Audited build | X 12.24.1 build 1 |
 | Minimum iOS | iOS 15.0 |
 | Architecture | arm64 |
 | Packages | Sideloaded IPA, TrollStore TIPA, rootless DEB, rootful DEB |
@@ -50,6 +66,11 @@ preserved where possible.
   filtered by either list.
 - A Posts/Media selector in Likes with an adaptive, pinch-adjustable waterfall
   that respects each item's aspect ratio.
+- The same waterfall and media viewer in profile Photos/Videos tabs, enabled
+  under **Profiles > Profile media waterfall**. Each native profile feed stays
+  separate; pull to refresh or continue scrolling to load older media.
+- **Default to Photos** puts Photos first in the profile media menu while
+  keeping Videos available. Enabled by default; applies to newly opened profiles.
 - Full-window photo and video viewing on iPhone and iPad, original-quality
   photos, highest-available MP4 playback, zoom, paging, and swipe-down dismiss.
 - Native-style photo, video, and GIF menus with configurable download and share
@@ -70,63 +91,15 @@ compatibility-reply session data.
 
 ## Account compatibility
 
-Native X sign-in and native replies remain the defaults.
+Native X sign-in, posting, and replies remain the defaults. Compatibility
+Sign-in and the optional web reply composer are available as guarded fallback
+paths. The app's own services retain account registration and credential
+storage. Updating the host app does not guarantee that X's servers will accept
+requests from every sideloaded installation.
 
-**Compatibility Sign-in** is an explicit X 12.9 fallback for installations
-where the normal account flow does not finish. It opens a separate NeoFreeBird
-screen and submits one guarded password request through X's legacy account
-service. The password field is cleared before that request starts and is never
-saved or included in reports. Verification, account registration, credential
-storage, and account switching continue through X's own services. The same
-option is available when adding another account. Beta 43 returns the password
-request to X 12.9's native client metadata and preserves the minimum preflight
-window observed in the successful beta 29 and beta 36 device reports. Captured
-WebKit instrumentation remains diagnostic-only and is never supplied to the
-password command. Timeline, posting, media, and all other API traffic remain
-untouched.
-
-The default-off **Compatibility reply composer** is available when sideloaded
-builds reject native replies. For an inline reply, beta 44 first asks X 12.9's
-own visible web controller to authenticate with the exact native account object
-supplied for that tap. NeoFreeBird verifies that the controller retained that
-same object; X still decides which server-side web account is active, so this
-path must be checked with both accounts on-device. The controller is
-runtime-checked, never hidden, and never posts automatically. If that private
-controller is unavailable or fails a guard, NeoFreeBird falls back to its
-existing visible x.com Web Intent.
-Only that custom fallback uses one persistent web session for every app
-account, so it still asks you to review the web account when needed. NeoFreeBird
-does not inspect or export web credentials, cookies, page account data, or
-reply text, and it does not separately persist, log, or export post identifiers.
-The tapped identifier necessarily remains in X's official visible reply URL
-while that screen is open. An optional local **Last confirmed: @handle** label
-for the custom session is unverified and excluded from profiles and reports.
-
-Beta 44 expanded native-reply troubleshooting without changing the native
-request. Reports now include an ordered, monotonic send-stage trace and fixed
-categories for known `CreateTweet` task constructors, first-party host class,
-HTTP result class, network-error class, and coarse duration. Per-overload
-availability and fixed rejection counters distinguish a missed networking seam
-from a request that simply did not match the strict policy. The observer is
-active only during a short forwarded-reply window. During that window it
-transiently classifies the HTTP method, URL scheme, exact first-party host, and
-operation name; those values are reduced to fixed counters and are never logged
-or retained as raw URLs. It never reads headers, bodies, cookies, tokens,
-response contents, reply text, identifiers, or account data.
-
-Beta 45 adds a second, narrower checkpoint after X 12.9 decodes a GraphQL
-response. It distinguishes a decoded model, API-error presence, parse-error
-presence, combinations of those states, and an empty decoded result. This is
-needed because HTTP 2xx only confirms transport; it does not prove that X
-accepted or assimilated the reply. A lock-free hint first avoids work during
-ordinary GraphQL traffic, and only the numeric active-reply generation is
-captured before X's decoder runs. Decoded presence is inspected only after X
-returns. The checkpoint is restricted to a 30-second temporal reply window and
-exact HTTPS API-host `CreateTweet` operations, and it preserves the response
-unchanged. It records only fixed presence categories and never reads or exports
-error messages, response bodies, raw URLs, headers, cookies, tokens, tweet
-text, identifiers, or account data. This operation-scoped temporal result is a
-diagnostic clue, not proof that X accepted the reply.
+The 12.24.1 update verifies the required native selectors and retains their
+runtime signature checks. Detailed reply diagnostics remain opt-in and use
+the existing bounded capture and expiry rules.
 
 ## Where to find things
 
@@ -155,8 +128,11 @@ can cause startup crashes and inconsistent behavior.
 
 Open **Actions > Build NeoFreeBird > Run workflow**, select the deployment
 format, and optionally choose a commit. Sideloaded and TrollStore builds also
-need a direct URL to a decrypted X 12.9 IPA.
+need a direct URL to a decrypted X 12.24.1 IPA.
 Download the package from the completed run's **Artifacts** section.
+The **sideload-payload** format compiles the injected libraries and resources
+without uploading an IPA. It is a payload ZIP, not an installable app; combine
+it with the audited local IPA using `tools/package_local_ipa.py`.
 
 ### Local build
 
@@ -165,7 +141,7 @@ Requirements:
 - [Theos](https://github.com/theos/theos) with an iOS 16.5 SDK
 - GNU Make, `dpkg`, `ldid`, and Python 3
 - [cyan](https://github.com/asdfzxcvbn/pyzule-rw) for IPA/TrollStore output
-- A legally obtained decrypted X 12.9 IPA for IPA/TrollStore builds
+- A legally obtained decrypted X 12.24.1 IPA for IPA/TrollStore builds
 
 ```bash
 git clone --recursive https://github.com/Vicitiniman/NeoFreeBirdReborn.git
@@ -194,7 +170,7 @@ ImageMagick's `magick` or `convert` command.
 
 ## Troubleshooting
 
-First confirm that the host app is X 12.9 and remove any other injected
+First confirm that the host app is X 12.24.1 and remove any other injected
 X/Twitter tweak.
 
 To export a report while signed out:
@@ -210,7 +186,7 @@ After signing in, use **Settings > NeoFreeBird > Debug > Export compatibility
 report**. A copy is also stored inside the app container at:
 
 ```text
-Library/Caches/BHTwitter-X12.9-Compatibility.json
+Library/Caches/BHTwitter-X12.24.1-Compatibility.json
 ```
 
 For startup crashes, also attach the newest `.ips` report and include the
@@ -243,8 +219,9 @@ Check formatting before opening a pull request:
 ./format.sh --check
 ```
 
-Detailed implementation notes and release history are in
-[`docs/X12_9_FEATURE_AUDIT.md`](docs/X12_9_FEATURE_AUDIT.md).
+Current implementation notes are in
+[`docs/X12_24_1_FEATURE_AUDIT.md`](docs/X12_24_1_FEATURE_AUDIT.md), with the
+earlier 12.9 investigation retained as historical reference.
 
 ## Credits
 

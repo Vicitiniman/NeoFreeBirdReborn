@@ -22,11 +22,19 @@ BOOL BHTIsManagedLikesActivityHistoryController(
     UIViewController* controller);
 void BHTRefreshLikesActivityHistoryConfiguration(
     UIViewController* rootController);
+void BHTRecordLikesNavigationConfiguration(NSInteger nativeCount,
+                                            NSArray<NSString*>* appliedPages,
+                                            NSString* state);
 
 // Called by the timeline section hook while a private Likes timeline is active.
 // Returns YES when the data controller belongs to the private Likes timeline,
 // allowing the caller to suppress X's saved scroll-position restoration.
 BOOL BHTCaptureLikesSections(UIViewController* dataViewController, NSArray* sections);
+
+// Reuses the waterfall and viewer inside a native profile Photos/Videos tab.
+// Each wrapper owns only the native feed supplied by that profile's factory.
+UIViewController* BHTProfileMediaController(UIViewController* nativeController,
+                                           NSString* mediaKind);
 
 // Called when the real tab changes from unselected to selected. It reconnects
 // the retained native controller without changing its scroll position.

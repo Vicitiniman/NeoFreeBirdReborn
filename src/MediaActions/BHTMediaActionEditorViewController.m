@@ -388,8 +388,8 @@ static NSString* const kBHTMediaActionGridFooterID =
     UIAlertController* alert = [UIAlertController
         alertControllerWithTitle:
             [[BHTBundle sharedBundle]
-                localizedTwitterStringForKey:
-                    @"SUBSCRIPTION_TAB_CUSTOMIZATION_RESTORE_BUTTON_TITLE"]
+                localizedStringForKey:
+                    @"BHT_RESTORE_DEFAULTS"]
                          message:[[BHTBundle sharedBundle]
                                      localizedStringForKey:
                                          @"MEDIA_ACTION_RESET_MESSAGE"]
@@ -397,8 +397,8 @@ static NSString* const kBHTMediaActionGridFooterID =
     __weak typeof(self) weakSelf = self;
     [alert addAction:[UIAlertAction
                          actionWithTitle:[[BHTBundle sharedBundle]
-                                             localizedTwitterStringForKey:
-                                                 @"CONTINUE_ACTION_LABEL"]
+                                             localizedStringForKey:
+                                                 @"BHT_RESTORE_DEFAULTS"]
                                    style:UIAlertActionStyleDestructive
                                  handler:^(__unused UIAlertAction* action) {
                                      typeof(self) strongSelf = weakSelf;
@@ -543,8 +543,8 @@ static NSString* const kBHTMediaActionGridFooterID =
                                                   forIndexPath:indexPath];
     [footer.subviews makeObjectsPerformSelector:@selector(removeFromSuperview)];
     NSString* title = [[BHTBundle sharedBundle]
-        localizedTwitterStringForKey:
-            @"SUBSCRIPTION_TAB_CUSTOMIZATION_RESTORE_BUTTON_TITLE"];
+        localizedStringForKey:
+            @"BHT_RESTORE_DEFAULTS"];
     UIButton* restore = nil;
     Class buttonClass = objc_getClass("TFNButton");
     if ([buttonClass

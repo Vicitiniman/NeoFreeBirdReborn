@@ -81,6 +81,11 @@
     });
     NSString* value =
         [twitterBundle localizedStringForKey:key value:key table:nil];
+    if (value.length == 0 || [value isEqualToString:key]) {
+        // Host translations can disappear between X releases. Keep the
+        // tweak's English fallback available for strings it still uses.
+        value = [self localizedStringForKey:key];
+    }
     return value ?: key;
 }
 - (NSURL*)pathForFile:(NSString*)fileName {

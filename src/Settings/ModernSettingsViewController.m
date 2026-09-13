@@ -666,6 +666,14 @@ static NSCache<NSString*, UIImage*>* BHTDeveloperAvatarCache(void) {
         [bundle localizedStringForKey:@"MODERN_SETTINGS_APPEARANCE_TITLE"];
     NSString* mainNavigationTitle =
         [bundle localizedStringForKey:@"CUSTOM_TAB_BAR_OPTION_TITLE"];
+    [index addObject:@{
+        @"kind": @"deepSetting", @"route": @"mainNavigation",
+        @"pageKey": @"appearance", @"identifier": @"hide_grok_sidebar",
+        @"title": [bundle localizedStringForKey:@"NAV_HIDE_GROK_BOT_TITLE"],
+        @"subtitle": mainNavigationTitle,
+        @"icon": appearancePage[@"icon"] ?: @"paintbrush_stroke",
+        @"searchText": @"hide try grok bot sidebar promotion edit navigation bar"
+    }];
     for (NSDictionary* entry in [CustomTabBarUtility availableTabs]) {
         NSString* identifier = entry[TabPageKey];
         NSString* title = entry[TabTitleKey];

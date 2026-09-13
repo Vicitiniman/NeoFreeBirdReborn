@@ -4,6 +4,7 @@
 #import <AVKit/AVKit.h>
 #import <ImageIO/ImageIO.h>
 #import <mach-o/dyld.h>
+#import <mach-o/loader.h>
 #import <math.h>
 #import <objc/message.h>
 #import <objc/runtime.h>
@@ -30,10 +31,10 @@ static char kBHTNativeLikesControllerKey;
 static char kBHTNativeLikesNavigationKey;
 static char kBHTNativeLikesTabViewKey;
 static char kBHTInitialResetPanMarkerKey;
-static const long long kBHTLikesPanelID = 6; // X 12.9 Bookmarks panel
-static const uintptr_t kBHTX129EntryFactoryOffset = 0x6CAFE8;
-static const uintptr_t kBHTX129EntryFactoryJumpTableOffset = 0x1329880;
-static const uintptr_t kBHTX129BookmarksFactoryCaseOffset = 0x6CB26C;
+static const long long kBHTLikesPanelID = 6; // X 12.24.1 Bookmarks panel
+static const uintptr_t kBHTEntryFactoryOffset = 0x69B0C4;
+static const uintptr_t kBHTEntryFactoryJumpTableOffset = 0x1403730;
+static const uintptr_t kBHTBookmarksFactoryCaseOffset = 0x69B1E0;
 
 static NSObject* BHTLikesDiagnosticsLock(void) {
     static NSObject* lock;
@@ -118,6 +119,14 @@ static void BHTIncrementLikesDiagnostic(NSString* key) {
         NSMutableDictionary* diagnostics = BHTMutableLikesDiagnostics();
         diagnostics[key] = @([diagnostics[key] unsignedIntegerValue] + 1);
     }
+}
+
+void BHTRecordLikesNavigationConfiguration(NSInteger nativeCount,
+                                            NSArray<NSString*>* appliedPages,
+                                            NSString* state) {
+    BHTSetLikesDiagnostic(@"activityHistoryNativeTabCount", @(nativeCount));
+    BHTSetLikesDiagnostic(@"activityHistoryConfigurationState", state);
+    if (appliedPages) BHTSetLikesDiagnostic(@"appliedActivityHistoryTabs", appliedPages);
 }
 
 NSDictionary* BHTLikesDiagnosticsSnapshot(void) {
@@ -436,6 +445,30 @@ static NSURL* BHTStatusURL(long long statusID) {
         [NSString stringWithFormat:@"https://x.com/i/status/%lld", statusID]];
 }
 
+static CGFloat BHTMediaEntityAspectRatio(id media) {
+    // The current entity exposes CGSize, not originalInfo.width/height.
+    // Read it before requesting a thumbnail so tiles start at their real size.
+    for (NSString* name in @[@"mediaDimensions", @"imageDimensions"]) {
+        SEL selector = NSSelectorFromString(name);
+        NSMethodSignature* signature = [media methodSignatureForSelector:selector];
+        if (signature.numberOfArguments != 2 ||
+            strcmp(signature.methodReturnType, @encode(CGSize)) != 0) continue;
+        CGSize size = ((CGSize (*)(id, SEL))objc_msgSend)(media, selector);
+        if (isfinite(size.width) && isfinite(size.height) &&
+            size.width > 0 && size.height > 0) {
+            return BHTBoundedMediaAspectRatio(size.width / size.height);
+        }
+    }
+    id videoInfo = BHTSafeValue(media, @"videoInfo");
+    CGFloat numerator = [BHTSafeValue(videoInfo, @"numerator") doubleValue];
+    CGFloat denominator = [BHTSafeValue(videoInfo, @"denominator") doubleValue];
+    if (isfinite(numerator) && isfinite(denominator) &&
+        numerator > 0 && denominator > 0) {
+        return BHTBoundedMediaAspectRatio(numerator / denominator);
+    }
+    return 1.0;
+}
+
 static NSArray<BHTLikedMediaItem*>* BHTMediaItemsFromSections(NSArray* sections) {
     NSMutableArray<BHTLikedMediaItem*>* result = [NSMutableArray array];
     NSMutableSet<NSString*>* identifiers = [NSMutableSet set];
@@ -463,13 +496,6 @@ static NSArray<BHTLikedMediaItem*>* BHTMediaItemsFromSections(NSArray* sections)
                 if ([identifiers containsObject:identifier]) return;
                 [identifiers addObject:identifier];
 
-                CGFloat width = [BHTSafeValue(BHTSafeValue(media, @"originalInfo"), @"width") doubleValue];
-                CGFloat height = [BHTSafeValue(BHTSafeValue(media, @"originalInfo"), @"height") doubleValue];
-                if (width <= 0 || height <= 0) {
-                    width = [BHTSafeValue(media, @"width") doubleValue];
-                    height = [BHTSafeValue(media, @"height") doubleValue];
-                }
-
                 BHTLikedMediaItem* model = [BHTLikedMediaItem new];
                 model.identifier = identifier;
                 model.previewURL =
@@ -480,11 +506,7 @@ static NSArray<BHTLikedMediaItem*>* BHTMediaItemsFromSections(NSArray* sections)
                 model.mediaEntity = media;
                 model.mediaActionKind =
                     BHTMediaActionKindForEntity(media);
-                model.aspectRatio =
-                    BHTBoundedMediaAspectRatio(
-                        (width > 0 && height > 0)
-                            ? width / height
-                            : 1.0);
+                model.aspectRatio = BHTMediaEntityAspectRatio(media);
                 model.statusID = statusID;
                 model.statusText = BHTReadableStatusText(status);
                 model.statusURL = BHTStatusURL(statusID);
@@ -497,8 +519,39 @@ static NSArray<BHTLikedMediaItem*>* BHTMediaItemsFromSections(NSArray* sections)
 
 #pragma mark - Waterfall UI
 
+static NSArray<BHTLikedMediaItem*>* BHTProfileMediaSnapshot(
+    NSArray<BHTLikedMediaItem*>* incoming,
+    NSArray<BHTLikedMediaItem*>* previousItems) {
+    NSMutableDictionary* previous = [NSMutableDictionary dictionary];
+    for (BHTLikedMediaItem* item in previousItems) previous[item.identifier] = item;
+    for (BHTLikedMediaItem* item in incoming) {
+        BHTLikedMediaItem* old = previous[item.identifier];
+        if (old.aspectRatioConfirmedByImage) {
+            item.aspectRatio = old.aspectRatio;
+            item.aspectRatioConfirmedByImage = YES;
+        }
+    }
+    // In particular, empty means empty. Never resurrect a deleted image or
+    // media removed by a native privacy/access-state update.
+    return incoming ?: @[];
+}
+
+static CGFloat BHTProfileMediaOffsetForTopInset(CGFloat offsetY,
+                                               CGFloat previousTop,
+                                               CGFloat nextTop) {
+    // Match TFNDataViewController's safe-area update: retain the distance
+    // scrolled from the first item, including a partially collapsed header.
+    return offsetY + previousTop - nextTop;
+}
+
 @protocol BHTWaterfallLayoutDelegate <NSObject>
 - (CGFloat)waterfallAspectRatioAtIndexPath:(NSIndexPath*)indexPath;
+@end
+
+@interface BHTWaterfallInvalidationContext : UICollectionViewLayoutInvalidationContext
+@property(nonatomic) BOOL geometryAlreadyPrepared;
+@end
+@implementation BHTWaterfallInvalidationContext
 @end
 
 @interface BHTWaterfallLayout : UICollectionViewLayout
@@ -506,6 +559,10 @@ static NSArray<BHTLikedMediaItem*>* BHTMediaItemsFromSections(NSArray* sections)
 @property(nonatomic) CGFloat spacing;
 @property(nonatomic, strong) NSArray<UICollectionViewLayoutAttributes*>* attributes;
 @property(nonatomic) CGSize contentSize;
+@property(nonatomic) BOOL geometryDirty;
+@property(nonatomic) CGFloat preparedWidth;
+@property(nonatomic) NSInteger preparedColumns;
+- (void)invalidatePreservingVisibleAnchor;
 @end
 
 @implementation BHTWaterfallLayout
@@ -514,15 +571,34 @@ static NSArray<BHTLikedMediaItem*>* BHTMediaItemsFromSections(NSArray* sections)
     if ((self = [super init])) {
         _columns = 3;
         _spacing = 2;
+        _geometryDirty = YES;
     }
     return self;
 }
 
++ (Class)invalidationContextClass {
+    return BHTWaterfallInvalidationContext.class;
+}
+
+- (void)invalidateLayoutWithContext:(UICollectionViewLayoutInvalidationContext*)context {
+    if (![context isKindOfClass:BHTWaterfallInvalidationContext.class] ||
+        !((BHTWaterfallInvalidationContext*)context).geometryAlreadyPrepared) {
+        self.geometryDirty = YES;
+    }
+    [super invalidateLayoutWithContext:context];
+}
+
 - (void)prepareLayout {
     [super prepareLayout];
-    NSInteger count = [self.collectionView numberOfItemsInSection:0];
+    NSInteger count = self.collectionView.numberOfSections > 0
+        ? [self.collectionView numberOfItemsInSection:0] : 0;
     NSInteger columns = MAX(2, MIN(5, self.columns));
     CGFloat width = CGRectGetWidth(self.collectionView.bounds);
+    if (!self.geometryDirty && self.attributes.count == count &&
+        self.preparedWidth == width && self.preparedColumns == columns) return;
+    self.geometryDirty = NO;
+    self.preparedWidth = width;
+    self.preparedColumns = columns;
     if (count <= 0 || width <= 0) {
         self.attributes = @[];
         self.contentSize = CGSizeMake(MAX(0, width), 0);
@@ -642,6 +718,45 @@ static NSArray<BHTLikedMediaItem*>* BHTMediaItemsFromSections(NSArray* sections)
 
 - (BOOL)shouldInvalidateLayoutForBoundsChange:(CGRect)newBounds {
     return fabs(CGRectGetWidth(newBounds) - CGRectGetWidth(self.collectionView.bounds)) > 0.5;
+}
+
+- (void)invalidatePreservingVisibleAnchor {
+    UICollectionView* collection = self.collectionView;
+    CGFloat viewportTop = collection.contentOffset.y;
+    UICollectionViewLayoutAttributes* anchor = nil;
+    CGFloat nearest = CGFLOAT_MAX;
+    for (NSIndexPath* path in collection.indexPathsForVisibleItems) {
+        UICollectionViewLayoutAttributes* candidate =
+            [self layoutAttributesForItemAtIndexPath:path];
+        if (!candidate) continue;
+        CGFloat distance = fabs(CGRectGetMinY(candidate.frame) - viewportTop);
+        if (distance < nearest) {
+            nearest = distance;
+            anchor = candidate;
+        }
+    }
+    self.geometryDirty = YES;
+    [self prepareLayout];
+    BHTWaterfallInvalidationContext* context = [BHTWaterfallInvalidationContext new];
+    context.geometryAlreadyPrepared = YES;
+    [context invalidateItemsAtIndexPaths:[self.attributes valueForKey:@"indexPath"]];
+    UICollectionViewLayoutAttributes* updated = anchor
+        ? [self layoutAttributesForItemAtIndexPath:anchor.indexPath] : nil;
+    // UIKit applies this delta as part of layout, preserving an active pan or
+    // deceleration. Calling setContentOffset here interrupts scrolling.
+    if (updated && viewportTop > -collection.adjustedContentInset.top + 0.5) {
+        CGFloat delta = CGRectGetMinY(updated.frame) - CGRectGetMinY(anchor.frame);
+        CGFloat minimum = -collection.adjustedContentInset.top;
+        CGFloat maximum = MAX(minimum, self.contentSize.height -
+            CGRectGetHeight(collection.bounds) + collection.adjustedContentInset.bottom);
+        if (isfinite(delta)) {
+            context.contentOffsetAdjustment = CGPointMake(
+                0, MIN(maximum, MAX(minimum, viewportTop + delta)) - viewportTop);
+            BHTIncrementLikesDiagnostic(@"waterfallAnchorPreservations");
+        }
+    }
+    [self invalidateLayoutWithContext:context];
+    [collection layoutIfNeeded];
 }
 
 @end
@@ -809,6 +924,17 @@ static CGFloat BHTTargetPixelsForView(UIView* view,
     }
     CGFloat scale = screen.scale;
     return MAX(640.0, points * scale * qualityMultiplier);
+}
+
+static CGFloat BHTWaterfallPreviewPixels(UICollectionView* collection,
+                                         NSIndexPath* indexPath) {
+    CGRect frame = [collection.collectionViewLayout
+        layoutAttributesForItemAtIndexPath:indexPath].frame;
+    CGFloat points = MAX(CGRectGetWidth(frame), CGRectGetHeight(frame));
+    UIScreen* screen = collection.window.screen ?: UIScreen.mainScreen;
+    // Prefetch and visible cells must request the same bucket, including tall
+    // portraits and spanning tiles. The medium preview itself is 1200 pixels.
+    return MIN(1200.0, MAX(640.0, points * screen.scale * 1.2));
 }
 
 typedef void (^BHTMediaImageCompletion)(UIImage* image);
@@ -1513,6 +1639,7 @@ static UIMenu* BHTLikedMediaContextMenu(
 - (void)dealloc {
     BHTCancelMediaImageRequest(self.imageRequest);
 }
+
 
 @end
 
@@ -2365,11 +2492,24 @@ static void BHTRefreshNativeTabViewAppearance(T1TabView* tabView);
 
 @end
 
+@interface BHTWaterfallFrameTarget : NSObject
+@property(nonatomic, copy) void (^update)(void);
+- (void)tick:(CADisplayLink*)link;
+@end
+@implementation BHTWaterfallFrameTarget
+- (void)tick:(CADisplayLink*)link {
+    [link invalidate];
+    if (self.update) self.update();
+}
+@end
+
 @interface BHTLikesViewController : UIViewController <UICollectionViewDataSource,
                                                        UICollectionViewDelegate,
                                                        UICollectionViewDataSourcePrefetching,
                                                        BHTWaterfallLayoutDelegate>
 @property(nonatomic, strong) UIViewController* postsController;
+@property(nonatomic, copy) NSString* profileMediaKind;
+@property(nonatomic) BOOL updatingProfileMediaInsets;
 @property(nonatomic, strong) UISegmentedControl* selector;
 @property(nonatomic, strong) UICollectionView* collectionView;
 @property(nonatomic, strong) BHTWaterfallLayout* waterfallLayout;
@@ -2388,7 +2528,7 @@ static void BHTRefreshNativeTabViewAppearance(T1TabView* tabView);
 @property(nonatomic) CFTimeInterval initialResetHardDeadline;
 @property(nonatomic) NSUInteger loadRequestGeneration;
 @property(nonatomic) BOOL waterfallLayoutInvalidationScheduled;
-@property(nonatomic) BOOL waterfallLayoutInvalidationPendingUntilIdle;
+@property(nonatomic, strong) CADisplayLink* waterfallLayoutDisplayLink;
 @property(nonatomic) BOOL themeRefreshScheduled;
 - (void)ingestSections:(NSArray*)sections;
 - (void)loadMoreMedia;
@@ -2403,10 +2543,16 @@ static void BHTRefreshNativeTabViewAppearance(T1TabView* tabView);
 - (void)updateAdaptiveAspectRatioForItem:(BHTLikedMediaItem*)item
                               fromImage:(UIImage*)image;
 - (void)scheduleWaterfallLayoutInvalidation;
-- (void)applyPendingWaterfallLayoutInvalidationIfIdle;
+- (void)applyPendingWaterfallLayoutInvalidation;
 - (void)invalidateInitialResetDisplayLink;
 - (void)cancelInitialResetGuard;
 - (void)startInitialResetDisplayLinkIfNeeded;
+- (instancetype)initWithPostsController:(UIViewController*)controller
+                       profileMediaKind:(NSString*)kind;
+- (void)updateProfileMediaVisibility;
+- (void)updateProfileMediaInsets;
+- (void)refreshProfileMedia:(UIRefreshControl*)sender;
+- (void)forwardProfileScrollEvent:(NSString*)name scrollView:(UIScrollView*)scrollView;
 @end
 
 static void BHTFindVerticalScrollView(UIView* view, UIScrollView** best,
@@ -2435,13 +2581,20 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
 @implementation BHTLikesViewController
 
 - (instancetype)init {
+    return [self initWithPostsController:BHTMakeNativeLikesController(BHTCurrentAccount())
+                        profileMediaKind:nil];
+}
+
+- (instancetype)initWithPostsController:(UIViewController*)controller
+                       profileMediaKind:(NSString*)kind {
     if ((self = [super init])) {
-        _postsController = BHTMakeNativeLikesController(BHTCurrentAccount());
+        _postsController = controller;
+        _profileMediaKind = [kind copy];
         _mediaItems = [NSMutableArray array];
         _mediaIDs = [NSMutableSet set];
         _prefetchRequests = [NSMutableDictionary dictionary];
-        _needsInitialTopReset = YES;
-        self.title =
+        _needsInitialTopReset = kind == nil;
+        self.title = kind ? controller.title :
             [[BHTBundle sharedBundle] localizedStringForKey:@"MY_LIKES_TITLE"];
         [[NSNotificationCenter defaultCenter]
             addObserver:self
@@ -2469,6 +2622,7 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
 
 - (void)dealloc {
     [self.initialResetDisplayLink invalidate];
+    [self.waterfallLayoutDisplayLink invalidate];
     for (BHTMediaImageRequestToken* request in
          self.prefetchRequests.allValues) {
         BHTCancelMediaImageRequest(request);
@@ -2486,6 +2640,16 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
         self.postsController.view.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
         [self.view addSubview:self.postsController.view];
         [self.postsController didMoveToParentViewController:self];
+        if (self.profileMediaKind) {
+            // Backend scrolls request the next native page. They must not
+            // collapse the visible profile header or move its reading point.
+            SEL sendEvents = NSSelectorFromString(@"setTfn_sendContentScrollEventsToParentViewController:");
+            if ([self.postsController respondsToSelector:sendEvents]) {
+                ((void (*)(id, SEL, BOOL))objc_msgSend)(self.postsController, sendEvents, NO);
+                ((void (*)(id, SEL, BOOL))objc_msgSend)(self, sendEvents, YES);
+            }
+            BHTFindScrollableView(self.postsController.view).scrollsToTop = NO;
+        }
     } else {
         UILabel* unavailable = [[UILabel alloc] initWithFrame:self.view.bounds];
         unavailable.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
@@ -2544,6 +2708,12 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
     self.collectionView.tintColor = accent;
     self.unavailableLabel.textColor = secondaryText;
     self.unavailableLabel.backgroundColor = background;
+    if (self.profileMediaKind) {
+        for (BHTLikedMediaCell* cell in self.collectionView.visibleCells) {
+            if ([cell isKindOfClass:BHTLikedMediaCell.class]) [cell applyCurrentThemeSurface];
+        }
+        return;
+    }
 
     // Keep UIKit's native segmented-control artwork. Supplying 1x1 custom
     // background images makes an unconstrained UINavigationItem titleView
@@ -2646,6 +2816,7 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
 }
 
 - (void)likesNavigationSettingsChanged:(NSNotification*)notification {
+    if (self.profileMediaKind) return;
     dispatch_async(dispatch_get_main_queue(), ^{
         if (self.isViewLoaded) [self configureWaterfallInterface];
         BHTRefreshLikesActivityHistoryConfiguration(
@@ -2655,25 +2826,24 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
 
 - (void)configureWaterfallInterface {
     BOOL waterfallEnabled =
-        [BHTLikesNavigationUtility waterfallEnabled];
+        self.profileMediaKind ? [BHTSettings boolForKey:@"profile_media_waterfall"] :
+            [BHTLikesNavigationUtility waterfallEnabled];
     if (waterfallEnabled && !self.collectionView) {
         BHTBundle* bundle = [BHTBundle sharedBundle];
-        self.selector = [[BHTLikesModeSelector alloc]
-            initWithItems:@[
-                [bundle localizedStringForKey:@"LIKES_POSTS_SEGMENT"],
-                [bundle localizedStringForKey:@"LIKES_MEDIA_SEGMENT"]
-            ]];
-        self.selector.selectedSegmentIndex = 0;
-        [self.selector
-            setContentCompressionResistancePriority:
-                UILayoutPriorityRequired
-                                         forAxis:
-                UILayoutConstraintAxisVertical];
-        [self.selector sizeToFit];
-        [self.selector addTarget:self
-                          action:@selector(selectionChanged:)
-                forControlEvents:UIControlEventValueChanged];
-        [self ensureWaterfallSelectorInstalled];
+        if (!self.profileMediaKind) {
+            self.selector = [[BHTLikesModeSelector alloc]
+                initWithItems:@[
+                    [bundle localizedStringForKey:@"LIKES_POSTS_SEGMENT"],
+                    [bundle localizedStringForKey:@"LIKES_MEDIA_SEGMENT"]
+                ]];
+            self.selector.selectedSegmentIndex = 0;
+            [self.selector setContentCompressionResistancePriority:UILayoutPriorityRequired
+                                                           forAxis:UILayoutConstraintAxisVertical];
+            [self.selector sizeToFit];
+            [self.selector addTarget:self action:@selector(selectionChanged:)
+                    forControlEvents:UIControlEventValueChanged];
+            [self ensureWaterfallSelectorInstalled];
+        }
 
         self.waterfallLayout = [BHTWaterfallLayout new];
         self.collectionView = [[UICollectionView alloc] initWithFrame:self.view.bounds
@@ -2687,6 +2857,19 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
         self.collectionView.hidden = YES;
         [self.collectionView registerClass:BHTLikedMediaCell.class forCellWithReuseIdentifier:@"media"];
         [self.view addSubview:self.collectionView];
+        if (self.profileMediaKind) {
+            self.collectionView.alwaysBounceVertical = YES;
+            // X's header reads contentInset itself, not adjustedContentInset.
+            // Apply its propagated safe area explicitly, as its TFN data
+            // controller does, instead of letting UIKit add it a second time.
+            self.collectionView.contentInsetAdjustmentBehavior = UIScrollViewContentInsetAdjustmentNever;
+            UIRefreshControl* refresh = [UIRefreshControl new];
+            [refresh addTarget:self action:@selector(refreshProfileMedia:)
+                forControlEvents:UIControlEventValueChanged];
+            self.collectionView.refreshControl = refresh;
+            self.collectionView.accessibilityLabel = [[BHTBundle sharedBundle]
+                localizedStringForKey:@"PROFILE_MEDIA_WATERFALL_TITLE"];
+        }
 
         UIPinchGestureRecognizer* pinch = [[UIPinchGestureRecognizer alloc] initWithTarget:self action:@selector(pinched:)];
         [self.collectionView addGestureRecognizer:pinch];
@@ -2718,16 +2901,19 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
         self.collectionView = nil;
         self.waterfallLayout = nil;
         self.waterfallLayoutInvalidationScheduled = NO;
-        self.waterfallLayoutInvalidationPendingUntilIdle = NO;
+        [self.waterfallLayoutDisplayLink invalidate];
+        self.waterfallLayoutDisplayLink = nil;
         if (self.navigationItem.titleView == self.selector) {
             self.navigationItem.titleView = nil;
         }
         self.selector = nil;
         BHTSetLikesDiagnostic(@"waterfallSelectorOwned", @NO);
     }
+    if (self.profileMediaKind) [self updateProfileMediaVisibility];
 }
 
 - (void)ensureWaterfallSelectorInstalled {
+    if (self.profileMediaKind) return;
     if (![BHTLikesNavigationUtility waterfallEnabled] ||
         !self.selector) {
         return;
@@ -2741,6 +2927,7 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
 }
 
 - (void)restoreWaterfallSelectorVisibilityIfVisible {
+    if (self.profileMediaKind) return;
     if (![BHTLikesNavigationUtility waterfallEnabled] ||
         !self.selector) {
         return;
@@ -2766,6 +2953,7 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
 }
 
 - (void)recordWaterfallSelectorRuntimeState {
+    if (self.profileMediaKind) return;
     UISegmentedControl* selector = self.selector;
     UINavigationController* navigation = self.navigationController;
     UINavigationBar* navigationBar = navigation.navigationBar;
@@ -2854,7 +3042,7 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
     [self configureWaterfallInterface];
     [self ensureWaterfallSelectorInstalled];
     [self applyCurrentThemeSurfaces];
-    [self applyPendingWaterfallLayoutInvalidationIfIdle];
+    [self applyPendingWaterfallLayoutInvalidation];
     // Reset before UIKit presents the first Likes frame. This keeps X's
     // restored middle position off-screen without an artificial loading view.
     if (!self.needsInitialTopReset) return;
@@ -3016,7 +3204,7 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
     self.collectionView.hidden = !media;
     if (media) {
         [self.view bringSubviewToFront:self.collectionView];
-        [self applyPendingWaterfallLayoutInvalidationIfIdle];
+        [self applyPendingWaterfallLayoutInvalidation];
         if (self.mediaItems.count < 12) [self loadMoreMedia];
     }
 }
@@ -3038,7 +3226,7 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
     __weak typeof(self) weakSelf = self;
     dispatch_async(dispatch_get_main_queue(), ^{
         [weakSelf scheduleWaterfallLayoutInvalidation];
-        [weakSelf applyPendingWaterfallLayoutInvalidationIfIdle];
+        [weakSelf applyPendingWaterfallLayoutInvalidation];
     });
 }
 
@@ -3096,101 +3284,27 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
 }
 
 - (void)scheduleWaterfallLayoutInvalidation {
-    if (!self.waterfallLayout ||
-        self.waterfallLayoutInvalidationScheduled) {
-        return;
-    }
-    if (self.collectionView.tracking ||
-        self.collectionView.dragging ||
-        self.collectionView.decelerating) {
-        self.waterfallLayoutInvalidationPendingUntilIdle = YES;
-        return;
-    }
-    self.waterfallLayoutInvalidationPendingUntilIdle = NO;
+    if (!self.waterfallLayout || self.waterfallLayoutInvalidationScheduled) return;
     self.waterfallLayoutInvalidationScheduled = YES;
+    BHTWaterfallFrameTarget* target = [BHTWaterfallFrameTarget new];
     __weak typeof(self) weakSelf = self;
-    dispatch_async(dispatch_get_main_queue(), ^{
-        typeof(self) strongSelf = weakSelf;
-        if (!strongSelf) return;
-        strongSelf.waterfallLayoutInvalidationScheduled = NO;
-        if (!strongSelf.waterfallLayout ||
-            !strongSelf.collectionView) {
-            return;
-        }
-        if (strongSelf.collectionView.tracking ||
-            strongSelf.collectionView.dragging ||
-            strongSelf.collectionView.decelerating) {
-            strongSelf
-                .waterfallLayoutInvalidationPendingUntilIdle = YES;
-            return;
-        }
-
-        UICollectionView* collectionView =
-            strongSelf.collectionView;
-        NSIndexPath* anchorIndexPath = nil;
-        UICollectionViewLayoutAttributes* anchorAttributes = nil;
-        CGFloat viewportTop = collectionView.contentOffset.y;
-        CGFloat nearestDistance = CGFLOAT_MAX;
-        for (NSIndexPath* indexPath in
-             collectionView.indexPathsForVisibleItems) {
-            UICollectionViewLayoutAttributes* attributes =
-                [strongSelf.waterfallLayout
-                    layoutAttributesForItemAtIndexPath:indexPath];
-            if (!attributes) continue;
-            CGFloat distance =
-                fabs(CGRectGetMinY(attributes.frame) - viewportTop);
-            if (distance < nearestDistance) {
-                nearestDistance = distance;
-                anchorIndexPath = indexPath;
-                anchorAttributes = attributes;
-            }
-        }
-        CGFloat anchorOffset = anchorAttributes
-            ? viewportTop - CGRectGetMinY(anchorAttributes.frame)
-            : 0;
-
-        [strongSelf.waterfallLayout invalidateLayout];
-        [collectionView layoutIfNeeded];
-
-        UICollectionViewLayoutAttributes* updatedAnchor =
-            anchorIndexPath
-                ? [strongSelf.waterfallLayout
-                      layoutAttributesForItemAtIndexPath:
-                          anchorIndexPath]
-                : nil;
-        if (updatedAnchor) {
-            UIEdgeInsets inset = collectionView.adjustedContentInset;
-            CGFloat minimumY = -inset.top;
-            CGFloat maximumY = MAX(
-                minimumY,
-                collectionView.contentSize.height -
-                    CGRectGetHeight(collectionView.bounds) +
-                    inset.bottom);
-            CGFloat targetY =
-                CGRectGetMinY(updatedAnchor.frame) + anchorOffset;
-            if (isfinite(targetY)) {
-                targetY = MIN(maximumY, MAX(minimumY, targetY));
-                [collectionView
-                    setContentOffset:
-                        CGPointMake(collectionView.contentOffset.x,
-                                    targetY)
-                             animated:NO];
-                BHTIncrementLikesDiagnostic(
-                    @"waterfallAnchorPreservations");
-            }
-        }
-    });
+    target.update = ^{ [weakSelf applyPendingWaterfallLayoutInvalidation]; };
+    self.waterfallLayoutDisplayLink =
+        [CADisplayLink displayLinkWithTarget:target selector:@selector(tick:)];
+    // Common modes continue delivering frames while a finger tracks the grid.
+    [self.waterfallLayoutDisplayLink addToRunLoop:NSRunLoop.mainRunLoop
+                                        forMode:NSRunLoopCommonModes];
 }
 
-- (void)applyPendingWaterfallLayoutInvalidationIfIdle {
-    if (!self.waterfallLayoutInvalidationPendingUntilIdle ||
-        self.collectionView.tracking ||
-        self.collectionView.dragging ||
-        self.collectionView.decelerating) {
-        return;
-    }
-    self.waterfallLayoutInvalidationPendingUntilIdle = NO;
-    [self scheduleWaterfallLayoutInvalidation];
+- (void)applyPendingWaterfallLayoutInvalidation {
+    if (!self.waterfallLayoutInvalidationScheduled) return;
+    [self.waterfallLayoutDisplayLink invalidate];
+    self.waterfallLayoutDisplayLink = nil;
+    self.waterfallLayoutInvalidationScheduled = NO;
+    [UIView performWithoutAnimation:^{
+        [self.waterfallLayout invalidatePreservingVisibleAnchor];
+    }];
+    BHTIncrementLikesDiagnostic(@"waterfallFrameUpdates");
 }
 
 - (void)waterfallMediaLongPressed:
@@ -3235,6 +3349,26 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
 }
 
 - (void)ingestSections:(NSArray*)sections {
+    if (self.profileMediaKind) {
+        // These are complete native snapshots, including deletes, refreshes,
+        // protected-account states and pagination. Never merge an old profile
+        // snapshot back into a cleared/replaced feed.
+        BHTIncrementLikesDiagnostic([@"profileMediaSectionUpdates_" stringByAppendingString:self.profileMediaKind]);
+        NSArray<BHTLikedMediaItem*>* incoming = BHTProfileMediaSnapshot(
+            BHTMediaItemsFromSections(sections), self.mediaItems);
+        [self.mediaItems setArray:incoming];
+        [self.mediaIDs setSet:[NSSet setWithArray:[incoming valueForKey:@"identifier"]]];
+        self.loadRequestGeneration++;
+        self.requestedMore = NO;
+        BHTSetLikesDiagnostic([@"profileMediaCaptured_" stringByAppendingString:self.profileMediaKind], @(incoming.count));
+        if (self.isViewLoaded) {
+            [self.collectionView.refreshControl endRefreshing];
+            [self.collectionView reloadData];
+            [self updateProfileMediaVisibility];
+            [self.activeMediaPager mediaItemsDidUpdateWithItems:self.mediaItems];
+        }
+        return;
+    }
     if (sections.count > 0 && self.initialResetMayRearm &&
         self.view.window &&
         CACurrentMediaTime() < self.initialResetHardDeadline) {
@@ -3361,8 +3495,7 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
     [cell applyCurrentThemeSurface];
     cell.videoBadge.hidden = item.videoURL == nil;
     cell.representedURL = item.previewURL;
-    CGFloat targetPixels =
-        BHTTargetPixelsForView(cell.contentView, 1.2);
+    CGFloat targetPixels = BHTWaterfallPreviewPixels(collectionView, indexPath);
     UIImage* cached =
         BHTCachedMediaImage(
             item.previewURL,
@@ -3393,17 +3526,6 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
 - (void)collectionView:(UICollectionView*)collectionView
     prefetchItemsAtIndexPaths:
         (NSArray<NSIndexPath*>*)indexPaths {
-    CGFloat width =
-        CGRectGetWidth(collectionView.bounds);
-    NSInteger columns =
-        MAX(2, self.waterfallLayout.columns);
-    CGFloat points =
-        MAX(160, width / columns);
-    UIScreen* screen =
-        collectionView.window.screen ?:
-        UIScreen.mainScreen;
-    CGFloat pixels =
-        points * screen.scale * 1.2;
     for (NSIndexPath* indexPath in indexPaths) {
         if (indexPath.item >=
             (NSInteger)self.mediaItems.count) {
@@ -3411,6 +3533,7 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
         }
         BHTLikedMediaItem* item =
             self.mediaItems[indexPath.item];
+        CGFloat pixels = BHTWaterfallPreviewPixels(collectionView, indexPath);
         NSString* identifier = item.identifier;
         NSURL* URL = item.previewURL;
         if (!URL || identifier.length == 0 ||
@@ -3531,6 +3654,13 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
 }
 
 - (void)scrollViewDidScroll:(UIScrollView*)scrollView {
+    if (self.updatingProfileMediaInsets && scrollView == self.collectionView) return;
+    if (self.profileMediaKind && scrollView == self.collectionView) {
+        SEL event = NSSelectorFromString(@"tfn_contentScrollViewDidScroll:animate:");
+        if ([self respondsToSelector:event]) {
+            ((void (*)(id, SEL, id, BOOL))objc_msgSend)(self, event, scrollView, YES);
+        }
+    }
     if (scrollView != self.collectionView || self.requestedMore || self.mediaItems.count == 0) return;
     CGFloat remaining = scrollView.contentSize.height - CGRectGetMaxY((CGRect){scrollView.contentOffset, scrollView.bounds.size});
     if (remaining <= 900) [self loadMoreMedia];
@@ -3538,30 +3668,139 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
 
 - (void)scrollViewDidEndDragging:(UIScrollView*)scrollView
                   willDecelerate:(BOOL)decelerate {
+    if (self.profileMediaKind && scrollView == self.collectionView) {
+        SEL event = NSSelectorFromString(@"tfn_contentScrollViewDidEndDragging:willDecelerate:");
+        if ([self respondsToSelector:event]) ((void (*)(id, SEL, id, BOOL))objc_msgSend)(self, event, scrollView, decelerate);
+    }
     if (scrollView == self.collectionView && !decelerate) {
         __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [weakSelf applyPendingWaterfallLayoutInvalidationIfIdle];
+            [weakSelf applyPendingWaterfallLayoutInvalidation];
         });
     }
 }
 
 - (void)scrollViewDidEndDecelerating:(UIScrollView*)scrollView {
+    [self forwardProfileScrollEvent:@"tfn_contentScrollViewDidEndDecelerating:" scrollView:scrollView];
     if (scrollView == self.collectionView) {
         __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [weakSelf applyPendingWaterfallLayoutInvalidationIfIdle];
+            [weakSelf applyPendingWaterfallLayoutInvalidation];
         });
     }
 }
 
 - (void)scrollViewDidEndScrollingAnimation:(UIScrollView*)scrollView {
+    [self forwardProfileScrollEvent:@"tfn_contentScrollViewDidEndScrollingAnimation:" scrollView:scrollView];
     if (scrollView == self.collectionView) {
         __weak typeof(self) weakSelf = self;
         dispatch_async(dispatch_get_main_queue(), ^{
-            [weakSelf applyPendingWaterfallLayoutInvalidationIfIdle];
+            [weakSelf applyPendingWaterfallLayoutInvalidation];
         });
     }
+}
+
+- (UIScrollView*)tfn_contentScrollView {
+    if (self.profileMediaKind) {
+        [self loadViewIfNeeded];
+        [self updateProfileMediaInsets];
+        if (self.collectionView) return self.collectionView;
+        return BHTCallObject(self.postsController, @"tfn_contentScrollView");
+    }
+    struct objc_super parent = { self, UIViewController.class };
+    return ((UIScrollView* (*)(struct objc_super*, SEL))objc_msgSendSuper)(&parent, _cmd);
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    [self updateProfileMediaInsets];
+}
+
+- (void)viewSafeAreaInsetsDidChange {
+    [super viewSafeAreaInsetsDidChange];
+    [self updateProfileMediaInsets];
+}
+
+- (void)updateProfileMediaInsets {
+    if (!self.profileMediaKind || !self.collectionView || self.updatingProfileMediaInsets) return;
+    UICollectionView* collection = self.collectionView;
+    UIEdgeInsets previous = collection.contentInset;
+    UIEdgeInsets safe = self.view.safeAreaInsets;
+    UIEdgeInsets next = previous;
+    next.top = safe.top;
+    // The native header can add bottom padding to make a short feed scrollable.
+    next.bottom = MAX(previous.bottom, safe.bottom);
+    if (UIEdgeInsetsEqualToEdgeInsets(previous, next)) return;
+    CGPoint offset = collection.contentOffset;
+    offset.y = BHTProfileMediaOffsetForTopInset(offset.y, previous.top, next.top);
+    self.updatingProfileMediaInsets = YES;
+    collection.contentInset = next;
+    collection.contentOffset = offset;
+    self.updatingProfileMediaInsets = NO;
+    // Do not copy gallery insets into the backend: its native controller
+    // already handles the inherited safe area and its own loading controls.
+    BHTIncrementLikesDiagnostic(@"profileMediaSafeAreaUpdates");
+}
+
+- (void)updateProfileMediaVisibility {
+    if (!self.profileMediaKind || !self.isViewLoaded) return;
+    BOOL showingGallery = self.collectionView && self.mediaItems.count > 0;
+    BHTSetLikesDiagnostic([@"profileMediaWaterfallVisible_" stringByAppendingString:self.profileMediaKind], @(showingGallery));
+    // X retains control of loading, retries, private-profile and empty states.
+    // Show its own surface whenever there is no media snapshot to display.
+    self.collectionView.hidden = !showingGallery;
+    self.collectionView.scrollsToTop = showingGallery;
+    self.postsController.view.hidden = NO;
+    self.postsController.view.userInteractionEnabled = !showingGallery;
+    self.postsController.view.accessibilityElementsHidden = showingGallery;
+    BHTFindScrollableView(self.postsController.view).scrollsToTop = !showingGallery;
+}
+
+- (void)refreshProfileMedia:(UIRefreshControl*)sender {
+    SEL loadTop = NSSelectorFromString(@"loadTop:");
+    if (!self.profileMediaKind || ![self.postsController respondsToSelector:loadTop]) {
+        [sender endRefreshing];
+        return;
+    }
+    self.requestedMore = NO;
+    ((void (*)(id, SEL, id))objc_msgSend)(self.postsController, loadTop, sender);
+    __weak UIRefreshControl* weakRefresh = sender;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 15 * NSEC_PER_SEC),
+                   dispatch_get_main_queue(), ^{ [weakRefresh endRefreshing]; });
+}
+
+- (void)forwardProfileScrollEvent:(NSString*)name scrollView:(UIScrollView*)scrollView {
+    if (!self.profileMediaKind || scrollView != self.collectionView) return;
+    SEL event = NSSelectorFromString(name);
+    if ([self respondsToSelector:event]) ((void (*)(id, SEL, id))objc_msgSend)(self, event, scrollView);
+}
+
+- (void)scrollViewWillBeginDragging:(UIScrollView*)scrollView {
+    [self forwardProfileScrollEvent:@"tfn_contentScrollViewWillBeginDragging:" scrollView:scrollView];
+}
+
+- (void)scrollViewWillBeginDecelerating:(UIScrollView*)scrollView {
+    [self forwardProfileScrollEvent:@"tfn_contentScrollViewWillBeginDecelerating:" scrollView:scrollView];
+}
+
+- (void)scrollViewWillEndDragging:(UIScrollView*)scrollView
+                    withVelocity:(CGPoint)velocity
+             targetContentOffset:(inout CGPoint*)offset {
+    if (!self.profileMediaKind || scrollView != self.collectionView) return;
+    SEL event = NSSelectorFromString(@"tfn_contentScrollViewWillEndDragging:withVelocity:targetContentOffset:");
+    if ([self respondsToSelector:event]) ((void (*)(id, SEL, id, CGPoint, CGPoint*))objc_msgSend)(self, event, scrollView, velocity, offset);
+}
+
+- (BOOL)scrollViewShouldScrollToTop:(UIScrollView*)scrollView {
+    SEL event = NSSelectorFromString(@"tfn_contentScrollViewShouldScrollToTop:programmatically:");
+    if (self.profileMediaKind && scrollView == self.collectionView && [self respondsToSelector:event]) {
+        return ((BOOL (*)(id, SEL, id, BOOL))objc_msgSend)(self, event, scrollView, NO);
+    }
+    return YES;
+}
+
+- (void)scrollViewDidScrollToTop:(UIScrollView*)scrollView {
+    [self forwardProfileScrollEvent:@"tfn_contentScrollViewDidScrollToTop:" scrollView:scrollView];
 }
 
 @end
@@ -3571,7 +3810,7 @@ BOOL BHTIsManagedLikesActivityHistoryController(
     UIViewController* current = controller;
     while (current) {
         if ([current isKindOfClass:BHTLikesViewController.class]) {
-            return YES;
+            return ((BHTLikesViewController*)current).profileMediaKind == nil;
         }
         current = current.parentViewController;
     }
@@ -3594,7 +3833,28 @@ static uintptr_t BHTT1TwitterImageBase(void) {
         const char* name = _dyld_get_image_name(index);
         if (name &&
             strstr(name, "/T1Twitter.framework/T1Twitter") != NULL) {
-            return (uintptr_t)_dyld_get_image_header(index);
+            const struct mach_header_64* header =
+                (const struct mach_header_64*)_dyld_get_image_header(index);
+            if (!header || header->magic != MH_MAGIC_64) return 0;
+            // Exact binary identity gates every read of a private offset.
+            // X 12.24.1 build 1; a later app fails closed before dereferencing.
+            const uint8_t expectedUUID[16] = {
+                0xB7, 0x62, 0x6D, 0x78, 0xE9, 0x63, 0x30, 0xFF,
+                0xA7, 0xE1, 0xC1, 0x28, 0x1B, 0xC7, 0x29, 0x8D
+            };
+            const uint8_t* cursor = (const uint8_t*)(header + 1);
+            const uint8_t* end = cursor + header->sizeofcmds;
+            for (uint32_t commandIndex = 0; commandIndex < header->ncmds; commandIndex++) {
+                if (cursor + sizeof(struct load_command) > end) return 0;
+                const struct load_command* command = (const void*)cursor;
+                if (command->cmdsize < sizeof(*command) || cursor + command->cmdsize > end) return 0;
+                if (command->cmd == LC_UUID && command->cmdsize >= sizeof(struct uuid_command)) {
+                    return memcmp(((const struct uuid_command*)command)->uuid, expectedUUID, 16) == 0
+                        ? (uintptr_t)header : 0;
+                }
+                cursor += command->cmdsize;
+            }
+            return 0;
         }
     }
     return 0;
@@ -3605,32 +3865,32 @@ static id BHTMakeNativeBookmarksEntry(void) {
     uintptr_t imageBase = BHTT1TwitterImageBase();
     if (imageBase == 0) {
         BHTSetLikesDiagnostic(@"nativeEntryFactoryFailure",
-                              @"T1TwitterImageNotFound");
+                              @"UnsupportedT1TwitterImage");
         return nil;
     }
 
-    // X 12.9 build 10's own panel-entry switch. Its case 6 allocates and
+    // X 12.24.1 build 1's own panel-entry switch. Its case 6 allocates and
     // initializes BookmarksAppNavigationTabEntry with the current account.
     // Validate the switch prologue, panel-6 jump-table target, and invariant
     // case instructions before calling so another X build is skipped safely
     // instead of jumping into a changed private function.
-    uintptr_t factoryAddress = imageBase + kBHTX129EntryFactoryOffset;
+    uintptr_t factoryAddress = imageBase + kBHTEntryFactoryOffset;
     const uint32_t* instructions = (const uint32_t*)factoryAddress;
     const uint8_t* jumpTable =
         (const uint8_t*)(imageBase +
-                         kBHTX129EntryFactoryJumpTableOffset);
+                         kBHTEntryFactoryJumpTableOffset);
     const uint32_t* bookmarksCase =
         (const uint32_t*)(imageBase +
-                          kBHTX129BookmarksFactoryCaseOffset);
+                          kBHTBookmarksFactoryCaseOffset);
     if (instructions[0] != 0xD10203FF ||
-        instructions[6] != 0xF1005C1F ||
-        jumpTable[kBHTLikesPanelID] != 0x91 ||
+        instructions[6] != 0xF100601F ||
+        jumpTable[kBHTLikesPanelID] != 0x37 ||
         bookmarksCase[0] != 0xD2800000 ||
         bookmarksCase[3] != 0xAA0003F4 ||
         bookmarksCase[4] != 0xAA1303E0 ||
         bookmarksCase[6] != 0xAA0003F3) {
         BHTSetLikesDiagnostic(@"nativeEntryFactoryFailure",
-                              @"X129FactorySignatureMismatch");
+                              @"NativeFactorySignatureMismatch");
         return nil;
     }
 
@@ -3972,8 +4232,28 @@ BOOL BHTCaptureLikesSections(UIViewController* dataViewController, NSArray* sect
         current = current.parentViewController;
     }
     if ([current isKindOfClass:BHTLikesViewController.class]) {
+        BHTLikesViewController* gallery = (BHTLikesViewController*)current;
+        if (gallery.profileMediaKind &&
+            ![dataViewController isKindOfClass:NSClassFromString(@"T1URTViewController")]) return NO;
         [(BHTLikesViewController*)current ingestSections:sections];
-        return YES;
+        return ((BHTLikesViewController*)current).profileMediaKind == nil;
     }
     return NO;
+}
+
+UIViewController* BHTProfileMediaController(UIViewController* nativeController,
+                                           NSString* mediaKind) {
+    if (![BHTSettings boolForKey:@"profile_media_waterfall"] ||
+        ![nativeController isKindOfClass:UIViewController.class] ||
+        nativeController.parentViewController ||
+        [nativeController isKindOfClass:BHTLikesViewController.class]) return nativeController;
+    if (![nativeController isKindOfClass:NSClassFromString(@"T1URTViewController")]) {
+        BHTSetLikesDiagnostic([@"profileMediaUnsupported_" stringByAppendingString:mediaKind],
+                              NSStringFromClass(nativeController.class));
+        return nativeController;
+    }
+    BHTSetLikesDiagnostic([@"profileMediaNative_" stringByAppendingString:mediaKind],
+                          NSStringFromClass(nativeController.class));
+    return [[BHTLikesViewController alloc] initWithPostsController:nativeController
+                                                 profileMediaKind:mediaKind];
 }
