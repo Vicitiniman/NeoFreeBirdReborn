@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check source invariants that protect the X 12.9 compatibility fixes."""
+"""Check source invariants that protect the X 12.24.1 compatibility fixes."""
 
 from collections import Counter
 from pathlib import Path
@@ -173,6 +173,9 @@ def main() -> None:
         "twitter_bird.png": (24, 24),
         "twitter_bird@2x.png": (48, 48),
         "twitter_bird@3x.png": (72, 72),
+        "twitter_bird_launch.png": (256, 256),
+        "twitter_bird_launch@2x.png": (512, 512),
+        "twitter_bird_launch@3x.png": (768, 768),
     }
     for filename, expected_size in expected_birds.items():
         if png_size(BUNDLE / filename) != expected_size:
@@ -198,6 +201,17 @@ def main() -> None:
     )
     if "- (BOOL)isProfileTranslationEnabled" in profile_source:
         raise AssertionError("Unavailable X 12.9 profile selector is hooked")
+    require_source_tokens(
+        profile_source,
+        (
+            "BHTCurrentProfileMoreActions",
+            "profileMoreActionsBaseActionItemsWithSender:",
+            "nestedMenuWithTitle:title items:copyActions",
+            "BHTCopyProfileActions(self.viewModel)",
+            "%init(BHTCurrentProfileMoreActions)",
+        ),
+        "X 12.24 native Copy profile details menu",
+    )
 
     page_source = (
         ROOT / "src" / "Settings" / "ModernSettingsPageViewController.m"
@@ -214,6 +228,7 @@ def main() -> None:
     for required in (
         "UIUserInterfaceIdiomPad",
         "T1TabBarHostView",
+        "T1AppSplitSideBarViewController",
         "BHTRailHeaderLogoImageView",
         "BHTGuardedRailHeaderImageScan",
         "BHTRailHeaderCandidateBelongsToTab",
@@ -251,6 +266,9 @@ def main() -> None:
     for required in (
         'BHTProbe(@"appearance", @"T1TabBarHostView", @"logoImageView", NO)',
         'BHTProbe(@"appearance", @"T1TabBarHostView", @"tabBarViewController", NO)',
+        'BHTProbe(@"appearance", @"T1AppSplitSideBarViewController", @"viewWillLayoutSubviews", NO)',
+        'BHTProbe(@"profiles", @"T1ProfileHeaderViewController", @"profileMoreActionsBaseActionItemsWithSender:", NO)',
+        'BHTProbe(@"profiles", @"TFNActionItem", @"nestedMenuWithTitle:items:", YES)',
         'BHTProbe(@"appearance", @"TAEColorSettings", @"currentColorPalette", NO)',
         'BHTProbe(@"appearance", @"T1ColorSettings", @"_t1_applyTheme", YES)',
         '@"railBrandingRuntime": BHTRailBrandingObservationSnapshot()',
@@ -4275,11 +4293,11 @@ def main() -> None:
             "navigation delegate"
         )
 
-    if "Version: 6.1.0-beta.62" not in (
+    if "Version: 6.1.0-beta.64" not in (
         ROOT / "control"
     ).read_text(encoding="utf-8"):
         raise AssertionError(
-            "Current promoted-status filtering must ship as beta.62"
+            "Current profile/branding compatibility must ship as beta.64"
         )
 
     require_source_tokens(
@@ -4295,8 +4313,16 @@ def main() -> None:
     branding_source = (
         ROOT / "src" / "Branding" / "BHTBranding.m"
     ).read_text(encoding="utf-8")
-    if '@"twitter_bird"' not in branding_source:
-        raise AssertionError("Central Twitter bird asset lookup is missing")
+    require_source_tokens(
+        branding_source,
+        (
+            '@"twitter_bird"',
+            '@"twitter_bird_launch"',
+            "existingPointSize",
+            "imageWithCGImage:birdPixels",
+        ),
+        "central Twitter bird asset lookup",
+    )
 
     ipa_branding_source = (
         ROOT / "branding" / "ipa_branding.py"
@@ -4801,6 +4827,38 @@ def main() -> None:
     require_source_tokens(
         feature_switches_source,
         (
+            "BHTShouldSuppressSensitiveTweetWarnings",
+            "BHTInstallURTSensitiveStatusDecisionHook",
+            'objc_getClass("T1URTTimelineStatusItemViewModel")',
+            'NSSelectorFromString(@"isPossiblySensitiveViewModelForAccount:")',
+            "class_getInstanceMethod(viewModelClass, selector)",
+            "method_setImplementation(method,",
+            "%hook T1CompositionStatusViewModel",
+            "%hook T1TranslatedStatusViewModel",
+            "%hook T1StatusTableRowAdapter",
+            "- (BOOL)isPossiblySensitiveViewModelForAccount:(id)account",
+            "sensitiveStatusViewModelAtRow:(NSInteger)row",
+            "return BHTShouldSuppressSensitiveTweetWarnings() ? nil : %orig;",
+        ),
+        "full-status sensitive-content warning bypass",
+    )
+    require_source_tokens(
+        compatibility_source,
+        (
+            'BHTProbe(@"sensitiveContent", @"T1CompositionStatusViewModel", '
+            '@"isPossiblySensitiveViewModelForAccount:", NO)',
+            'BHTProbe(@"sensitiveContent", @"T1TranslatedStatusViewModel", '
+            '@"isPossiblySensitiveViewModelForAccount:", NO)',
+            'BHTProbe(@"sensitiveContent", @"T1URTTimelineStatusItemViewModel", '
+            '@"isPossiblySensitiveViewModelForAccount:", NO)',
+            'BHTProbe(@"sensitiveContent", @"T1StatusTableRowAdapter", '
+            '@"sensitiveStatusViewModelAtRow:section:dataViewController:", NO)',
+        ),
+        "sensitive-content compatibility probes",
+    )
+    require_source_tokens(
+        feature_switches_source,
+        (
             "BHTInstallSecureWebSessionAccountStateAccessors",
             "method_setImplementation(method, replacement)",
             "class_addMethod(accountClass, selector, replacement, fallbackTypes)",
@@ -5278,8 +5336,34 @@ def main() -> None:
     launch_source = (
         ROOT / "src" / "Hooks" / "AppLifecycle.x"
     ).read_text(encoding="utf-8")
-    if "applyClassicLaunchBird" not in launch_source:
-        raise AssertionError("Classic launch bird replacement is missing")
+    launch_reveal = source_section(
+        launch_source,
+        "- (void)animateRevealWithCompletion:(id)completion",
+        "%end",
+        "classic launch reveal",
+    )
+    require_source_tokens(
+        launch_reveal,
+        (
+            "applyClassicLaunchBird(launchView)",
+            "classicLaunchAnimationDuration()",
+            "removeAllAnimations",
+            "completionBlock",
+        ),
+        "fast high-resolution classic launch reveal",
+    )
+    if launch_reveal.count("%orig") != 1:
+        raise AssertionError(
+            "Classic launch must use X's stock reveal only when disabled"
+        )
+    require_source_tokens(
+        launch_source,
+        (
+            "BHTApplyTwitterBirdLaunchToImageView",
+            "kBHTLaunchResolvedLogoViewKey",
+        ),
+        "cached high-resolution launch bird",
+    )
 
     likes_source = (
         ROOT / "src" / "Likes" / "BHTLikesTab.m"
