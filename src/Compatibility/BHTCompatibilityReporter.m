@@ -1592,6 +1592,8 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"forYouFilters", @"TFNTwitterStatus", @"fromUserFullName", NO),
         BHTProbe(@"appearance", @"T1TabBarHostView", @"logoImageView", NO),
         BHTProbe(@"appearance", @"T1TabBarHostView", @"tabBarViewController", NO),
+        BHTProbe(@"appearance", @"T1AppSplitSideBarViewController", @"viewWillLayoutSubviews", NO),
+        BHTProbe(@"appearance", @"T1AppSplitSideBarViewController", @"viewSafeAreaInsetsDidChange", NO),
         BHTProbe(@"home", @"T1FleetLineHeaderController", @"_t1_shouldShowFleetLine", NO),
         BHTProbe(@"home", @"TUIUpdateIndicator", @"_recreatePillControlForContentNotification:hideOnScroll:", NO),
         BHTProbe(@"appearance", @"TwitterHome.HomeDefaultNavigationBarTitleViewPlugin", @"titleView", NO),
@@ -1623,6 +1625,8 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"search", @"T1TwitterSwift.GuideContainerViewController", @"viewDidLoad", NO),
 
         BHTProbe(@"profiles", @"T1ProfileHeaderViewController", @"actionButtonProviders", NO),
+        BHTProbe(@"profiles", @"T1ProfileHeaderViewController", @"profileMoreActionsBaseActionItemsWithSender:", NO),
+        BHTProbe(@"profiles", @"TFNActionItem", @"nestedMenuWithTitle:items:", YES),
         BHTProbe(@"profiles", @"T1ProfileFriendsFollowingViewModel", @"_t1_followCountTextWithLabel:singularLabel:count:highlighted:", NO),
         BHTProbe(@"profiles", @"TFNTwitterCanonicalUser", @"isProfileBioTranslatable", NO),
         BHTProbe(@"profiles", @"TFNTwitterCanonicalUser", @"isProfileTranslationEnabled", NO),

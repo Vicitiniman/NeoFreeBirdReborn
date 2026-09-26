@@ -56,9 +56,14 @@ def bird_alpha(source: Image.Image) -> Image.Image:
     return alpha.crop(bounds)
 
 
-def build_variant(alpha: Image.Image, scale: int) -> Image.Image:
-    canvas_size = 24 * scale
-    maximum = (22 * scale, 20 * scale)
+def build_variant(
+    alpha: Image.Image, scale: int, point_size: int = 24
+) -> Image.Image:
+    canvas_size = point_size * scale
+    maximum = (
+        round(canvas_size * 22 / 24),
+        round(canvas_size * 20 / 24),
+    )
     glyph = alpha.copy()
     glyph.thumbnail(maximum, Image.Resampling.LANCZOS)
 
@@ -76,13 +81,20 @@ def build_variant(alpha: Image.Image, scale: int) -> Image.Image:
 def main() -> None:
     DESTINATION.mkdir(parents=True, exist_ok=True)
     alpha = bird_alpha(Image.open(SOURCE))
-    names = {
-        1: "twitter_bird.png",
-        2: "twitter_bird@2x.png",
-        3: "twitter_bird@3x.png",
+    variants = {
+        "twitter_bird": 24,
+        # The launch animation scales its image view. A dedicated 256-point
+        # source prevents UIKit from magnifying the 72-pixel navigation asset
+        # on large iPad displays.
+        "twitter_bird_launch": 256,
     }
-    for scale, name in names.items():
-        build_variant(alpha, scale).save(DESTINATION / name, optimize=True)
+    for base_name, point_size in variants.items():
+        for scale in (1, 2, 3):
+            suffix = "" if scale == 1 else f"@{scale}x"
+            name = f"{base_name}{suffix}.png"
+            build_variant(alpha, scale, point_size).save(
+                DESTINATION / name, optimize=True
+            )
 
 
 if __name__ == "__main__":

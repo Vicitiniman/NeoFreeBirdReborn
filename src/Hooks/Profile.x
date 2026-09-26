@@ -69,6 +69,44 @@ static NSArray* BHTProfileMainEntriesWithPhotosFirst(NSArray* groups,
 
 static char kCopyProviderKey;
 
+static NSString* BHTCopyProfileLocalizedTitle(NSString* key) {
+    return [[BHTBundle sharedBundle] localizedStringForKey:key];
+}
+
+static TFNActionItem* BHTCopyProfileAction(NSString* titleKey,
+                                           NSString* imageName,
+                                           NSString* value) {
+    NSString* copiedValue = [value copy];
+    TFNActionItem* action = [%c(TFNActionItem)
+        actionItemWithTitle:BHTCopyProfileLocalizedTitle(titleKey)
+                  imageName:imageName
+                     action:^{
+                         if (copiedValue.length) {
+                             UIPasteboard.generalPasteboard.string =
+                                 copiedValue;
+                         }
+                     }];
+    action.disabled = copiedValue.length == 0;
+    return action;
+}
+
+static NSArray<TFNActionItem*>* BHTCopyProfileActions(
+    T1ProfileUserViewModel* viewModel) {
+    if (!viewModel) return @[];
+    return @[
+        BHTCopyProfileAction(@"COPY_PROFILE_INFO_MENU_OPTION_3", @"account",
+                             viewModel.fullName),
+        BHTCopyProfileAction(@"COPY_PROFILE_INFO_MENU_OPTION_2", @"at",
+                             viewModel.username),
+        BHTCopyProfileAction(@"COPY_PROFILE_INFO_MENU_OPTION_1", @"news_stroke",
+                             viewModel.bio),
+        BHTCopyProfileAction(@"COPY_PROFILE_INFO_MENU_OPTION_5", @"location_stroke",
+                             viewModel.location),
+        BHTCopyProfileAction(@"COPY_PROFILE_INFO_MENU_OPTION_4", @"link",
+                             viewModel.url),
+    ];
+}
+
 @interface ProfileCopyButtonProvider : NSObject
 @property (nonatomic, weak) T1ProfileHeaderViewController* headerViewController;
 @property (nonatomic, weak) id delegate;
@@ -156,6 +194,50 @@ static char kCopyProviderKey;
 }
 
 @end
+
+// X 12.24 replaced actionButtonProviders/T1ProfileActionButtonSpec with a
+// catalog. Its profile overflow menu is still exposed as native
+// TFNActionItems, so add a nested Copy profile details menu there.
+%group BHTCurrentProfileMoreActions
+
+%hook T1ProfileHeaderViewController
+
+- (NSArray*)profileMoreActionsBaseActionItemsWithSender:(id)sender {
+    NSArray* original = %orig;
+    if (![BHTSettings boolForKey:@"copy_profile_info"]) return original;
+    Class actionItemClass = NSClassFromString(@"TFNActionItem");
+    if (![actionItemClass respondsToSelector:
+            @selector(nestedMenuWithTitle:items:)]) {
+        return original;
+    }
+
+    NSString* title =
+        BHTCopyProfileLocalizedTitle(@"COPY_PROFILE_INFO_TITLE");
+    for (id item in original) {
+        if ([item isKindOfClass:%c(TFNActionItem)] &&
+            [[(TFNActionItem*)item title] isEqualToString:title]) {
+            return original;
+        }
+    }
+
+    NSArray* copyActions = BHTCopyProfileActions(self.viewModel);
+    if (!copyActions.count) return original;
+    TFNActionItem* copyMenu =
+        [%c(TFNActionItem) nestedMenuWithTitle:title items:copyActions];
+    copyMenu.imageName = @"copy_stroke";
+    if (!copyMenu) return original;
+
+    NSMutableArray* result =
+        [original isKindOfClass:NSArray.class]
+            ? [original mutableCopy]
+            : [NSMutableArray array];
+    [result addObject:copyMenu];
+    return [result copy];
+}
+
+%end
+
+%end
 
 %group BHTLegacyProfileActionProviders
 
@@ -251,6 +333,11 @@ static char kCopyProviderKey;
 %ctor {
     %init;
     Class header = NSClassFromString(@"T1ProfileHeaderViewController");
+    if (class_getInstanceMethod(
+            header,
+            @selector(profileMoreActionsBaseActionItemsWithSender:))) {
+        %init(BHTCurrentProfileMoreActions);
+    }
     if (class_getInstanceMethod(header, @selector(actionButtonProviders))) {
         %init(BHTLegacyProfileActionProviders);
     }
