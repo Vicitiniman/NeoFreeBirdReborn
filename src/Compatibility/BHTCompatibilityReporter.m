@@ -1651,6 +1651,16 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"settings", @"TFSFeatureSwitches", @"boolForKey:", NO),
         BHTProbe(@"settings", @"TFSInstrumentedFeatureSwitches", @"boolForKey:", NO),
 
+        BHTProbe(@"sensitiveContent", @"TFNTwitterAccount", @"isSensitiveTweetWarningsComposeEnabled", NO),
+        BHTProbe(@"sensitiveContent", @"TFNTwitterAccount", @"isSensitiveTweetWarningsConsumeEnabled", NO),
+        BHTProbe(@"sensitiveContent", @"T1CompositionStatusViewModel", @"isPossiblySensitiveViewModelForAccount:", NO),
+        BHTProbe(@"sensitiveContent", @"T1TranslatedStatusViewModel", @"isPossiblySensitiveViewModelForAccount:", NO),
+        BHTProbe(@"sensitiveContent", @"T1URTTimelineStatusItemViewModel", @"isPossiblySensitiveViewModelForAccount:", NO),
+        BHTProbe(@"sensitiveContent", @"T1StatusTableRowAdapter", @"sensitiveStatusViewModelAtRow:section:dataViewController:", NO),
+        BHTProbe(@"sensitiveContent", @"TFNTwitterStatus", @"hasImageInterstitial", NO),
+        BHTProbe(@"sensitiveContent", @"HFHealthSafetyFeature", @"isTweetMedialInterstitialEnabled:", YES),
+        BHTProbe(@"ageVerification", @"TFNTwitterAccount", @"isAgeAssuranceAgeVerificationFlowEnabled", NO),
+
         BHTProbe(@"replyWorkflow", @"TTAStatusInlineReplyButton", @"didTap", NO),
         BHTProbe(@"replyWorkflow", @"T1StatusViewInlineActionTapEventHandler", @"performReplyActionWithAccount:event:controller:scribeContext:scribeElement:parameters:originalStatus:", NO),
         BHTProbe(@"replyWorkflow", @"T1TweetComposeViewController", @"viewDidAppear:", NO),

@@ -770,18 +770,62 @@ BHTInstallSecureWebSessionAccountStateAccessors(void) {
             (IMP)BHTTwitterAccountIsAuthorized, "B@:");
 }
 
+static BOOL BHTShouldSuppressSensitiveTweetWarnings(void) {
+    return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"];
+}
+
+typedef BOOL (*BHTSensitiveStatusDecisionIMP)(id, SEL, id);
+static BHTSensitiveStatusDecisionIMP
+    BHTOriginalURTSensitiveStatusDecision = NULL;
+
+static BOOL BHTURTIsPossiblySensitiveViewModelForAccount(id receiver,
+                                                          SEL selector,
+                                                          id account) {
+    if (BHTShouldSuppressSensitiveTweetWarnings()) {
+        return NO;
+    }
+    return BHTOriginalURTSensitiveStatusDecision
+               ? BHTOriginalURTSensitiveStatusDecision(receiver, selector,
+                                                       account)
+               : NO;
+}
+
+// This selector is supplied to the Objective-C class by a Swift extension in
+// X 12.24.1, so it is absent from the class's static Objective-C method list.
+// Install it only when the live runtime exposes the method, and preserve the
+// original decision for users who leave the warning toggle disabled.
+__attribute__((constructor)) static void
+BHTInstallURTSensitiveStatusDecisionHook(void) {
+    Class viewModelClass = objc_getClass("T1URTTimelineStatusItemViewModel");
+    SEL selector =
+        NSSelectorFromString(@"isPossiblySensitiveViewModelForAccount:");
+    Method method = class_getInstanceMethod(viewModelClass, selector);
+    if (!method) {
+        return;
+    }
+
+    IMP replacement = (IMP)BHTURTIsPossiblySensitiveViewModelForAccount;
+    IMP original = method_getImplementation(method);
+    if (class_addMethod(viewModelClass, selector, replacement,
+                        method_getTypeEncoding(method))) {
+        BHTOriginalURTSensitiveStatusDecision =
+            (BHTSensitiveStatusDecisionIMP)original;
+        return;
+    }
+
+    BHTOriginalURTSensitiveStatusDecision =
+        (BHTSensitiveStatusDecisionIMP)method_setImplementation(method,
+                                                                replacement);
+}
+
 %hook TFNTwitterAccount
 
 - (BOOL)isSensitiveTweetWarningsComposeEnabled {
-    return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"]
-               ? NO
-               : %orig;
+    return BHTShouldSuppressSensitiveTweetWarnings() ? NO : %orig;
 }
 
 - (BOOL)isSensitiveTweetWarningsConsumeEnabled {
-    return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"]
-               ? NO
-               : %orig;
+    return BHTShouldSuppressSensitiveTweetWarnings() ? NO : %orig;
 }
 
 - (BOOL)isAgeAssuranceAgeVerificationFlowEnabled {
@@ -1043,26 +1087,52 @@ static void BHTScheduleSidebarConfigurationReapply(id controller) {
 
 %end
 
-// MARK: - Sensitive media warnings
+// MARK: - Sensitive-content warnings
+
+// X 12.24.1 has a full-status gate in addition to the older media
+// interstitial. Tweet-detail table rows can ask these view models whether a
+// status is sensitive while passing a nil account, so the account preference
+// hooks above never participate. Returning NO here keeps the normal status
+// cell selected when the existing NeoFreeBird warning toggle is enabled.
+
+%hook T1CompositionStatusViewModel
+
+- (BOOL)isPossiblySensitiveViewModelForAccount:(id)account {
+    return BHTShouldSuppressSensitiveTweetWarnings() ? NO : %orig;
+}
+
+%end
+
+%hook T1TranslatedStatusViewModel
+
+- (BOOL)isPossiblySensitiveViewModelForAccount:(id)account {
+    return BHTShouldSuppressSensitiveTweetWarnings() ? NO : %orig;
+}
+
+%end
+
+%hook T1StatusTableRowAdapter
+
+- (id)sensitiveStatusViewModelAtRow:(NSInteger)row
+                            section:(NSInteger)section
+                 dataViewController:(id)dataViewController {
+    return BHTShouldSuppressSensitiveTweetWarnings() ? nil : %orig;
+}
+
+%end
 
 %hook TFNTwitterStatus
 
 - (BOOL)hasImageInterstitial {
-    return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"]
-               ? NO
-               : %orig;
+    return BHTShouldSuppressSensitiveTweetWarnings() ? NO : %orig;
 }
 
 - (id)imageInterstitial {
-    return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"]
-               ? nil
-               : %orig;
+    return BHTShouldSuppressSensitiveTweetWarnings() ? nil : %orig;
 }
 
 - (id)innerImageInterstitial {
-    return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"]
-               ? nil
-               : %orig;
+    return BHTShouldSuppressSensitiveTweetWarnings() ? nil : %orig;
 }
 
 %end
@@ -1070,9 +1140,7 @@ static void BHTScheduleSidebarConfigurationReapply(id controller) {
 %hook HFHealthSafetyFeature
 
 + (BOOL)isTweetMedialInterstitialEnabled:(id)featureSwitches {
-    return [BHTSettings boolForKey:@"disable_sensitive_tweet_warnings"]
-               ? NO
-               : %orig;
+    return BHTShouldSuppressSensitiveTweetWarnings() ? NO : %orig;
 }
 
 %end

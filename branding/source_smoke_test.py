@@ -4275,11 +4275,11 @@ def main() -> None:
             "navigation delegate"
         )
 
-    if "Version: 6.1.0-beta.62" not in (
+    if "Version: 6.1.0-beta.63" not in (
         ROOT / "control"
     ).read_text(encoding="utf-8"):
         raise AssertionError(
-            "Current promoted-status filtering must ship as beta.62"
+            "Current sensitive-content filtering must ship as beta.63"
         )
 
     require_source_tokens(
@@ -4798,6 +4798,38 @@ def main() -> None:
     feature_switches_source = (
         ROOT / "src" / "Hooks" / "FeatureSwitches.x"
     ).read_text(encoding="utf-8")
+    require_source_tokens(
+        feature_switches_source,
+        (
+            "BHTShouldSuppressSensitiveTweetWarnings",
+            "BHTInstallURTSensitiveStatusDecisionHook",
+            'objc_getClass("T1URTTimelineStatusItemViewModel")',
+            'NSSelectorFromString(@"isPossiblySensitiveViewModelForAccount:")',
+            "class_getInstanceMethod(viewModelClass, selector)",
+            "method_setImplementation(method,",
+            "%hook T1CompositionStatusViewModel",
+            "%hook T1TranslatedStatusViewModel",
+            "%hook T1StatusTableRowAdapter",
+            "- (BOOL)isPossiblySensitiveViewModelForAccount:(id)account",
+            "sensitiveStatusViewModelAtRow:(NSInteger)row",
+            "return BHTShouldSuppressSensitiveTweetWarnings() ? nil : %orig;",
+        ),
+        "full-status sensitive-content warning bypass",
+    )
+    require_source_tokens(
+        compatibility_source,
+        (
+            'BHTProbe(@"sensitiveContent", @"T1CompositionStatusViewModel", '
+            '@"isPossiblySensitiveViewModelForAccount:", NO)',
+            'BHTProbe(@"sensitiveContent", @"T1TranslatedStatusViewModel", '
+            '@"isPossiblySensitiveViewModelForAccount:", NO)',
+            'BHTProbe(@"sensitiveContent", @"T1URTTimelineStatusItemViewModel", '
+            '@"isPossiblySensitiveViewModelForAccount:", NO)',
+            'BHTProbe(@"sensitiveContent", @"T1StatusTableRowAdapter", '
+            '@"sensitiveStatusViewModelAtRow:section:dataViewController:", NO)',
+        ),
+        "sensitive-content compatibility probes",
+    )
     require_source_tokens(
         feature_switches_source,
         (
