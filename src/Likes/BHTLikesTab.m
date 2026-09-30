@@ -1914,6 +1914,11 @@ BHTLikedMediaContextConfiguration(
 
 @end
 
+static CGFloat BHTMediaViewerCaptionWidth(CGFloat safeWidth, BOOL tablet) {
+    CGFloat available = MAX(0.0, safeWidth - (tablet ? 48.0 : 24.0));
+    return tablet ? MIN(640.0, available) : available;
+}
+
 @interface BHTMediaPagerController : UIViewController <UIPageViewControllerDataSource,
                                                         UIPageViewControllerDelegate,
                                                         UIGestureRecognizerDelegate,
@@ -1928,6 +1933,9 @@ BHTLikedMediaContextConfiguration(
 @property(nonatomic, strong) UIButton* postButton;
 @property(nonatomic, strong) UIButton* closeButton;
 @property(nonatomic, strong) UIPanGestureRecognizer* dismissPan;
+@property(nonatomic, strong) UITapGestureRecognizer* chromeTap;
+@property(nonatomic, strong) NSLayoutConstraint* captionWidthConstraint;
+@property(nonatomic) BOOL chromeHidden;
 @property(nonatomic, strong)
     UIPercentDrivenInteractiveTransition* dismissalInteraction;
 @property(nonatomic) BOOL completingDismissal;
@@ -1990,6 +1998,11 @@ BHTLikedMediaContextConfiguration(
     self.dismissPan.maximumNumberOfTouches = 1;
     self.dismissPan.delegate = self;
     [self.view addGestureRecognizer:self.dismissPan];
+    self.chromeTap = [[UITapGestureRecognizer alloc]
+        initWithTarget:self action:@selector(toggleViewerChrome:)];
+    self.chromeTap.delegate = self;
+    self.chromeTap.cancelsTouchesInView = NO;
+    [self.view addGestureRecognizer:self.chromeTap];
     for (UIView* subview in self.pageController.view.subviews) {
         if ([subview isKindOfClass:UIScrollView.class]) {
             // Direction is decided by dismissPan's delegate. A horizontal page
@@ -2025,10 +2038,15 @@ BHTLikedMediaContextConfiguration(
                         action:@selector(openCurrentPost:)
               forControlEvents:UIControlEventTouchUpInside];
     [self.view addSubview:self.postButton];
+    BOOL tablet = UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad;
+    self.captionWidthConstraint = [self.postButton.widthAnchor
+        constraintEqualToConstant:BHTMediaViewerCaptionWidth(
+            CGRectGetWidth(self.view.bounds), tablet)];
     [NSLayoutConstraint activateConstraints:@[
-        [self.postButton.leadingAnchor constraintEqualToAnchor:self.view.leadingAnchor constant:12],
-        [self.postButton.trailingAnchor constraintEqualToAnchor:self.view.trailingAnchor constant:-12],
-        [self.postButton.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor constant:-12],
+        self.captionWidthConstraint,
+        [self.postButton.centerXAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.centerXAnchor],
+        [self.postButton.bottomAnchor constraintEqualToAnchor:self.view.safeAreaLayoutGuide.bottomAnchor
+                                                     constant:tablet ? -24 : -12],
         [self.postButton.heightAnchor constraintGreaterThanOrEqualToConstant:44],
         [self.postButton.heightAnchor constraintLessThanOrEqualToConstant:116]
     ]];
@@ -2095,15 +2113,61 @@ BHTLikedMediaContextConfiguration(
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
-    self.closeButton.userInteractionEnabled = YES;
+    self.closeButton.userInteractionEnabled = !self.chromeHidden;
     [self recordFullScreenCoverage];
 }
 
 - (void)viewDidLayoutSubviews {
     [super viewDidLayoutSubviews];
     // Keep the pager edge-to-edge after iPad multitasking changes and device
-    // rotation. Overlay controls remain pinned to the safe area.
+    // rotation. Use this window's safe width for Split View, and keep the
+    // caption readable and centered instead of stretching across an iPad.
     self.pageController.view.frame = self.view.bounds;
+    UIEdgeInsets safe = self.view.safeAreaInsets;
+    self.captionWidthConstraint.constant = BHTMediaViewerCaptionWidth(
+        CGRectGetWidth(self.view.bounds) - safe.left - safe.right,
+        UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad);
+    CGFloat textWidth = MAX(0, self.captionWidthConstraint.constant -
+        self.postButton.contentEdgeInsets.left - self.postButton.contentEdgeInsets.right);
+    if (fabs(self.postButton.titleLabel.preferredMaxLayoutWidth - textWidth) > 0.5) {
+        self.postButton.titleLabel.preferredMaxLayoutWidth = textWidth;
+    }
+}
+
+- (void)toggleViewerChrome:(id)sender {
+    if (self.completingDismissal || self.presentedViewController ||
+        self.pageTransitionInFlight || self.isBeingPresented ||
+        self.isBeingDismissed) return;
+    self.chromeHidden = !self.chromeHidden;
+    self.postButton.hidden = NO;
+    self.closeButton.hidden = NO;
+    self.postButton.accessibilityElementsHidden = self.chromeHidden;
+    self.closeButton.accessibilityElementsHidden = self.chromeHidden;
+    self.closeButton.userInteractionEnabled = !self.chromeHidden;
+    [UIView animateWithDuration:UIAccessibilityIsReduceMotionEnabled() ? 0.0 : 0.18
+                          delay:0
+                        options:UIViewAnimationOptionBeginFromCurrentState
+                     animations:^{
+        CGFloat alpha = self.chromeHidden ? 0 : 1;
+        self.postButton.alpha = alpha;
+        self.closeButton.alpha = alpha;
+    } completion:^(__unused BOOL finished) {
+        // Read the current state so a quick second tap cannot leave the
+        // controls hidden after the fade back in.
+        self.postButton.hidden = self.chromeHidden;
+        self.closeButton.hidden = self.chromeHidden;
+    }];
+}
+
+- (BOOL)gestureRecognizer:(UIGestureRecognizer*)gestureRecognizer
+       shouldReceiveTouch:(UITouch*)touch {
+    if (gestureRecognizer == self.chromeTap || gestureRecognizer == self.dismissPan) {
+        // Caption links, Close and the video Play control keep their actions.
+        for (UIView* view = touch.view; view && view != self.view; view = view.superview) {
+            if ([view isKindOfClass:UIControl.class]) return NO;
+        }
+    }
+    return YES;
 }
 
 - (void)viewWillTransitionToSize:(CGSize)size
@@ -2174,7 +2238,7 @@ BHTLikedMediaContextConfiguration(
             strongSelf.presentingViewController &&
             !strongSelf.isBeingDismissed) {
             strongSelf.completingDismissal = NO;
-            strongSelf.closeButton.userInteractionEnabled = YES;
+            strongSelf.closeButton.userInteractionEnabled = !strongSelf.chromeHidden;
         }
     });
 }
@@ -2352,7 +2416,7 @@ BHTLikedMediaContextConfiguration(
                           : @"View post and replies";
     [self.postButton setTitle:title forState:UIControlStateNormal];
     self.postButton.enabled = item.statusID > 0 || item.statusURL != nil;
-    self.postButton.accessibilityHint = @"Opens the original liked post";
+    self.postButton.accessibilityHint = @"Opens the original post";
 }
 
 - (void)requestMoreIfNeededAtIndex:(NSUInteger)index {

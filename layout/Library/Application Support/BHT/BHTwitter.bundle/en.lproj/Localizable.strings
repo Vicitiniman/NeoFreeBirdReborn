@@ -252,7 +252,8 @@
 "FOLLOW_CONFIRM_DETAIL" = "Ask before following someone.";
 
 "COPY_PROFILE_INFO_TITLE" = "Copy profile details";
-"COPY_PROFILE_INFO_DETAIL" = "Copy usernames, bios, and more with one tap.";
+"COPY_PROFILE_INFO_DETAIL" = "Hold profile text to select and copy individual words, or copy a whole field from the profile menu.";
+"PROFILE_SELECT_TEXT" = "Select text";
 
 "DISABLE_ARTICLES_TITLE" = "No Articles tab";
 "DISABLE_ARTICLES_DETAIL" = "Hide the Articles tab in profiles.";
