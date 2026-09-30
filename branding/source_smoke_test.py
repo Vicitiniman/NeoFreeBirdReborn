@@ -4293,11 +4293,11 @@ def main() -> None:
             "navigation delegate"
         )
 
-    if "Version: 6.1.0-beta.64" not in (
+    if "Version: 6.1.0-beta.65" not in (
         ROOT / "control"
     ).read_text(encoding="utf-8"):
         raise AssertionError(
-            "Current profile/branding compatibility must ship as beta.64"
+            "Current profile/branding compatibility must ship as beta.65"
         )
 
     require_source_tokens(
@@ -4320,6 +4320,7 @@ def main() -> None:
             '@"twitter_bird_launch"',
             "existingPointSize",
             "imageWithCGImage:birdPixels",
+            "kBHTScaledLaunchBirdKey",
         ),
         "central Twitter bird asset lookup",
     )
@@ -5349,8 +5350,10 @@ def main() -> None:
             "classicLaunchAnimationDuration()",
             "removeAllAnimations",
             "completionBlock",
+            "animateKeyframesWithDuration:",
+            "relativeDuration:0.20",
         ),
-        "fast high-resolution classic launch reveal",
+        "visible high-resolution classic launch reveal",
     )
     if launch_reveal.count("%orig") != 1:
         raise AssertionError(

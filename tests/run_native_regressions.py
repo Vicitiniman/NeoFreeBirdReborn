@@ -70,6 +70,7 @@ static BOOL ReportGenuineTabGates = NO;
 static BOOL AccountIsGenuinelyPremium(void) { return NO; }
 '''
     unit += section(media_source, "static NSArray<BHTLikedMediaItem*>* BHTProfileMediaSnapshot", "@protocol BHTWaterfallLayoutDelegate")
+    unit += section(media_source, "static CGFloat BHTMediaViewerCaptionWidth", "@interface BHTMediaPagerController")
     profile_source = (ROOT / "src/Hooks/Profile.x").read_text(encoding="utf8")
     unit += section(profile_source, "static NSArray* BHTProfileMainEntriesWithPhotosFirst", "// Keep the profile's native")
     unit += section(switches, "static NSNumber* FeatureSwitchOverrideValueForKey", "// Every feature switch facade")

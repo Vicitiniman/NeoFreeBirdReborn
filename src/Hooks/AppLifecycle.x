@@ -494,11 +494,7 @@ static UIImageView* applyClassicLaunchBird(UIView* launchView) {
 }
 
 static NSTimeInterval classicLaunchAnimationDuration(void) {
-    if (UIAccessibilityIsReduceMotionEnabled()) return 0.16;
-    return UIDevice.currentDevice.userInterfaceIdiom ==
-                   UIUserInterfaceIdiomPad
-               ? 0.26
-               : 0.30;
+    return UIAccessibilityIsReduceMotionEnabled() ? 0.20 : 0.64;
 }
 
 %hook T1AnimatedLaunchScreenView
@@ -542,8 +538,9 @@ static NSTimeInterval classicLaunchAnimationDuration(void) {
 
     // X's reveal animates a mask and repeatedly reconfigures the logo. That
     // path is costly on older iPads and magnifies the small navigation glyph.
-    // A single compositor-backed scale and fade keeps the classic launch feel
-    // while using the dedicated high-resolution bird.
+    // Keep the initial silhouette still briefly, then perform the classic
+    // anticipation and expansion. Only transforms and opacity animate, so
+    // this remains inexpensive on older iPads.
     [launchView.layer removeAllAnimations];
     [logoView.layer removeAllAnimations];
     launchView.hidden = NO;
@@ -551,21 +548,30 @@ static NSTimeInterval classicLaunchAnimationDuration(void) {
     launchView.userInteractionEnabled = NO;
     logoView.alpha = 1.0;
     BOOL reduceMotion = UIAccessibilityIsReduceMotionEnabled();
-    logoView.transform =
-        reduceMotion ? CGAffineTransformIdentity
-                     : CGAffineTransformMakeScale(0.94, 0.94);
+    logoView.transform = CGAffineTransformIdentity;
 
-    [UIView animateWithDuration:classicLaunchAnimationDuration()
-                          delay:0.0
-                        options:UIViewAnimationOptionBeginFromCurrentState |
-                                UIViewAnimationOptionCurveEaseOut |
-                                UIViewAnimationOptionAllowAnimatedContent
+    [UIView animateKeyframesWithDuration:classicLaunchAnimationDuration()
+                          delay:reduceMotion ? 0.0 : 0.16
+                        options:UIViewKeyframeAnimationOptionBeginFromCurrentState |
+                                UIViewKeyframeAnimationOptionCalculationModeCubic
                      animations:^{
-                         launchView.alpha = 0.0;
                          if (!reduceMotion) {
-                             logoView.transform =
-                                 CGAffineTransformMakeScale(1.28, 1.28);
+                             [UIView addKeyframeWithRelativeStartTime:0.0
+                                                   relativeDuration:0.20
+                                                         animations:^{
+                                 logoView.transform = CGAffineTransformMakeScale(0.90, 0.90);
+                             }];
+                             [UIView addKeyframeWithRelativeStartTime:0.20
+                                                   relativeDuration:0.80
+                                                         animations:^{
+                                 logoView.transform = CGAffineTransformMakeScale(14.0, 14.0);
+                             }];
                          }
+                         [UIView addKeyframeWithRelativeStartTime:reduceMotion ? 0.0 : 0.42
+                                               relativeDuration:reduceMotion ? 1.0 : 0.58
+                                                     animations:^{
+                             launchView.alpha = 0.0;
+                         }];
                      }
                      completion:^(__unused BOOL finished) {
                          launchView.hidden = YES;

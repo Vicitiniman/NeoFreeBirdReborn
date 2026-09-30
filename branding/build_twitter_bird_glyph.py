@@ -64,8 +64,17 @@ def build_variant(
         round(canvas_size * 22 / 24),
         round(canvas_size * 20 / 24),
     )
-    glyph = alpha.copy()
-    glyph.thumbnail(maximum, Image.Resampling.LANCZOS)
+    # thumbnail never enlarges a source. That left the bird progressively
+    # smaller inside the 2x/3x launch canvases, causing a size jump at launch.
+    ratio = min(maximum[0] / alpha.width, maximum[1] / alpha.height)
+    if ratio <= 1:
+        glyph = alpha.copy()
+        glyph.thumbnail(maximum, Image.Resampling.LANCZOS)
+    else:
+        glyph = alpha.resize(
+            (round(alpha.width * ratio), round(alpha.height * ratio)),
+            Image.Resampling.LANCZOS,
+        )
 
     canvas = Image.new("RGBA", (canvas_size, canvas_size), (255, 255, 255, 0))
     white_glyph = Image.new("RGBA", glyph.size, (255, 255, 255, 255))

@@ -2,6 +2,9 @@
 
 #import "Core/BHTBundle.h"
 #import <math.h>
+#import <objc/runtime.h>
+
+static char kBHTScaledLaunchBirdKey;
 
 static UIImage* BHTTwitterBirdImageNamed(NSString* name) {
     NSBundle* bundle = [BHTBundle sharedBundle].mainBundle;
@@ -48,6 +51,12 @@ void BHTApplyTwitterBirdToImageView(UIImageView* imageView,
 void BHTApplyTwitterBirdLaunchToImageView(UIImageView* imageView,
                                           UIColor* tintColor) {
     if (!imageView) return;
+    UIImage* cached = objc_getAssociatedObject(imageView, &kBHTScaledLaunchBirdKey);
+    if (cached && imageView.image == cached) {
+        imageView.tintColor = tintColor;
+        imageView.contentMode = UIViewContentModeScaleAspectFit;
+        return;
+    }
     UIImage* bird = BHTTwitterBirdLaunchTemplateImage();
     CGSize existingPointSize = imageView.image.size;
     CGImageRef birdPixels = bird.CGImage;
@@ -69,4 +78,6 @@ void BHTApplyTwitterBirdLaunchToImageView(UIImageView* imageView,
     }
     BHTApplyTwitterBirdImageToImageView(
         imageView, bird, tintColor);
+    objc_setAssociatedObject(imageView, &kBHTScaledLaunchBirdKey,
+                             bird, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
 }

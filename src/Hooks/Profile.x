@@ -5,6 +5,7 @@
 
 #import "HookHelpers.h"
 #import "Likes/BHTLikesTab.h"
+#import "Profile/BHTProfileTextSelection.h"
 
 static char kBHTProfilePhotosFirstKey;
 
@@ -202,6 +203,11 @@ static NSArray<TFNActionItem*>* BHTCopyProfileActions(
 
 %hook T1ProfileHeaderViewController
 
+- (void)viewWillDisappear:(BOOL)animated {
+    BHTEndProfileTextSelection();
+    %orig;
+}
+
 - (NSArray*)profileMoreActionsBaseActionItemsWithSender:(id)sender {
     NSArray* original = %orig;
     if (![BHTSettings boolForKey:@"copy_profile_info"]) return original;
@@ -233,6 +239,50 @@ static NSArray<TFNActionItem*>* BHTCopyProfileActions(
             : [NSMutableArray array];
     [result addObject:copyMenu];
     return [result copy];
+}
+
+%end
+
+%end
+
+// The classic header exposes the exact labels and metadata buttons. Attach
+// once when they are constructed/refreshed, rather than scanning while the
+// profile scrolls. Bio rebuilds (including translations) get the same behavior.
+%group BHTProfileWordSelection
+
+%hook T1ProfileUserInfoView
+
+- (id)initWithConfiguration:(id)configuration {
+    id result = %orig;
+    for (NSString* name in @[@"bioLabel", @"translatedBioLabel", @"locationButton", @"urlButton"]) {
+        SEL selector = NSSelectorFromString(name);
+        if ([result respondsToSelector:selector]) {
+            BHTInstallProfileTextSelection(((id (*)(id, SEL))objc_msgSend)(result, selector));
+        }
+    }
+    return result;
+}
+
+- (void)setBioLabel:(id)label {
+    %orig;
+    BHTInstallProfileTextSelection(label);
+}
+
+- (void)setTranslatedBioLabel:(id)label {
+    %orig;
+    BHTInstallProfileTextSelection(label);
+}
+
+%end
+
+%hook T1ProfileSummaryView
+
+- (void)_t1_updatePropertiesForFullNameLabel:(id)fullNameLabel
+                            subtitleLabel:(id)subtitleLabel
+                               atPosition:(NSUInteger)position {
+    %orig;
+    BHTInstallProfileTextSelection(fullNameLabel);
+    BHTInstallProfileTextSelection(subtitleLabel);
 }
 
 %end
@@ -340,5 +390,13 @@ static NSArray<TFNActionItem*>* BHTCopyProfileActions(
     }
     if (class_getInstanceMethod(header, @selector(actionButtonProviders))) {
         %init(BHTLegacyProfileActionProviders);
+    }
+    Class info = NSClassFromString(@"T1ProfileUserInfoView");
+    Class summary = NSClassFromString(@"T1ProfileSummaryView");
+    if (class_getInstanceMethod(info, @selector(initWithConfiguration:)) &&
+        class_getInstanceMethod(info, @selector(setBioLabel:)) &&
+        class_getInstanceMethod(info, @selector(setTranslatedBioLabel:)) &&
+        class_getInstanceMethod(summary, @selector(_t1_updatePropertiesForFullNameLabel:subtitleLabel:atPosition:))) {
+        %init(BHTProfileWordSelection);
     }
 }
