@@ -5,6 +5,7 @@
 
 #import "HookHelpers.h"
 #import "Branding/BHTBranding.h"
+#import "Login/BHTSecureWebSession.h"
 #import <stdlib.h>
 
 // MARK: - Padlock helpers
@@ -274,6 +275,7 @@ static void presentAuthIfNeeded(void) {
     _Bool orig = %orig;
 
     [BHTManager cleanCache];
+    BHTSecureWebSessionRestoreSavedAccounts();
     if ([BHTSettings boolForKey:@"flex_twitter"]) {
         [[%c(FLEXManager) sharedManager] showExplorer];
     }
@@ -287,6 +289,8 @@ static void presentAuthIfNeeded(void) {
 
 - (void)applicationDidBecomeActive:(__unsafe_unretained id)arg1 {
     %orig;
+
+    BHTSecureWebSessionRestoreSavedAccounts();
 
     applySelectedThemeColor();
 

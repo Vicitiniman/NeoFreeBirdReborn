@@ -5,6 +5,7 @@
 
 #import "HookHelpers.h"
 #import "Login/BHTSecureWebSession.h"
+#import "Login/BHTWebSessionSecurity.h"
 #import "Sidebar/BHTSidebarNavigationUtility.h"
 
 #import <objc/runtime.h>
@@ -689,19 +690,7 @@ static NSInteger (*BHTOriginalTwitterAccountLoginState)(id, SEL) = NULL;
 static BOOL (*BHTOriginalTwitterAccountIsAuthorized)(id, SEL) = NULL;
 
 static BOOL BHTTwitterAccountUsesWebSessionPlaceholder(id account) {
-    static NSString* const marker = @"neofreebird_web_session";
-    for (NSString* selectorName in @[@"oAuthToken", @"oAuthTokenSecret"]) {
-        SEL selector = NSSelectorFromString(selectorName);
-        if (![account respondsToSelector:selector]) {
-            continue;
-        }
-        id value = ((id (*)(id, SEL))objc_msgSend)(account, selector);
-        if ([value isKindOfClass:[NSString class]] &&
-            [value isEqualToString:marker]) {
-            return YES;
-        }
-    }
-    return NO;
+    return BHTWebSessionAccountUsesPlaceholder(account);
 }
 
 static BOOL BHTTwitterAccountHasNativeOAuthTokens(id account) {

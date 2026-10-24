@@ -16,13 +16,28 @@ void BHTPresentSecureWebSessionSignIn(
     UIViewController* _Nullable addAccountController);
 
 // Returns the original request unless a saved session exists and the request
-// is HTTPS to an exact x.com/twitter.com host or one of their subdomains.
+// is HTTPS to an exact x.com/twitter.com host or one of their subdomains,
+// and its non-secret OAuth marker identifies that specific saved account.
 NSURLRequest* BHTSecureWebSessionAuthenticatedRequest(
     NSURLRequest* request);
 
 // Used only to make the locally-created account shell pass X's account gate.
-// The comparison is against the validated, Keychain-backed screen name.
+// The comparison uses the stable numeric account ID and its Keychain session.
 BOOL BHTSecureWebSessionOwnsNativeAccount(id _Nullable account);
+
+UIViewController* _Nullable BHTSecureWebSessionOnboardingController(void);
+void BHTSecureWebSessionRestoreSavedAccounts(void);
+void BHTSecureWebSessionDidSelectAccount(id _Nullable account);
+BOOL BHTSecureWebSessionForgetAccount(id _Nullable account);
+
+// Internal, account-scoped boundaries shared with the request coordinator.
+// These values are never part of reports, defaults, logs, or native tokens.
+NSDictionary* _Nullable BHTSecureWebSessionCopyAccountSession(uint64_t userID);
+void BHTSecureWebSessionObserveResponse(NSURLRequest* request, NSURLResponse* _Nullable response);
+void BHTSecureWebSessionWatchTask(NSURLSessionTask* task, NSURLRequest* request);
+void BHTSecureWebSessionNeedsSignIn(uint64_t userID, NSString* expectedAuth);
+BOOL BHTSecureWebSessionMayCompleteHandoff(UIViewController* source, id account);
+void BHTSecureWebSessionSaveCookiesForAccount(uint64_t userID, NSString* expectedAuth, NSArray<NSHTTPCookie*>* cookies);
 
 // Deletes the Keychain item, the matching WebKit/URL-loading cookies, and the
 // locally-created X account shell when that private API is available.

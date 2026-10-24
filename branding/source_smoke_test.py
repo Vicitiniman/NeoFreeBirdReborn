@@ -431,6 +431,8 @@ def main() -> None:
     web_session_hook = (
         ROOT / "src" / "Hooks" / "WebSessionAuthentication.x"
     ).read_text(encoding="utf-8")
+    web_session_vault_source = (ROOT / "src/Login/BHTWebSessionVault.m").read_text(encoding="utf-8")
+    web_session_requests_source = (ROOT / "src/Login/BHTWebSessionRequests.m").read_text(encoding="utf-8")
     require_source_tokens(
         compatibility_login_header,
         (
@@ -572,10 +574,11 @@ def main() -> None:
             "Beta 43 must not install the experimental X 12.3 metadata "
             "override"
         )
-    if "private_startLoginFlowWithSender:" in compatibility_login_hook:
-        raise AssertionError(
-            "Compatibility sign-in must not replace X's native login action"
-        )
+    primary_login = source_section(compatibility_login_hook,
+        "%group BHTCompatibilityPrimaryAddAccountHook", "%group BHTCompatibilityAccountSelectionHook",
+        "primary web sign-in with native fallback")
+    require_source_tokens(primary_login, ("BHTSecureWebSessionSignInIsAvailable()", "%orig;"),
+        "unsupported builds retain native login")
     install_position = compatibility_login_hook.index(
         "BHTInstallCompatibilitySignInEntry(controller);"
     )
@@ -1416,7 +1419,7 @@ def main() -> None:
         (
             '@"missingRuntimeRequirements":',
             '@"preLoginDiagnosticsEligible":',
-            '@"nativeSignInRemainsDefault": @YES',
+            '@"nativeSignInRemainsDefault": @NO',
             '@"secureWebSession":',
             "BHTSecureWebSessionDiagnosticSnapshot()",
             '@"user_confirmed_web_session_bridge"',
@@ -1527,10 +1530,10 @@ def main() -> None:
         "secure web-session public contract",
     )
     require_source_tokens(
-        secure_web_session_source,
+        secure_web_session_source + web_session_vault_source,
         (
             "kSecClassGenericPassword",
-            "kSecAttrAccessibleWhenUnlockedThisDeviceOnly",
+            "kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly",
             "SecItemCopyMatching",
             "SecItemUpdate",
             "SecItemAdd",
@@ -1540,7 +1543,7 @@ def main() -> None:
             "getAllCookies:",
             'document.querySelector(\'a[data-testid=\\"AppTabBar_Profile_Link\\"]\')',
             "BHTCompatibilityInstallWebSessionAccount(",
-            "BHTCompatibilityRemoveWebSessionAccount(screenName)",
+            "BHTCompatibilityRemoveWebSessionAccountWithUserID(userID)",
             '@"passwordReadByTweak": @NO',
             '@"cookieReadRequiresUserConfirmation": @YES',
             '@"sessionStoredInDeviceOnlyKeychain": @YES',
@@ -1561,7 +1564,7 @@ def main() -> None:
         "localizedDescription",
         "debugDescription",
     ):
-        if unsafe_persistence_api in secure_web_session_source:
+        if unsafe_persistence_api in secure_web_session_source + web_session_vault_source + web_session_requests_source:
             raise AssertionError(
                 "Secure web sign-in must not persist outside Keychain or "
                 f"log credential-adjacent data: {unsafe_persistence_api}"
@@ -1603,7 +1606,7 @@ def main() -> None:
     )
     if request_bridge.index(
         "BHTWebSessionURLIsAllowed(request.URL)"
-    ) > request_bridge.index("BHTWebSessionCopySession()"):
+    ) > request_bridge.index("BHTSecureWebSessionCopyAccountSession(owner)"):
         raise AssertionError(
             "Reject non-first-party URLs before loading the Keychain session"
         )
@@ -1635,10 +1638,10 @@ def main() -> None:
         ),
         "guarded final-boundary request hooks",
     )
-    if web_session_hook.count("%hook NSURLSession") != 8:
+    if web_session_hook.count("%hook NSURLSession") != 11:
         raise AssertionError(
-            "The web session must cover exactly the eight audited request "
-            "constructors"
+            "The web session must cover the eight original constructors plus "
+            "the guarded delegate and streamed-request variants"
         )
     for broad_hook in (
         "%hook NSMutableURLRequest",
@@ -4293,11 +4296,11 @@ def main() -> None:
             "navigation delegate"
         )
 
-    if "Version: 6.1.0-beta.65" not in (
+    if "Version: 6.1.0-beta.66" not in (
         ROOT / "control"
     ).read_text(encoding="utf-8"):
         raise AssertionError(
-            "Current profile/branding compatibility must ship as beta.65"
+            "Current compatibility changes must ship as beta.66"
         )
 
     require_source_tokens(

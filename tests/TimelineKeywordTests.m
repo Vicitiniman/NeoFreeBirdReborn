@@ -122,6 +122,7 @@ int main(void) {
         testProfileMediaAndGrok();
         testCompatibilityLogin();
         testWebSessionSecurity();
+        testWebSessionVault();
         testTimelineCleanupClassification();
         BHTTestSettingsBoolReadCount = 0;
         BHTEnabledTimelineCleanupKinds();
