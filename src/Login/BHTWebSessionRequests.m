@@ -52,7 +52,7 @@ static BHTSessionRequestHelper* BHTCurrentRequestHelper;
     __weak typeof(self) weakSelf = self;
     [webView evaluateJavaScript:script completionHandler:^(__unused id value, NSError* error) {
         typeof(self) strongSelf = weakSelf;
-        if (!strongSelf || error) return;
+        if (!strongSelf || strongSelf != BHTCurrentRequestHelper || error) return;
         strongSelf.ready = YES;
         [BHTRequestCondition() lock];
         NSDictionary* pending = [BHTPendingTokenPaths() copy];
@@ -60,7 +60,8 @@ static BHTSessionRequestHelper* BHTCurrentRequestHelper;
         [BHTRequestCondition() unlock];
         for (NSString* key in pending) {
             NSDictionary* job = pending[key];
-            if ([job[@"userID"] isEqual:strongSelf.session[@"userID"]]) {
+            if ([job[@"userID"] isEqual:strongSelf.session[@"userID"]] &&
+                [job[@"auth"] isEqual:strongSelf.session[@"auth"]]) {
                 [strongSelf mintMethod:job[@"method"] path:job[@"path"] key:key];
             }
         }
@@ -70,7 +71,9 @@ static BHTSessionRequestHelper* BHTCurrentRequestHelper;
     if (!self.ready) return;
     [BHTRequestCondition() lock];
     NSMutableDictionary* job = [BHTPendingTokenPaths()[key] mutableCopy];
-    if (!job || [job[@"running"] boolValue]) { [BHTRequestCondition() unlock]; return; }
+    if (!job || [job[@"running"] boolValue] ||
+        ![job[@"userID"] isEqual:self.session[@"userID"]] ||
+        ![job[@"auth"] isEqual:self.session[@"auth"]]) { [BHTRequestCondition() unlock]; return; }
     job[@"running"] = @YES; BHTPendingTokenPaths()[key] = job;
     [BHTRequestCondition() unlock];
     __weak typeof(self) weakSelf = self;
@@ -81,6 +84,8 @@ static BHTSessionRequestHelper* BHTCurrentRequestHelper;
             if (!strongSelf) return;
             NSDictionary* current = BHTSecureWebSessionCopyAccountSession([strongSelf.session[@"userID"] unsignedLongLongValue]);
             [BHTRequestCondition() lock];
+            // An old helper must not remove a newer job after account switch.
+            if (BHTPendingTokenPaths()[key] != job) { [BHTRequestCondition() unlock]; return; }
             if (!error && BHTWebSessionTransactionValueIsValid(value) &&
                 [current[@"auth"] isEqual:strongSelf.session[@"auth"]]) {
                 BHTRequestTokens()[key] = @{@"value":value, @"auth":strongSelf.session[@"auth"], @"date":NSDate.date};
@@ -93,8 +98,19 @@ static BHTSessionRequestHelper* BHTCurrentRequestHelper;
 
 static void BHTStartRequestHelper(NSDictionary* session) {
     if (![NSThread isMainThread]) return;
+    NSDictionary* current = BHTSecureWebSessionCopyAccountSession([session[@"userID"] unsignedLongLongValue]);
+    if (![current[@"auth"] isEqual:session[@"auth"]] || [current[@"needsSignIn"] boolValue]) return;
     if ([BHTCurrentRequestHelper.session[@"userID"] isEqual:session[@"userID"]] &&
         [BHTCurrentRequestHelper.session[@"auth"] isEqual:session[@"auth"]]) return;
+    [BHTRequestCondition() lock];
+    for (NSString* key in [BHTPendingTokenPaths().allKeys copy]) {
+        NSDictionary* job = BHTPendingTokenPaths()[key];
+        if ([job[@"userID"] isEqual:BHTCurrentRequestHelper.session[@"userID"]] &&
+            [job[@"auth"] isEqual:BHTCurrentRequestHelper.session[@"auth"]]) {
+            [BHTPendingTokenPaths() removeObjectForKey:key];
+        }
+    }
+    [BHTRequestCondition() broadcast]; [BHTRequestCondition() unlock];
     [BHTCurrentRequestHelper.webView stopLoading];
     BHTCurrentRequestHelper.webView.navigationDelegate = nil;
     [BHTCurrentRequestHelper.webView removeFromSuperview];
@@ -163,8 +179,9 @@ static NSString* BHTTransactionForRequest(NSURLRequest* request, NSDictionary* s
     NSString* token = [cached[@"auth"] isEqual:session[@"auth"]] &&
         [cached[@"date"] timeIntervalSinceNow] > -90 ? cached[@"value"] : nil;
     [BHTRequestTokens() removeObjectForKey:key];
-    if (BHTPendingTokenPaths().count < 32 && !BHTPendingTokenPaths()[key]) {
-        BHTPendingTokenPaths()[key] = @{@"userID":session[@"userID"], @"method":method, @"path":path};
+    NSDictionary* pending = BHTPendingTokenPaths()[key];
+    if (BHTPendingTokenPaths().count < 32 && ![pending[@"auth"] isEqual:session[@"auth"]]) {
+        BHTPendingTokenPaths()[key] = @{@"userID":session[@"userID"], @"auth":session[@"auth"], @"method":method, @"path":path};
     }
     [lock unlock];
     dispatch_async(dispatch_get_main_queue(), ^{
@@ -173,11 +190,14 @@ static NSString* BHTTransactionForRequest(NSURLRequest* request, NSDictionary* s
     });
     // Request constructors sometimes run on the main thread. Never stop UI
     // scrolling or sign-in there; a cold background request may wait briefly
-    // while WebKit prepares its first token. Consuming a token prewarms the next.
+    // while WebKit prepares its first token. A cached token is single-use and
+    // schedules a replacement for the same account, method, and path.
     if (!token && !NSThread.isMainThread) {
         [lock lock];
         NSDate* deadline = [NSDate dateWithTimeIntervalSinceNow:3];
-        while (!BHTRequestTokens()[key] && [deadline timeIntervalSinceNow] > 0) [lock waitUntilDate:deadline];
+        while (!BHTRequestTokens()[key] &&
+            [BHTPendingTokenPaths()[key][@"auth"] isEqual:session[@"auth"]] &&
+            [deadline timeIntervalSinceNow] > 0) [lock waitUntilDate:deadline];
         cached = BHTRequestTokens()[key];
         if ([cached[@"auth"] isEqual:session[@"auth"]]) token = cached[@"value"];
         [BHTRequestTokens() removeObjectForKey:key]; [lock unlock];
@@ -204,13 +224,17 @@ NSURLRequest* BHTWebSessionRequestForSession(NSURLRequest* request, NSDictionary
 
 @interface BHTSessionRefreshDelegate : NSObject <NSURLSessionTaskDelegate>
 @property(nonatomic, copy) NSDictionary* session;
+@property(nonatomic) BOOL identityMismatch;
 @end
 @implementation BHTSessionRefreshDelegate
 - (void)URLSession:(NSURLSession*)session task:(NSURLSessionTask*)task
  willPerformHTTPRedirection:(NSHTTPURLResponse*)response newRequest:(NSURLRequest*)request
  completionHandler:(void (^)(NSURLRequest*))completion {
-    NSDictionary* updated = BHTWebSessionUpdatedSessionFromResponse(self.session, response);
-    if (updated) self.session = updated;
+    NSDictionary* identity = BHTWebSessionIdentityFromResponse(self.session, nil, response);
+    if ([identity[@"identityMismatch"] boolValue]) {
+        self.identityMismatch = YES; completion(nil); return;
+    }
+    if (identity[@"session"]) self.session = identity[@"session"];
     if (!BHTWebSessionURLIsAllowed(request.URL)) { completion(nil); return; }
     NSMutableURLRequest* next = [request mutableCopy];
     next.HTTPShouldHandleCookies = NO;
@@ -237,8 +261,8 @@ void BHTRefreshWebSessionCookies(NSDictionary* session, void (^completion)(NSDic
     request.timeoutInterval = 12; request.HTTPShouldHandleCookies = NO;
     [request setValue:[@"auth_token=" stringByAppendingString:session[@"auth"]] forHTTPHeaderField:@"Cookie"];
     [[connection dataTaskWithRequest:request completionHandler:^(__unused NSData* data, NSURLResponse* response, NSError* error) {
-        NSDictionary* updated = !error ? BHTWebSessionUpdatedSessionFromResponse(delegate.session, (id)response) : nil;
-        if (!error && [response isKindOfClass:NSHTTPURLResponse.class] &&
+        NSDictionary* updated = !error && !delegate.identityMismatch ? BHTWebSessionUpdatedSessionFromResponse(delegate.session, (id)response) : nil;
+        if (!error && !delegate.identityMismatch && [response isKindOfClass:NSHTTPURLResponse.class] &&
             [(NSHTTPURLResponse*)response statusCode] >= 200 && [(NSHTTPURLResponse*)response statusCode] < 400) {
             NSMutableDictionary* refreshed = [(updated ?: delegate.session) mutableCopy];
             refreshed[@"lastRefresh"] = NSDate.date; updated = refreshed;
@@ -248,10 +272,17 @@ void BHTRefreshWebSessionCookies(NSDictionary* session, void (^completion)(NSDic
     }] resume];
 }
 
-void BHTResolveWebSessionIdentity(NSDictionary* session, void (^completion)(NSString*)) {
+void BHTResolveWebSessionIdentity(NSDictionary* session, void (^completion)(NSString*, NSDictionary*, BOOL)) {
+    // The username is not known until this request completes. This temporary
+    // in-memory label only lets the shared cookie validator check the session;
+    // it is never shown, persisted, or used for the native account entry.
+    NSMutableDictionary* pending = [session mutableCopy];
+    pending[@"screenName"] = @"session";
+    NSDictionary* working = BHTWebSessionValidatedSession(pending);
+    if (!working) { if (completion) completion(nil, session, NO); return; }
     NSURLSessionConfiguration* config = NSURLSessionConfiguration.ephemeralSessionConfiguration;
     config.HTTPCookieStorage = nil; config.HTTPShouldSetCookies = NO; config.URLCache = nil;
-    BHTSessionRefreshDelegate* delegate = [BHTSessionRefreshDelegate new]; delegate.session = session;
+    BHTSessionRefreshDelegate* delegate = [BHTSessionRefreshDelegate new]; delegate.session = working;
     NSURLSession* connection = [NSURLSession sessionWithConfiguration:config delegate:delegate delegateQueue:nil];
     NSMutableURLRequest* request = [NSMutableURLRequest requestWithURL:
         [NSURL URLWithString:@"https://x.com/i/api/1.1/account/verify_credentials.json?include_entities=false&skip_status=true"]];
@@ -262,18 +293,13 @@ void BHTResolveWebSessionIdentity(NSDictionary* session, void (^completion)(NSSt
     [request setValue:BHTWebSessionCookieHeader(nil, session[@"auth"], session[@"csrf"],
         [session[@"userID"] unsignedLongLongValue]) forHTTPHeaderField:@"Cookie"];
     [[connection dataTaskWithRequest:request completionHandler:^(NSData* data, NSURLResponse* response, NSError* error) {
-        NSString* handle = nil;
-        if (!error && data.length <= 262144 && [response isKindOfClass:NSHTTPURLResponse.class] &&
-            [(NSHTTPURLResponse*)response statusCode] == 200 && BHTWebSessionURLIsAllowed(response.URL)) {
-            id value = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
-            if ([value isKindOfClass:NSDictionary.class]) {
-                id uid = value[@"id_str"] ?: [value[@"id"] description];
-                if (BHTWebSessionUserIDFromTWID(uid) == [session[@"userID"] unsignedLongLongValue]) {
-                    handle = BHTWebSessionNormalizedHandle(value[@"screen_name"]);
-                }
-            }
-        }
-        dispatch_async(dispatch_get_main_queue(), ^{ if (completion) completion(handle); });
+        NSDictionary* identity = BHTWebSessionIdentityFromResponse(delegate.session, error ? nil : data, (id)response);
+        NSDictionary* updated = identity[@"session"] ?: working;
+        NSDictionary* components = @{@"auth":updated[@"auth"], @"csrf":updated[@"csrf"], @"userID":updated[@"userID"]};
+        BOOL mismatch = delegate.identityMismatch || [identity[@"identityMismatch"] boolValue];
+        dispatch_async(dispatch_get_main_queue(), ^{
+            if (completion) completion(identity[@"screenName"], components, mismatch);
+        });
         [connection finishTasksAndInvalidate];
     }] resume];
 }

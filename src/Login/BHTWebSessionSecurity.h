@@ -24,6 +24,11 @@ NSURLRequest* BHTWebSessionBuildAuthenticatedRequest(NSURLRequest* request, NSDi
     NSString* _Nullable transaction);
 NSDictionary* _Nullable BHTWebSessionUpdatedSessionFromResponse(
     NSDictionary* session, NSHTTPURLResponse* response);
+// Returns the same-account session (including rotated cookies), an optional
+// screenName, and identityMismatch. An unavailable identity endpoint leaves
+// the visible profile link usable; an explicit different identity does not.
+NSDictionary* BHTWebSessionIdentityFromResponse(NSDictionary* session,
+    NSData* _Nullable data, NSHTTPURLResponse* _Nullable response);
 NSString* BHTWebSessionCookieHeader(
     NSString* _Nullable existingHeader,
     NSString* authToken,

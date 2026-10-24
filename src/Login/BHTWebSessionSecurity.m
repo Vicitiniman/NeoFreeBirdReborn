@@ -237,14 +237,20 @@ static BOOL BHTWebSessionCookieBelongsToResponse(NSHTTPCookie* cookie, NSHTTPURL
         BHTWebSessionHostMatchesDomain(response.URL.host.lowercaseString, domain);
 }
 
+static BOOL BHTWebSessionResponseUserMismatch(NSDictionary* session, NSHTTPURLResponse* response) {
+    NSArray* cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:response.allHeaderFields forURL:response.URL];
+    for (NSHTTPCookie* cookie in cookies) {
+        if (BHTWebSessionCookieBelongsToResponse(cookie, response) && [cookie.name isEqualToString:@"twid"] &&
+            BHTWebSessionUserIDFromTWID(cookie.value) != [session[@"userID"] unsignedLongLongValue]) return YES;
+    }
+    return NO;
+}
+
 NSDictionary* BHTWebSessionUpdatedSessionFromResponse(NSDictionary* session, NSHTTPURLResponse* response) {
     if (![response isKindOfClass:NSHTTPURLResponse.class] ||
         !BHTWebSessionURLIsAllowed(response.URL) || !BHTWebSessionValidatedSession(session)) return nil;
     NSArray* cookies = [NSHTTPCookie cookiesWithResponseHeaderFields:response.allHeaderFields forURL:response.URL];
-    for (NSHTTPCookie* cookie in cookies) {
-        if (BHTWebSessionCookieBelongsToResponse(cookie, response) && [cookie.name isEqualToString:@"twid"] &&
-            BHTWebSessionUserIDFromTWID(cookie.value) != [session[@"userID"] unsignedLongLongValue]) return nil;
-    }
+    if (BHTWebSessionResponseUserMismatch(session, response)) return nil;
     NSMutableDictionary* updated = [session mutableCopy];
     BOOL changed = NO;
     for (NSHTTPCookie* cookie in cookies) {
@@ -258,6 +264,31 @@ NSDictionary* BHTWebSessionUpdatedSessionFromResponse(NSDictionary* session, NSH
     if (!changed) return nil;
     updated[@"lastRefresh"] = NSDate.date;
     return BHTWebSessionValidatedSession(updated);
+}
+
+NSDictionary* BHTWebSessionIdentityFromResponse(NSDictionary* session, NSData* data, NSHTTPURLResponse* response) {
+    NSDictionary* validated = BHTWebSessionValidatedSession(session);
+    if (!validated) return @{};
+    BOOL allowed = [response isKindOfClass:NSHTTPURLResponse.class] && BHTWebSessionURLIsAllowed(response.URL);
+    BOOL mismatch = allowed && BHTWebSessionResponseUserMismatch(validated, response);
+    NSDictionary* updated = allowed && !mismatch ? BHTWebSessionUpdatedSessionFromResponse(validated, response) : nil;
+    NSMutableDictionary* result = [@{@"session":updated ?: validated, @"identityMismatch":@(mismatch)} mutableCopy];
+    if (allowed && !mismatch && response.statusCode == 200 && data.length > 0 && data.length <= 262144) {
+        id value = [NSJSONSerialization JSONObjectWithData:data options:0 error:nil];
+        if ([value isKindOfClass:NSDictionary.class]) {
+            id number = value[@"id"];
+            id identity = value[@"id_str"] ?: ([number isKindOfClass:NSNumber.class] ? [number stringValue] : nil);
+            uint64_t userID = BHTWebSessionUserIDFromTWID(identity);
+            if (userID && userID != [validated[@"userID"] unsignedLongLongValue]) {
+                result[@"identityMismatch"] = @YES;
+                result[@"session"] = validated;
+            } else if (userID) {
+                NSString* handle = BHTWebSessionNormalizedHandle(value[@"screen_name"]);
+                if (handle) result[@"screenName"] = handle;
+            }
+        }
+    }
+    return [result copy];
 }
 
 NSString* BHTWebSessionCookieHeader(

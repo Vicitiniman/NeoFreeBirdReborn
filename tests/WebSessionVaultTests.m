@@ -130,11 +130,24 @@ static void testWebSessionVault(void) {
     NSDictionary* changed = BHTWebSessionUpdatedSessionFromResponse(first, response);
     NSCAssert([changed[@"csrf"] isEqual:@"synthetic_new_csrf"] && [changed[@"auth"] isEqual:first[@"auth"]],
         @"Capture server cookie changes without changing the owner or other credentials");
+    NSData* identityData = [NSJSONSerialization dataWithJSONObject:@{@"id_str":@"42", @"screen_name":@"renamed_user"} options:0 error:nil];
+    NSDictionary* identity = BHTWebSessionIdentityFromResponse(first, identityData, response);
+    NSCAssert([identity[@"screenName"] isEqual:@"renamed_user"] && ![identity[@"identityMismatch"] boolValue] &&
+        [identity[@"session"][@"csrf"] isEqual:@"synthetic_new_csrf"], @"Initial sign-in keeps cookies refreshed during identity confirmation");
+    NSData* anotherIdentity = [NSJSONSerialization dataWithJSONObject:@{@"id_str":@"99", @"screen_name":@"second_user"} options:0 error:nil];
+    identity = BHTWebSessionIdentityFromResponse(first, anotherIdentity, response);
+    NSCAssert([identity[@"identityMismatch"] boolValue] && !identity[@"screenName"] &&
+        [identity[@"session"][@"csrf"] isEqual:first[@"csrf"]], @"An explicit identity mismatch cannot fall back to a stale profile label");
     NSHTTPURLResponse* denied = [[NSHTTPURLResponse alloc] initWithURL:response.URL statusCode:403 HTTPVersion:@"HTTP/1.1" headerFields:@{}];
     NSCAssert(!BHTWebSessionUpdatedSessionFromResponse(first, denied), @"A 403 by itself is not a logout or a credential replacement");
+    identity = BHTWebSessionIdentityFromResponse(first, nil, denied);
+    NSCAssert(![identity[@"identityMismatch"] boolValue] && !identity[@"screenName"],
+        @"An unavailable identity endpoint permits the visible profile link fallback");
     NSHTTPURLResponse* wrongOwner = [[NSHTTPURLResponse alloc] initWithURL:response.URL statusCode:200 HTTPVersion:@"HTTP/1.1"
         headerFields:@{@"Set-Cookie":@"twid=u%3D99; Domain=.x.com; Path=/; Secure"}];
     NSCAssert(!BHTWebSessionUpdatedSessionFromResponse(first, wrongOwner), @"Never adopt a response for another account");
+    NSCAssert([BHTWebSessionIdentityFromResponse(first, nil, wrongOwner)[@"identityMismatch"] boolValue],
+        @"A different account cookie during confirmation also blocks the fallback");
     NSHTTPURLResponse* foreignCookie = [[NSHTTPURLResponse alloc] initWithURL:response.URL statusCode:200 HTTPVersion:@"HTTP/1.1"
         headerFields:@{@"Set-Cookie":@"ct0=synthetic_foreign_csrf; Domain=evil.example; Path=/; Secure"}];
     NSCAssert(!BHTWebSessionUpdatedSessionFromResponse(first, foreignCookie), @"Ignore cookies outside the response host's domain family");

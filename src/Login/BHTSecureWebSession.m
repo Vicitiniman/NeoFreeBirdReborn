@@ -652,9 +652,10 @@ static char kBHTSignInURLObservation;
 
 - (void)setBusy:(BOOL)busy message:(NSString*)message {
     self.busy = busy;
+    self.webView.userInteractionEnabled = !busy;
     self.useAccountButton.enabled = !busy && (self.pageReady || self.savedConnection != nil);
     self.navigationItem.leftBarButtonItem.enabled = !busy;
-    self.navigationItem.rightBarButtonItem.enabled = !busy;
+    for (UIBarButtonItem* item in self.navigationItem.rightBarButtonItems) item.enabled = !busy;
     self.statusLabel.text = message ?: @"";
     self.statusLabel.textColor = UIColor.secondaryLabelColor;
     if (busy) [self.activity startAnimating];
@@ -765,10 +766,8 @@ static char kBHTSignInURLObservation;
     });
 }
 
-- (void)finishWithCookies:(NSArray<NSHTTPCookie*>*)cookies
+- (void)finishWithComponents:(NSDictionary*)components
               screenName:(NSString*)screenName {
-    NSDictionary* components =
-        BHTWebSessionComponentsFromCookies(cookies);
     if (!components) {
         BHTWebSessionRecord(BHTWebSessionEventCookieSetIncomplete);
         [self showErrorKey:@"SECURE_WEB_SIGN_IN_NOT_READY"];
@@ -777,7 +776,7 @@ static char kBHTSignInURLObservation;
     BHTWebSessionRecord(BHTWebSessionEventCookieSetComplete);
     NSString* handle = BHTWebSessionNormalizedHandle(screenName);
     if (handle.length == 0) {
-        [self promptForHandleWithCookies:cookies];
+        [self promptForHandleWithComponents:components];
         return;
     }
 
@@ -800,7 +799,7 @@ static char kBHTSignInURLObservation;
     [self connectSavedSession:session];
 }
 
-- (void)promptForHandleWithCookies:(NSArray<NSHTTPCookie*>*)cookies {
+- (void)promptForHandleWithComponents:(NSDictionary*)components {
     [self setBusy:NO message:BHTWebSessionLocalized(
         @"SECURE_WEB_SIGN_IN_HANDLE_REQUIRED")];
     UIAlertController* alert = [UIAlertController
@@ -834,7 +833,7 @@ static char kBHTSignInURLObservation;
             return;
         }
         BHTWebSessionRecord(BHTWebSessionEventHandleEntered);
-        [strongSelf finishWithCookies:cookies screenName:handle];
+        [strongSelf finishWithComponents:components screenName:handle];
     }]];
     [self presentViewController:alert animated:YES completion:nil];
 }
@@ -883,9 +882,13 @@ static char kBHTSignInURLObservation;
                     // The numeric identity must match X's own session. A
                     // verified API result takes priority over the UI label;
                     // the visible profile link remains a resilient fallback.
-                    BHTResolveWebSessionIdentity(components, ^(NSString* verified) {
+                    BHTResolveWebSessionIdentity(components, ^(NSString* verified, NSDictionary* updated, BOOL mismatch) {
                         if (strongSelf.operationGeneration != generation) return;
-                        [strongSelf finishWithCookies:cookies screenName:verified ?: handle];
+                        if (mismatch) {
+                            [strongSelf showErrorKey:@"SECURE_WEB_SIGN_IN_IDENTITY_CHANGED"];
+                            return;
+                        }
+                        [strongSelf finishWithComponents:updated screenName:verified ?: handle];
                     });
                 });
             }];

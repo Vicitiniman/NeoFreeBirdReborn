@@ -3194,7 +3194,7 @@ BHTCompatibilitySignInDiagnosticSnapshot(void) {
         @"legacyPasswordCommandReachable": @NO,
         @"credentialEntryOwner": @"x_webview",
         @"credentialPersistence":
-            @"device_only_keychain_and_webkit_store",
+            @"per_account_device_only_keychain_with_isolated_webkit",
         @"xAuthClientMetadataPolicy":
             @"native_x_12_24_1",
         @"xAuthClientMetadataTargetVersion":
@@ -3204,7 +3204,7 @@ BHTCompatibilitySignInDiagnosticSnapshot(void) {
         @"xAuthClientMetadataOverrideApplied": @0,
         @"xAuthClientMetadataScopeTimedOut": @0,
         @"compatibilityRequestProfile":
-            @"secure_web_session_v1",
+            @"secure_web_session_v2_account_bound",
         @"preflightPolicy": @"user_confirmed_x_web_sign_in",
         @"preflightMinimumDelaySeconds": @0,
         @"attestationOverridesIncluded": @NO,

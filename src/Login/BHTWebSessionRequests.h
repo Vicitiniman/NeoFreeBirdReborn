@@ -12,5 +12,6 @@ NSURLRequest* BHTWebSessionRequestForSession(NSURLRequest* request, NSDictionary
 void BHTRefreshWebSessionCookies(NSDictionary* session,
     void (^completion)(NSDictionary* _Nullable updated));
 void BHTResolveWebSessionIdentity(NSDictionary* session,
-    void (^completion)(NSString* _Nullable screenName));
+    void (^completion)(NSString* _Nullable screenName,
+        NSDictionary* components, BOOL identityMismatch));
 NS_ASSUME_NONNULL_END

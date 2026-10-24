@@ -132,6 +132,7 @@
 "SECURE_WEB_SIGN_IN_EXPIRED" = "X needs you to sign in again. Your other saved accounts are still available.";
 "SECURE_WEB_SIGN_IN_CONNECT_TIMEOUT" = "Connecting took too long. Your sign-in is saved; tap Retry connection.";
 "SECURE_WEB_SIGN_IN_CHECK_TIMEOUT" = "X took too long to confirm this account. Try Continue again.";
+"SECURE_WEB_SIGN_IN_IDENTITY_CHANGED" = "The account changed while X was confirming your sign-in. Wait for your timeline to finish loading, then tap Continue again.";
 "SECURE_WEB_SIGN_IN_HANDLE_REQUIRED" = "The session is signed in, but X did not expose the profile link needed to name the local account.";
 "SECURE_WEB_SIGN_IN_HANDLE_TITLE" = "Confirm your X username";
 "SECURE_WEB_SIGN_IN_HANDLE_DETAIL" = "Enter the @username for the account visible in the web page. This label is stored with the encrypted session; your password is never requested.";
