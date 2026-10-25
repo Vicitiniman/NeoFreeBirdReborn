@@ -116,6 +116,8 @@ jobs:
           python3 main/branding/source_smoke_test.py
           python3 main/branding/smoke_test.py
           python3 main/tests/test_hook_audit.py
+          python3 main/tests/test_launch_branding.py
+          node main/tests/WebSessionTransactionTests.cjs
 
       - name: Test sidebar persistence
         run: |

@@ -517,9 +517,12 @@ def _apply_builtin_launch_bird(appdir, workdir):
         / "BHTwitter.bundle"
     )
     birds = {
-        "tBird.png": bird_directory / "twitter_bird.png",
-        "tBird@2x.png": bird_directory / "twitter_bird@2x.png",
-        "tBird@3x.png": bird_directory / "twitter_bird@3x.png",
+        # The launch nib has explicit logo bounds (64 points in X 12.24),
+        # so these larger textures retain its layout while matching the
+        # animation's silhouette and resolution from the first frame.
+        "tBird.png": bird_directory / "twitter_bird_launch.png",
+        "tBird@2x.png": bird_directory / "twitter_bird_launch@2x.png",
+        "tBird@3x.png": bird_directory / "twitter_bird_launch@3x.png",
     }
     if not nib.is_file() or not all(path.is_file() for path in birds.values()):
         return

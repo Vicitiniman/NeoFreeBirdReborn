@@ -112,9 +112,9 @@
 "COMPATIBILITY_SIGN_IN_SHARE_REPORT" = "Share Report";
 "COMPATIBILITY_SIGN_IN_REPORT_ERROR" = "NeoFreeBird could not create the login report. Try again after another sign-in attempt.";
 "COMPATIBILITY_SIGN_IN_ADD_ACCOUNT_ACTION" = "Secure Web Sign-in";
-"SECURE_WEB_SIGN_IN_TITLE" = "Secure Web Sign-in";
-"SECURE_WEB_SIGN_IN_PRIVACY" = "Sign in on X's own x.com page below. NeoFreeBird never sees your password. After X shows your signed-in account, tap Use This Account to save the resulting session securely in this device's Keychain.";
-"SECURE_WEB_SIGN_IN_STATUS" = "Finish signing in on x.com, then tap Use This Account.";
+"SECURE_WEB_SIGN_IN_TITLE" = "Sign in to X";
+"SECURE_WEB_SIGN_IN_PRIVACY" = "Sign in directly on X's website below. NeoFreeBird does not read your password. Tap Continue when you're ready; your saved sign-in stays on this device.";
+"SECURE_WEB_SIGN_IN_STATUS" = "Finish signing in on X above, then tap Continue. You can also use Continue in the top bar.";
 "SECURE_WEB_SIGN_IN_LOADING" = "Loading X's secure sign-in page…";
 "SECURE_WEB_SIGN_IN_USE_ACCOUNT" = "Use This Account";
 "SECURE_WEB_SIGN_IN_CHECKING" = "Checking the signed-in X session…";
@@ -122,20 +122,37 @@
 "SECURE_WEB_SIGN_IN_NOT_READY" = "The required X session is not ready yet. Finish signing in, wait for your timeline to appear, then try again.";
 "SECURE_WEB_SIGN_IN_RETURN_TO_X" = "Return to an x.com page before using this account.";
 "SECURE_WEB_SIGN_IN_KEYCHAIN_ERROR" = "The X session could not be saved securely in Keychain. No native account was added.";
-"SECURE_WEB_SIGN_IN_ACCOUNT_ERROR" = "The web session was ready, but X's local account entry could not be created. Close and try again.";
+"SECURE_WEB_SIGN_IN_ACCOUNT_ERROR" = "Your sign-in is saved, but the app could not finish connecting. Tap Retry connection to try again.";
+"SECURE_WEB_SIGN_IN_SAVED_ACCOUNTS" = "Saved accounts";
+"SECURE_WEB_SIGN_IN_REPORT" = "Share sign-in report";
+"SECURE_WEB_SIGN_IN_OPEN_SAVED" = "Open saved account";
+"SECURE_WEB_SIGN_IN_RETRY_CONNECTION" = "Retry connection";
+"SECURE_WEB_SIGN_IN_READY" = "You're signed in on X. Continue to use this account in the app.";
+"SECURE_WEB_SIGN_IN_CONTINUE_AS" = "Continue as @%@";
+"SECURE_WEB_SIGN_IN_EXPIRED" = "X needs you to sign in again. Your other saved accounts are still available.";
+"SECURE_WEB_SIGN_IN_CONNECT_TIMEOUT" = "Connecting took too long. Your sign-in is saved; tap Retry connection.";
+"SECURE_WEB_SIGN_IN_CHECK_TIMEOUT" = "X took too long to confirm this account. Try Continue again.";
+"SECURE_WEB_SIGN_IN_IDENTITY_CHANGED" = "The account changed while X was confirming your sign-in. Wait for your timeline to finish loading, then tap Continue again.";
 "SECURE_WEB_SIGN_IN_HANDLE_REQUIRED" = "The session is signed in, but X did not expose the profile link needed to name the local account.";
 "SECURE_WEB_SIGN_IN_HANDLE_TITLE" = "Confirm your X username";
 "SECURE_WEB_SIGN_IN_HANDLE_DETAIL" = "Enter the @username for the account visible in the web page. This label is stored with the encrypted session; your password is never requested.";
 "SECURE_WEB_SIGN_IN_HANDLE_INVALID" = "Enter a valid X username with up to 15 letters, numbers, or underscores.";
 "SECURE_WEB_SIGN_IN_CONTINUE" = "Continue";
+"SECURE_WEB_SIGN_IN_RETRY" = "Retry";
+"SECURE_WEB_SIGN_IN_BROWSER_OPTIONS" = "Sign-in options";
+"SECURE_WEB_SIGN_IN_BACK" = "Back";
+"SECURE_WEB_SIGN_IN_RELOAD" = "Reload sign-in page";
+"SECURE_WEB_SIGN_IN_HIDE_KEYBOARD" = "Hide keyboard";
 "SECURE_WEB_SIGN_IN_CANCEL" = "Cancel";
 "SECURE_WEB_SIGN_IN_REMOVE" = "Remove Session";
 "SECURE_WEB_SIGN_IN_REMOVE_TITLE" = "Remove saved web session?";
-"SECURE_WEB_SIGN_IN_REMOVE_DETAIL" = "This removes the NeoFreeBird Keychain session, X website data, and the matching local account entry when X allows it. You can sign in again later.";
+"SECURE_WEB_SIGN_IN_REMOVE_DETAIL" = "You can reconnect this account or remove its saved sign-in from this device. Other accounts will stay signed in.";
 "SECURE_WEB_SIGN_IN_REMOVING" = "Removing the saved X session…";
 "SECURE_WEB_SIGN_IN_REMOVED" = "The saved session was removed.";
 "SECURE_WEB_SIGN_IN_REMOVED_ACCOUNT_REMAINS" = "The saved session and website data were removed. X did not expose its account-removal method, so remove any stale account entry from X's account picker.";
-"SECURE_WEB_SIGN_IN_LOAD_ERROR" = "X's sign-in page could not be loaded. Check your connection and try again.";
+"SECURE_WEB_SIGN_IN_LOAD_ERROR" = "X's sign-in page could not be loaded. Check your connection, then choose Reload sign-in page from the options at the top.";
+"SECURE_WEB_SIGN_IN_PAGE_INCOMPLETE" = "X's web page did not finish loading. If you already finished signing in, tap Continue. Otherwise, choose Reload sign-in page from the options at the top.";
+"SECURE_WEB_SIGN_IN_PROCESS_STOPPED" = "The sign-in page stopped responding. Choose Reload sign-in page from the options at the top to continue.";
 "SECURE_WEB_SIGN_IN_BLOCKED_HOST" = "For safety, this sign-in screen only opens X, Google, and Apple account pages.";
 "SECURE_WEB_SIGN_IN_UNAVAILABLE" = "Secure Web Sign-in is unavailable in this X build. Install the matching NeoFreeBird build and try again.";
 
@@ -252,7 +269,8 @@
 "FOLLOW_CONFIRM_DETAIL" = "Ask before following someone.";
 
 "COPY_PROFILE_INFO_TITLE" = "Copy profile details";
-"COPY_PROFILE_INFO_DETAIL" = "Copy usernames, bios, and more with one tap.";
+"COPY_PROFILE_INFO_DETAIL" = "Hold profile text to select and copy individual words, or copy a whole field from the profile menu.";
+"PROFILE_SELECT_TEXT" = "Select text";
 
 "DISABLE_ARTICLES_TITLE" = "No Articles tab";
 "DISABLE_ARTICLES_DETAIL" = "Hide the Articles tab in profiles.";

@@ -56,11 +56,25 @@ def bird_alpha(source: Image.Image) -> Image.Image:
     return alpha.crop(bounds)
 
 
-def build_variant(alpha: Image.Image, scale: int) -> Image.Image:
-    canvas_size = 24 * scale
-    maximum = (22 * scale, 20 * scale)
-    glyph = alpha.copy()
-    glyph.thumbnail(maximum, Image.Resampling.LANCZOS)
+def build_variant(
+    alpha: Image.Image, scale: int, point_size: int = 24
+) -> Image.Image:
+    canvas_size = point_size * scale
+    maximum = (
+        round(canvas_size * 22 / 24),
+        round(canvas_size * 20 / 24),
+    )
+    # thumbnail never enlarges a source. That left the bird progressively
+    # smaller inside the 2x/3x launch canvases, causing a size jump at launch.
+    ratio = min(maximum[0] / alpha.width, maximum[1] / alpha.height)
+    if ratio <= 1:
+        glyph = alpha.copy()
+        glyph.thumbnail(maximum, Image.Resampling.LANCZOS)
+    else:
+        glyph = alpha.resize(
+            (round(alpha.width * ratio), round(alpha.height * ratio)),
+            Image.Resampling.LANCZOS,
+        )
 
     canvas = Image.new("RGBA", (canvas_size, canvas_size), (255, 255, 255, 0))
     white_glyph = Image.new("RGBA", glyph.size, (255, 255, 255, 255))
@@ -76,13 +90,20 @@ def build_variant(alpha: Image.Image, scale: int) -> Image.Image:
 def main() -> None:
     DESTINATION.mkdir(parents=True, exist_ok=True)
     alpha = bird_alpha(Image.open(SOURCE))
-    names = {
-        1: "twitter_bird.png",
-        2: "twitter_bird@2x.png",
-        3: "twitter_bird@3x.png",
+    variants = {
+        "twitter_bird": 24,
+        # The launch animation scales its image view. A dedicated 256-point
+        # source prevents UIKit from magnifying the 72-pixel navigation asset
+        # on large iPad displays.
+        "twitter_bird_launch": 256,
     }
-    for scale, name in names.items():
-        build_variant(alpha, scale).save(DESTINATION / name, optimize=True)
+    for base_name, point_size in variants.items():
+        for scale in (1, 2, 3):
+            suffix = "" if scale == 1 else f"@{scale}x"
+            name = f"{base_name}{suffix}.png"
+            build_variant(alpha, scale, point_size).save(
+                DESTINATION / name, optimize=True
+            )
 
 
 if __name__ == "__main__":

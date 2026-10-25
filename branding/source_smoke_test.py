@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check source invariants that protect the X 12.9 compatibility fixes."""
+"""Check source invariants that protect the X 12.24.1 compatibility fixes."""
 
 from collections import Counter
 from pathlib import Path
@@ -173,6 +173,9 @@ def main() -> None:
         "twitter_bird.png": (24, 24),
         "twitter_bird@2x.png": (48, 48),
         "twitter_bird@3x.png": (72, 72),
+        "twitter_bird_launch.png": (256, 256),
+        "twitter_bird_launch@2x.png": (512, 512),
+        "twitter_bird_launch@3x.png": (768, 768),
     }
     for filename, expected_size in expected_birds.items():
         if png_size(BUNDLE / filename) != expected_size:
@@ -198,6 +201,17 @@ def main() -> None:
     )
     if "- (BOOL)isProfileTranslationEnabled" in profile_source:
         raise AssertionError("Unavailable X 12.9 profile selector is hooked")
+    require_source_tokens(
+        profile_source,
+        (
+            "BHTCurrentProfileMoreActions",
+            "profileMoreActionsBaseActionItemsWithSender:",
+            "nestedMenuWithTitle:title items:copyActions",
+            "BHTCopyProfileActions(self.viewModel)",
+            "%init(BHTCurrentProfileMoreActions)",
+        ),
+        "X 12.24 native Copy profile details menu",
+    )
 
     page_source = (
         ROOT / "src" / "Settings" / "ModernSettingsPageViewController.m"
@@ -214,6 +228,7 @@ def main() -> None:
     for required in (
         "UIUserInterfaceIdiomPad",
         "T1TabBarHostView",
+        "T1AppSplitSideBarViewController",
         "BHTRailHeaderLogoImageView",
         "BHTGuardedRailHeaderImageScan",
         "BHTRailHeaderCandidateBelongsToTab",
@@ -251,6 +266,9 @@ def main() -> None:
     for required in (
         'BHTProbe(@"appearance", @"T1TabBarHostView", @"logoImageView", NO)',
         'BHTProbe(@"appearance", @"T1TabBarHostView", @"tabBarViewController", NO)',
+        'BHTProbe(@"appearance", @"T1AppSplitSideBarViewController", @"viewWillLayoutSubviews", NO)',
+        'BHTProbe(@"profiles", @"T1ProfileHeaderViewController", @"profileMoreActionsBaseActionItemsWithSender:", NO)',
+        'BHTProbe(@"profiles", @"TFNActionItem", @"nestedMenuWithTitle:items:", YES)',
         'BHTProbe(@"appearance", @"TAEColorSettings", @"currentColorPalette", NO)',
         'BHTProbe(@"appearance", @"T1ColorSettings", @"_t1_applyTheme", YES)',
         '@"railBrandingRuntime": BHTRailBrandingObservationSnapshot()',
@@ -413,6 +431,8 @@ def main() -> None:
     web_session_hook = (
         ROOT / "src" / "Hooks" / "WebSessionAuthentication.x"
     ).read_text(encoding="utf-8")
+    web_session_vault_source = (ROOT / "src/Login/BHTWebSessionVault.m").read_text(encoding="utf-8")
+    web_session_requests_source = (ROOT / "src/Login/BHTWebSessionRequests.m").read_text(encoding="utf-8")
     require_source_tokens(
         compatibility_login_header,
         (
@@ -554,10 +574,11 @@ def main() -> None:
             "Beta 43 must not install the experimental X 12.3 metadata "
             "override"
         )
-    if "private_startLoginFlowWithSender:" in compatibility_login_hook:
-        raise AssertionError(
-            "Compatibility sign-in must not replace X's native login action"
-        )
+    primary_login = source_section(compatibility_login_hook,
+        "%group BHTCompatibilityPrimaryAddAccountHook", "%group BHTCompatibilityAccountSelectionHook",
+        "primary web sign-in with native fallback")
+    require_source_tokens(primary_login, ("BHTSecureWebSessionSignInIsAvailable()", "%orig;"),
+        "unsupported builds retain native login")
     install_position = compatibility_login_hook.index(
         "BHTInstallCompatibilitySignInEntry(controller);"
     )
@@ -1398,13 +1419,13 @@ def main() -> None:
         (
             '@"missingRuntimeRequirements":',
             '@"preLoginDiagnosticsEligible":',
-            '@"nativeSignInRemainsDefault": @YES',
+            '@"nativeSignInRemainsDefault": @NO',
             '@"secureWebSession":',
             "BHTSecureWebSessionDiagnosticSnapshot()",
             '@"user_confirmed_web_session_bridge"',
             '@"legacyPasswordCommandReachable": @NO',
             '@"credentialEntryOwner": @"x_webview"',
-            '@"device_only_keychain_and_webkit_store"',
+            '@"per_account_device_only_keychain_with_isolated_webkit"',
             '@"xAuthClientMetadataPolicy":',
             '@"native_x_12_24_1"',
             '@"xAuthClientMetadataTargetVersion":',
@@ -1413,7 +1434,7 @@ def main() -> None:
             '@"xAuthClientMetadataOverrideApplied": @0',
             '@"xAuthClientMetadataScopeTimedOut": @0',
             '@"compatibilityRequestProfile":',
-            '@"secure_web_session_v1"',
+            '@"secure_web_session_v2_account_bound"',
             '@"preflightPolicy":',
             '@"user_confirmed_x_web_sign_in"',
             '@"preflightMinimumDelaySeconds":',
@@ -1509,10 +1530,10 @@ def main() -> None:
         "secure web-session public contract",
     )
     require_source_tokens(
-        secure_web_session_source,
+        secure_web_session_source + web_session_vault_source,
         (
             "kSecClassGenericPassword",
-            "kSecAttrAccessibleWhenUnlockedThisDeviceOnly",
+            "kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly",
             "SecItemCopyMatching",
             "SecItemUpdate",
             "SecItemAdd",
@@ -1522,7 +1543,7 @@ def main() -> None:
             "getAllCookies:",
             'document.querySelector(\'a[data-testid=\\"AppTabBar_Profile_Link\\"]\')',
             "BHTCompatibilityInstallWebSessionAccount(",
-            "BHTCompatibilityRemoveWebSessionAccount(screenName)",
+            "BHTCompatibilityRemoveWebSessionAccountWithUserID(userID)",
             '@"passwordReadByTweak": @NO',
             '@"cookieReadRequiresUserConfirmation": @YES',
             '@"sessionStoredInDeviceOnlyKeychain": @YES',
@@ -1543,7 +1564,7 @@ def main() -> None:
         "localizedDescription",
         "debugDescription",
     ):
-        if unsafe_persistence_api in secure_web_session_source:
+        if unsafe_persistence_api in secure_web_session_source + web_session_vault_source + web_session_requests_source:
             raise AssertionError(
                 "Secure web sign-in must not persist outside Keychain or "
                 f"log credential-adjacent data: {unsafe_persistence_api}"
@@ -1585,7 +1606,7 @@ def main() -> None:
     )
     if request_bridge.index(
         "BHTWebSessionURLIsAllowed(request.URL)"
-    ) > request_bridge.index("BHTWebSessionCopySession()"):
+    ) > request_bridge.index("BHTSecureWebSessionCopyAccountSession(owner)"):
         raise AssertionError(
             "Reject non-first-party URLs before loading the Keychain session"
         )
@@ -1617,10 +1638,10 @@ def main() -> None:
         ),
         "guarded final-boundary request hooks",
     )
-    if web_session_hook.count("%hook NSURLSession") != 8:
+    if web_session_hook.count("%hook NSURLSession") != 11:
         raise AssertionError(
-            "The web session must cover exactly the eight audited request "
-            "constructors"
+            "The web session must cover the eight original constructors plus "
+            "the guarded delegate and streamed-request variants"
         )
     for broad_hook in (
         "%hook NSMutableURLRequest",
@@ -4275,11 +4296,11 @@ def main() -> None:
             "navigation delegate"
         )
 
-    if "Version: 6.1.0-beta.62" not in (
+    if "Version: 6.1.0-beta.68" not in (
         ROOT / "control"
     ).read_text(encoding="utf-8"):
         raise AssertionError(
-            "Current promoted-status filtering must ship as beta.62"
+            "Current compatibility changes must ship as beta.68"
         )
 
     require_source_tokens(
@@ -4295,8 +4316,17 @@ def main() -> None:
     branding_source = (
         ROOT / "src" / "Branding" / "BHTBranding.m"
     ).read_text(encoding="utf-8")
-    if '@"twitter_bird"' not in branding_source:
-        raise AssertionError("Central Twitter bird asset lookup is missing")
+    require_source_tokens(
+        branding_source,
+        (
+            '@"twitter_bird"',
+            '@"twitter_bird_launch"',
+            "existingPointSize",
+            "imageWithCGImage:birdPixels",
+            "kBHTScaledLaunchBirdKey",
+        ),
+        "central Twitter bird asset lookup",
+    )
 
     ipa_branding_source = (
         ROOT / "branding" / "ipa_branding.py"
@@ -4801,6 +4831,38 @@ def main() -> None:
     require_source_tokens(
         feature_switches_source,
         (
+            "BHTShouldSuppressSensitiveTweetWarnings",
+            "BHTInstallURTSensitiveStatusDecisionHook",
+            'objc_getClass("T1URTTimelineStatusItemViewModel")',
+            'NSSelectorFromString(@"isPossiblySensitiveViewModelForAccount:")',
+            "class_getInstanceMethod(viewModelClass, selector)",
+            "method_setImplementation(method,",
+            "%hook T1CompositionStatusViewModel",
+            "%hook T1TranslatedStatusViewModel",
+            "%hook T1StatusTableRowAdapter",
+            "- (BOOL)isPossiblySensitiveViewModelForAccount:(id)account",
+            "sensitiveStatusViewModelAtRow:(NSInteger)row",
+            "return BHTShouldSuppressSensitiveTweetWarnings() ? nil : %orig;",
+        ),
+        "full-status sensitive-content warning bypass",
+    )
+    require_source_tokens(
+        compatibility_source,
+        (
+            'BHTProbe(@"sensitiveContent", @"T1CompositionStatusViewModel", '
+            '@"isPossiblySensitiveViewModelForAccount:", NO)',
+            'BHTProbe(@"sensitiveContent", @"T1TranslatedStatusViewModel", '
+            '@"isPossiblySensitiveViewModelForAccount:", NO)',
+            'BHTProbe(@"sensitiveContent", @"T1URTTimelineStatusItemViewModel", '
+            '@"isPossiblySensitiveViewModelForAccount:", NO)',
+            'BHTProbe(@"sensitiveContent", @"T1StatusTableRowAdapter", '
+            '@"sensitiveStatusViewModelAtRow:section:dataViewController:", NO)',
+        ),
+        "sensitive-content compatibility probes",
+    )
+    require_source_tokens(
+        feature_switches_source,
+        (
             "BHTInstallSecureWebSessionAccountStateAccessors",
             "method_setImplementation(method, replacement)",
             "class_addMethod(accountClass, selector, replacement, fallbackTypes)",
@@ -5278,8 +5340,36 @@ def main() -> None:
     launch_source = (
         ROOT / "src" / "Hooks" / "AppLifecycle.x"
     ).read_text(encoding="utf-8")
-    if "applyClassicLaunchBird" not in launch_source:
-        raise AssertionError("Classic launch bird replacement is missing")
+    launch_reveal = source_section(
+        launch_source,
+        "- (void)animateRevealWithCompletion:(id)completion",
+        "%end",
+        "classic launch reveal",
+    )
+    require_source_tokens(
+        launch_reveal,
+        (
+            "applyClassicLaunchBird(launchView)",
+            "classicLaunchAnimationDuration()",
+            "removeAllAnimations",
+            "completionBlock",
+            "animateKeyframesWithDuration:",
+            "relativeDuration:0.20",
+        ),
+        "visible high-resolution classic launch reveal",
+    )
+    if launch_reveal.count("%orig") != 1:
+        raise AssertionError(
+            "Classic launch must use X's stock reveal only when disabled"
+        )
+    require_source_tokens(
+        launch_source,
+        (
+            "BHTApplyTwitterBirdLaunchToImageView",
+            "kBHTLaunchResolvedLogoViewKey",
+        ),
+        "cached high-resolution launch bird",
+    )
 
     likes_source = (
         ROOT / "src" / "Likes" / "BHTLikesTab.m"
