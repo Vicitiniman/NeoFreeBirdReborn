@@ -151,6 +151,7 @@
 "SECURE_WEB_SIGN_IN_REMOVED" = "The saved session was removed.";
 "SECURE_WEB_SIGN_IN_REMOVED_ACCOUNT_REMAINS" = "The saved session and website data were removed. X did not expose its account-removal method, so remove any stale account entry from X's account picker.";
 "SECURE_WEB_SIGN_IN_LOAD_ERROR" = "X's sign-in page could not be loaded. Check your connection, then choose Reload sign-in page from the options at the top.";
+"SECURE_WEB_SIGN_IN_PAGE_INCOMPLETE" = "X's web page did not finish loading. If you already finished signing in, tap Continue. Otherwise, choose Reload sign-in page from the options at the top.";
 "SECURE_WEB_SIGN_IN_PROCESS_STOPPED" = "The sign-in page stopped responding. Choose Reload sign-in page from the options at the top to continue.";
 "SECURE_WEB_SIGN_IN_BLOCKED_HOST" = "For safety, this sign-in screen only opens X, Google, and Apple account pages.";
 "SECURE_WEB_SIGN_IN_UNAVAILABLE" = "Secure Web Sign-in is unavailable in this X build. Install the matching NeoFreeBird build and try again.";

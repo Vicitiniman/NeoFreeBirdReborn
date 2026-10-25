@@ -13,6 +13,20 @@ static NSUInteger countOccurrences(NSString* value, NSString* needle) {
 }
 
 static void testWebSessionSecurity(void) {
+    NSCAssert(BHTWebSignInShouldIgnoreNavigationError([NSError errorWithDomain:NSURLErrorDomain code:NSURLErrorCancelled userInfo:nil]),
+        @"Cancelling an old web load must not display a sign-in failure");
+    for (NSString* domain in @[@"WebKitErrorDomain", @"WKErrorDomain"]) {
+        NSCAssert(BHTWebSignInShouldIgnoreNavigationError([NSError errorWithDomain:domain code:102 userInfo:nil]),
+            @"A WebKit frame-policy interruption is distinct from a failed page load");
+    }
+    for (NSNumber* code in @[@(NSURLErrorTimedOut), @(NSURLErrorNotConnectedToInternet),
+        @(NSURLErrorServerCertificateUntrusted), @(NSURLErrorUnsupportedURL), @102]) {
+        NSCAssert(!BHTWebSignInShouldIgnoreNavigationError([NSError errorWithDomain:NSURLErrorDomain code:code.integerValue userInfo:nil]),
+            @"Do not hide genuine network, certificate, or unsupported-URL errors");
+    }
+    NSCAssert(!BHTWebSignInShouldIgnoreNavigationError([NSError errorWithDomain:@"OtherDomain" code:102 userInfo:nil]) &&
+        !BHTWebSignInShouldIgnoreNavigationError([NSError errorWithDomain:@"OtherDomain" code:NSURLErrorCancelled userInfo:nil]) &&
+        !BHTWebSignInShouldIgnoreNavigationError(nil), @"An error number alone cannot classify a navigation interruption");
     // On iPhone X can omit the desktop profile link or finish on a different
     // first-party route. A user must still be able to explicitly confirm.
     for (NSString* page in @[@"https://x.com/i/flow/login", @"https://x.com/", @"https://x.com/home", @"https://twitter.com/settings/account"]) {
@@ -108,5 +122,5 @@ static void testWebSessionSecurity(void) {
               @"Emit exactly one value for each authentication cookie");
     NSCAssert([merged containsString:@"twid=u%3D99"],
               @"Encode the validated user ID in X's cookie form");
-    puts("PASS: mobile/manual sign-in confirmation, saved-session retries, and secure host, identifier, credential, and cookie validation");
+    puts("PASS: navigation interruption classification, mobile/manual sign-in confirmation, saved-session retries, and secure host, identifier, credential, and cookie validation");
 }

@@ -17,6 +17,9 @@ typedef NS_ENUM(NSUInteger, BHTWebSignInAction) {
 // must still validate the session and its account before saving anything.
 BHTWebSignInAction BHTWebSignInActionForState(NSURL* _Nullable URL,
     BOOL busy, BOOL hasSavedSession, BOOL signedInLanding);
+// Only cancellation and WebKit's explicit frame-policy interruption qualify.
+// A network, TLS, or unsupported-URL failure remains a real page-load problem.
+BOOL BHTWebSignInShouldIgnoreNavigationError(NSError* _Nullable error);
 NSString* _Nullable BHTWebSessionNormalizedHandle(id _Nullable value);
 uint64_t BHTWebSessionUserIDFromTWID(NSString* _Nullable value);
 BOOL BHTWebSessionCredentialValueIsValid(NSString* _Nullable value);

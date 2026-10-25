@@ -39,6 +39,8 @@ typedef NS_ENUM(NSUInteger, BHTWebSessionEvent) {
     BHTWebSessionEventReadinessUnavailable,
     BHTWebSessionEventReloadTapped,
     BHTWebSessionEventKeyboardDismissed,
+    BHTWebSessionEventNavigationInterruptionIgnored,
+    BHTWebSessionEventStaleNavigationFailureIgnored,
     BHTWebSessionEventCount,
 };
 
@@ -479,6 +481,8 @@ static BOOL BHTWebSessionNavigationURLIsAllowed(NSURL* URL) {
 @property(nonatomic, copy) NSString* detectedHandle;
 @property(nonatomic, copy) NSDictionary* savedConnection;
 @property(nonatomic, copy) NSURL* readinessURL;
+@property(nonatomic, strong) WKNavigation* currentNavigation;
+@property(nonatomic) BOOL pageLoadWarning;
 - (void)connectSavedSession:(NSDictionary*)session;
 - (void)updateReadiness;
 - (void)updateConfirmationControls;
@@ -708,7 +712,7 @@ static char kBHTSignInURLObservation;
         @"confirmationAction":action == BHTWebSignInActionReconnect ? @"reconnect" :
             (action == BHTWebSignInActionConfirm ? @"manual_confirmation" : @"disabled"),
         @"pageKind":page, @"webViewLoading":@(self.webView.loading),
-        @"signedInLayoutDetected":@(self.pageReady),
+        @"signedInLayoutDetected":@(self.pageReady), @"pageLoadWarning":@(self.pageLoadWarning),
     };
 }
 
@@ -762,7 +766,10 @@ static char kBHTSignInURLObservation;
         strongSelf.pageReady = strongSelf.detectedHandle.length > 0 || [path isEqualToString:@"/home"];
         if (strongSelf.pageReady) {
             strongSelf.savedConnection = nil;
-            strongSelf.statusLabel.text = BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_READY");
+            if (!strongSelf.pageLoadWarning) {
+                strongSelf.statusLabel.text = BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_READY");
+                strongSelf.statusLabel.textColor = UIColor.secondaryLabelColor;
+            }
         }
         [strongSelf updateConfirmationControls];
     }];
@@ -791,6 +798,17 @@ static char kBHTSignInURLObservation;
 - (void)showErrorKey:(NSString*)key {
     [self setBusy:NO message:BHTWebSessionLocalized(key)];
     self.statusLabel.textColor = UIColor.systemRedColor;
+}
+
+- (void)showPageLoadWarning {
+    self.pageLoadWarning = YES;
+    if (self.busy || self.completed) return;
+    // A web document can fail after X has established the account session.
+    // Keep explicit confirmation available; only its normal cookie/identity
+    // validation can decide whether the account is ready to connect.
+    self.statusLabel.text = BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_PAGE_INCOMPLETE");
+    self.statusLabel.textColor = UIColor.secondaryLabelColor;
+    [self updateConfirmationControls];
 }
 
 - (void)closeTapped {
@@ -1035,6 +1053,8 @@ static char kBHTSignInURLObservation;
 - (void)webView:(WKWebView*)webView
     didStartProvisionalNavigation:(WKNavigation*)navigation {
     BHTWebSessionRecord(BHTWebSessionEventNavigationStarted);
+    self.currentNavigation = navigation;
+    self.pageLoadWarning = NO;
     if (!self.busy) {
         self.statusLabel.text = BHTWebSessionLocalized(
             @"SECURE_WEB_SIGN_IN_LOADING");
@@ -1045,12 +1065,15 @@ static char kBHTSignInURLObservation;
 
 - (void)webView:(WKWebView*)webView didCommitNavigation:(WKNavigation*)navigation {
     BHTWebSessionRecord(BHTWebSessionEventNavigationCommitted);
+    if (navigation && self.currentNavigation && navigation != self.currentNavigation) return;
+    self.pageLoadWarning = NO;
     [self updateReadiness];
 }
 
 - (void)webView:(WKWebView*)webView
     didFinishNavigation:(WKNavigation*)navigation {
     BHTWebSessionRecord(BHTWebSessionEventNavigationFinished);
+    if (navigation && self.currentNavigation && navigation != self.currentNavigation) return;
     if (!self.busy) {
         self.statusLabel.text = BHTWebSessionLocalized(
             @"SECURE_WEB_SIGN_IN_STATUS");
@@ -1061,10 +1084,17 @@ static char kBHTSignInURLObservation;
 - (void)webView:(WKWebView*)webView
     didFailProvisionalNavigation:(WKNavigation*)navigation
                        withError:(NSError*)error {
-    if (error.code != NSURLErrorCancelled) BHTWebSessionRecord(BHTWebSessionEventNavigationFailed);
-    if (!self.busy && error.code != NSURLErrorCancelled) {
-        [self showErrorKey:@"SECURE_WEB_SIGN_IN_LOAD_ERROR"];
+    if (self.completed) return;
+    if (BHTWebSignInShouldIgnoreNavigationError(error)) {
+        BHTWebSessionRecord(BHTWebSessionEventNavigationInterruptionIgnored);
+        return;
     }
+    if (navigation && self.currentNavigation && navigation != self.currentNavigation) {
+        BHTWebSessionRecord(BHTWebSessionEventStaleNavigationFailureIgnored);
+        return;
+    }
+    BHTWebSessionRecord(BHTWebSessionEventNavigationFailed);
+    [self showPageLoadWarning];
 }
 
 - (void)webView:(WKWebView*)webView didFailNavigation:(WKNavigation*)navigation withError:(NSError*)error {
@@ -1204,6 +1234,8 @@ BHTSecureWebSessionDiagnosticSnapshot(void) {
         @"readinessScriptUnavailable",
         @"reloadTapped",
         @"keyboardDismissed",
+        @"navigationInterruptionIgnored",
+        @"staleNavigationFailureIgnored",
     ];
     NSMutableDictionary* counters =
         [NSMutableDictionary dictionaryWithCapacity:names.count];
@@ -1242,6 +1274,7 @@ BHTSecureWebSessionDiagnosticSnapshot(void) {
         @"manualConfirmationWithoutProfileLink": @YES,
         @"confirmationAvailableInNavigationBar": @YES,
         @"keyboardAwareSignInLayout": @YES,
+        @"pageLoadFailureDoesNotInferAccountFailure": @YES,
         @"presentation": presentation,
         @"revocationClearsKeychainAndWebData": @YES,
         @"counters": [counters copy],

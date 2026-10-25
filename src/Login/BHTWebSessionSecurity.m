@@ -35,6 +35,15 @@ BHTWebSignInAction BHTWebSignInActionForState(NSURL* URL, BOOL busy, BOOL hasSav
     return BHTWebSessionURLIsAllowed(URL) ? BHTWebSignInActionConfirm : BHTWebSignInActionUnavailable;
 }
 
+BOOL BHTWebSignInShouldIgnoreNavigationError(NSError* error) {
+    if (![error isKindOfClass:NSError.class]) return NO;
+    if ([error.domain isEqualToString:NSURLErrorDomain]) return error.code == NSURLErrorCancelled;
+    // WebKitErrorFrameLoadInterruptedByPolicyChange is 102. Keep the helper
+    // Foundation-only so its behavior can be tested without a live web view.
+    return error.code == 102 && ([error.domain isEqualToString:@"WebKitErrorDomain"] ||
+        [error.domain isEqualToString:@"WKErrorDomain"]);
+}
+
 NSString* BHTWebSessionNormalizedHandle(id value) {
     if (![value isKindOfClass:NSString.class]) return nil;
     NSString* handle = [(NSString*)value
