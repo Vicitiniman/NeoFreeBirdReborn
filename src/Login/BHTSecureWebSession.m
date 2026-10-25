@@ -30,6 +30,15 @@ typedef NS_ENUM(NSUInteger, BHTWebSessionEvent) {
     BHTWebSessionEventRestored,
     BHTWebSessionEventRefreshSaved,
     BHTWebSessionEventKeychainRetry,
+    BHTWebSessionEventNavigationStarted,
+    BHTWebSessionEventNavigationCommitted,
+    BHTWebSessionEventNavigationFinished,
+    BHTWebSessionEventNavigationFailed,
+    BHTWebSessionEventNavigationBlocked,
+    BHTWebSessionEventWebProcessTerminated,
+    BHTWebSessionEventReadinessUnavailable,
+    BHTWebSessionEventReloadTapped,
+    BHTWebSessionEventKeyboardDismissed,
     BHTWebSessionEventCount,
 };
 
@@ -434,6 +443,7 @@ static UIViewController* BHTWebSessionActiveController(void) {
 }
 
 static BOOL BHTWebSessionNavigationURLIsAllowed(NSURL* URL) {
+    if (![URL isKindOfClass:NSURL.class]) return NO;
     if (BHTWebSessionURLIsAllowed(URL)) return YES;
     NSURLComponents* components =
         [NSURLComponents componentsWithURL:URL
@@ -455,6 +465,10 @@ static BOOL BHTWebSessionNavigationURLIsAllowed(NSURL* URL) {
 @property(nonatomic, strong) UILabel* statusLabel;
 @property(nonatomic, strong) UIButton* useAccountButton;
 @property(nonatomic, strong) UIActivityIndicatorView* activity;
+@property(nonatomic, strong) UILabel* privacyLabel;
+@property(nonatomic, strong) UIStackView* statusRow;
+@property(nonatomic, strong) UIBarButtonItem* confirmNavigationItem;
+@property(nonatomic, strong) UIBarButtonItem* browserMenuItem;
 @property(nonatomic, weak) UIViewController* addAccountController;
 @property(nonatomic) BOOL busy;
 @property(nonatomic) BOOL rootSignIn;
@@ -464,9 +478,12 @@ static BOOL BHTWebSessionNavigationURLIsAllowed(NSURL* URL) {
 @property(nonatomic) NSUInteger operationGeneration;
 @property(nonatomic, copy) NSString* detectedHandle;
 @property(nonatomic, copy) NSDictionary* savedConnection;
-@property(nonatomic, strong) UIBarButtonItem* savedAccountsItem;
+@property(nonatomic, copy) NSURL* readinessURL;
 - (void)connectSavedSession:(NSDictionary*)session;
 - (void)updateReadiness;
+- (void)updateConfirmationControls;
+- (void)updateBrowserMenu;
+- (NSDictionary*)presentationSnapshot;
 @end
 
 static char kBHTSignInURLObservation;
@@ -483,20 +500,15 @@ static char kBHTSignInURLObservation;
             initWithBarButtonSystemItem:UIBarButtonSystemItemClose
                                  target:self
                                  action:@selector(closeTapped)];
-    if (BHTSharedSessionVault().sessions.count) {
-        self.navigationItem.rightBarButtonItem =
-            [[UIBarButtonItem alloc]
-                initWithTitle:BHTWebSessionLocalized(
-                    @"SECURE_WEB_SIGN_IN_SAVED_ACCOUNTS")
-                         style:UIBarButtonItemStylePlain
-                        target:self
-                        action:@selector(removeTapped)];
-    }
-    UIBarButtonItem* report = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAction
-        target:self action:@selector(shareReport:)];
-    report.accessibilityLabel = BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_REPORT");
-    self.navigationItem.rightBarButtonItems = self.navigationItem.rightBarButtonItem
-        ? @[self.navigationItem.rightBarButtonItem, report] : @[report];
+    // Keep an explicit confirmation action in the navigation bar as well as
+    // the footer. It remains reachable above an iPhone keyboard in landscape.
+    self.confirmNavigationItem = [[UIBarButtonItem alloc]
+        initWithTitle:BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_CONTINUE")
+        style:UIBarButtonItemStyleDone target:self action:@selector(useAccountTapped)];
+    self.browserMenuItem = [[UIBarButtonItem alloc] initWithImage:
+        [UIImage systemImageNamed:@"ellipsis.circle"] menu:nil];
+    self.browserMenuItem.accessibilityLabel = BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_BROWSER_OPTIONS");
+    self.navigationItem.rightBarButtonItems = @[self.confirmNavigationItem, self.browserMenuItem];
 
     UILabel* privacy = [UILabel new];
     privacy.translatesAutoresizingMaskIntoConstraints = NO;
@@ -507,6 +519,7 @@ static char kBHTSignInURLObservation;
     privacy.textColor = UIColor.secondaryLabelColor;
     privacy.adjustsFontForContentSizeCategory = YES;
     privacy.numberOfLines = 0;
+    self.privacyLabel = privacy;
 
     WKWebViewConfiguration* configuration =
         [WKWebViewConfiguration new];
@@ -520,6 +533,7 @@ static char kBHTSignInURLObservation;
     self.webView.navigationDelegate = self;
     self.webView.UIDelegate = self;
     self.webView.allowsBackForwardNavigationGestures = YES;
+    self.webView.scrollView.keyboardDismissMode = UIScrollViewKeyboardDismissModeInteractive;
     [self.webView addObserver:self forKeyPath:@"URL" options:NSKeyValueObservingOptionNew context:&kBHTSignInURLObservation];
 
     self.statusLabel = [UILabel new];
@@ -540,6 +554,10 @@ static char kBHTSignInURLObservation;
                             forState:UIControlStateNormal];
     self.useAccountButton.titleLabel.font = [UIFont
         preferredFontForTextStyle:UIFontTextStyleHeadline];
+    self.useAccountButton.titleLabel.adjustsFontForContentSizeCategory = YES;
+    self.useAccountButton.titleLabel.numberOfLines = 2;
+    self.useAccountButton.titleLabel.textAlignment = NSTextAlignmentCenter;
+    self.useAccountButton.contentEdgeInsets = UIEdgeInsetsMake(10, 12, 10, 12);
     self.useAccountButton.backgroundColor = UIColor.systemBlueColor;
     [self.useAccountButton setTitleColor:UIColor.whiteColor
                                forState:UIControlStateNormal];
@@ -553,46 +571,145 @@ static char kBHTSignInURLObservation;
     self.activity.translatesAutoresizingMaskIntoConstraints = NO;
     self.activity.hidesWhenStopped = YES;
 
-    [self.view addSubview:privacy];
+    UIStackView* header = [[UIStackView alloc] initWithArrangedSubviews:@[privacy]];
+    header.translatesAutoresizingMaskIntoConstraints = NO;
+    header.axis = UILayoutConstraintAxisVertical;
+    self.statusRow = [[UIStackView alloc] initWithArrangedSubviews:@[self.statusLabel, self.activity]];
+    self.statusRow.axis = UILayoutConstraintAxisHorizontal;
+    self.statusRow.alignment = UIStackViewAlignmentCenter;
+    self.statusRow.spacing = 8;
+    UIStackView* footer = [[UIStackView alloc] initWithArrangedSubviews:@[self.statusRow, self.useAccountButton]];
+    footer.translatesAutoresizingMaskIntoConstraints = NO;
+    footer.axis = UILayoutConstraintAxisVertical;
+    footer.spacing = 8;
+    [self.view addSubview:header];
     [self.view addSubview:self.webView];
-    [self.view addSubview:self.statusLabel];
-    [self.view addSubview:self.useAccountButton];
-    [self.view addSubview:self.activity];
+    [self.view addSubview:footer];
     UILayoutGuide* safe = self.view.safeAreaLayoutGuide;
+    // Follow a docked keyboard. A floating iPad keyboard keeps the footer at
+    // the normal safe area, preserving the already-working iPad presentation.
+    self.view.keyboardLayoutGuide.followsUndockedKeyboard = NO;
+    NSLayoutConstraint* minimumButtonHeight = [self.useAccountButton.heightAnchor constraintGreaterThanOrEqualToConstant:48];
+    minimumButtonHeight.priority = UILayoutPriorityDefaultHigh;
     [NSLayoutConstraint activateConstraints:@[
-        [privacy.topAnchor constraintEqualToAnchor:safe.topAnchor
-                                          constant:10.0],
-        [privacy.leadingAnchor constraintEqualToAnchor:safe.leadingAnchor
+        [header.topAnchor constraintEqualToAnchor:safe.topAnchor constant:8],
+        [header.leadingAnchor constraintEqualToAnchor:safe.leadingAnchor
                                               constant:14.0],
-        [privacy.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor
+        [header.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor
                                                constant:-14.0],
-        [self.webView.topAnchor constraintEqualToAnchor:privacy.bottomAnchor
-                                               constant:10.0],
+        [self.webView.topAnchor constraintEqualToAnchor:header.bottomAnchor constant:8],
         [self.webView.leadingAnchor constraintEqualToAnchor:safe.leadingAnchor],
         [self.webView.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor],
-        [self.statusLabel.topAnchor constraintEqualToAnchor:self.webView.bottomAnchor
-                                                   constant:8.0],
-        [self.statusLabel.leadingAnchor constraintEqualToAnchor:safe.leadingAnchor
-                                                       constant:14.0],
-        [self.statusLabel.trailingAnchor constraintEqualToAnchor:self.activity.leadingAnchor
-                                                        constant:-8.0],
-        [self.activity.centerYAnchor constraintEqualToAnchor:self.statusLabel.centerYAnchor],
-        [self.activity.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor
-                                                     constant:-14.0],
-        [self.useAccountButton.topAnchor constraintEqualToAnchor:self.statusLabel.bottomAnchor
-                                                        constant:10.0],
-        [self.useAccountButton.leadingAnchor constraintEqualToAnchor:safe.leadingAnchor
-                                                            constant:14.0],
-        [self.useAccountButton.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor
-                                                             constant:-14.0],
-        [self.useAccountButton.bottomAnchor constraintEqualToAnchor:safe.bottomAnchor
-                                                           constant:-12.0],
-        [self.useAccountButton.heightAnchor constraintEqualToConstant:48.0],
+        [self.webView.bottomAnchor constraintEqualToAnchor:footer.topAnchor constant:-8],
+        [self.webView.heightAnchor constraintGreaterThanOrEqualToConstant:0],
+        [footer.leadingAnchor constraintEqualToAnchor:safe.leadingAnchor constant:14],
+        [footer.trailingAnchor constraintEqualToAnchor:safe.trailingAnchor constant:-14],
+        [footer.bottomAnchor constraintEqualToAnchor:self.view.keyboardLayoutGuide.topAnchor constant:-8],
+        minimumButtonHeight,
     ]];
 
+    [self updateBrowserMenu];
     NSURL* URL = [NSURL URLWithString:@"https://x.com/i/flow/login"];
     [self.webView loadRequest:[NSURLRequest requestWithURL:URL]];
-    self.useAccountButton.enabled = NO;
+    [self updateConfirmationControls];
+}
+
+- (void)viewDidLayoutSubviews {
+    [super viewDidLayoutSubviews];
+    CGFloat availableHeight = CGRectGetMinY(self.view.keyboardLayoutGuide.layoutFrame) -
+        CGRectGetMinY(self.view.safeAreaLayoutGuide.layoutFrame);
+    // Give X the remaining viewport on a short screen. The top Continue
+    // action stays available when there is too little room for a full footer.
+    BOOL hidePrivacy = availableHeight < 420;
+    BOOL hideStatus = availableHeight < 260;
+    BOOL hideFooterButton = availableHeight < 180;
+    if (self.privacyLabel.hidden != hidePrivacy) self.privacyLabel.hidden = hidePrivacy;
+    if (self.statusRow.hidden != hideStatus) self.statusRow.hidden = hideStatus;
+    if (self.useAccountButton.hidden != hideFooterButton) self.useAccountButton.hidden = hideFooterButton;
+}
+
+- (void)updateBrowserMenu {
+    __weak typeof(self) weakSelf = self;
+    UIAction* back = [UIAction actionWithTitle:BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_BACK")
+        image:[UIImage systemImageNamed:@"chevron.backward"] identifier:nil handler:^(__unused UIAction* action) {
+            if (!weakSelf.busy && weakSelf.webView.canGoBack) [weakSelf.webView goBack];
+        }];
+    if (!self.webView.canGoBack) back.attributes = UIMenuElementAttributesDisabled;
+    UIAction* reload = [UIAction actionWithTitle:BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_RELOAD")
+        image:[UIImage systemImageNamed:@"arrow.clockwise"] identifier:nil handler:^(__unused UIAction* action) {
+            typeof(self) strongSelf = weakSelf;
+            if (!strongSelf || strongSelf.busy) return;
+            BHTWebSessionRecord(BHTWebSessionEventReloadTapped);
+            [strongSelf.view endEditing:YES];
+            NSURL* URL = BHTWebSessionNavigationURLIsAllowed(strongSelf.webView.URL)
+                ? strongSelf.webView.URL : [NSURL URLWithString:@"https://x.com/i/flow/login"];
+            // Reload with GET, never replay a password submission.
+            [strongSelf.webView loadRequest:[NSURLRequest requestWithURL:URL]];
+        }];
+    UIAction* keyboard = [UIAction actionWithTitle:BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_HIDE_KEYBOARD")
+        image:[UIImage systemImageNamed:@"keyboard.chevron.compact.down"] identifier:nil handler:^(__unused UIAction* action) {
+            BHTWebSessionRecord(BHTWebSessionEventKeyboardDismissed);
+            [weakSelf.view endEditing:YES];
+        }];
+    UIAction* accounts = [UIAction actionWithTitle:BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_SAVED_ACCOUNTS")
+        image:[UIImage systemImageNamed:@"person.crop.circle"] identifier:nil handler:^(__unused UIAction* action) {
+            [weakSelf removeTapped];
+        }];
+    if (!BHTSharedSessionVault().sessions.count) accounts.attributes = UIMenuElementAttributesDisabled;
+    UIAction* report = [UIAction actionWithTitle:BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_REPORT")
+        image:[UIImage systemImageNamed:@"square.and.arrow.up"] identifier:nil handler:^(__unused UIAction* action) {
+            typeof(self) strongSelf = weakSelf;
+            [strongSelf shareReport:strongSelf.browserMenuItem];
+        }];
+    self.browserMenuItem.menu = [UIMenu menuWithTitle:@"" children:@[back, reload, keyboard, accounts, report]];
+}
+
+- (void)updateConfirmationControls {
+    BHTWebSignInAction action = BHTWebSignInActionForState(self.webView.URL,
+        self.busy || self.completed, self.savedConnection != nil, self.pageReady);
+    BOOL enabled = action != BHTWebSignInActionUnavailable;
+    self.useAccountButton.enabled = enabled;
+    self.confirmNavigationItem.enabled = enabled;
+    NSString* title;
+    if (self.savedConnection && !self.pageReady) title = BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_RETRY_CONNECTION");
+    else if (self.pageReady && self.detectedHandle.length) title = [NSString stringWithFormat:
+        BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_CONTINUE_AS"), self.detectedHandle];
+    else title = BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_CONTINUE");
+    [self.useAccountButton setTitle:title forState:UIControlStateNormal];
+    self.confirmNavigationItem.title = BHTWebSessionLocalized(self.savedConnection && !self.pageReady
+        ? @"SECURE_WEB_SIGN_IN_RETRY" : @"SECURE_WEB_SIGN_IN_CONTINUE");
+}
+
+- (NSDictionary*)presentationSnapshot {
+    if (!NSThread.isMainThread || !self.isViewLoaded) return @{@"measured":@NO};
+    CGRect visible = self.view.safeAreaLayoutGuide.layoutFrame;
+    CGFloat keyboardTop = CGRectGetMinY(self.view.keyboardLayoutGuide.layoutFrame);
+    visible.size.height = MAX(0, MIN(CGRectGetMaxY(visible), keyboardTop) - CGRectGetMinY(visible));
+    CGRect button = [self.useAccountButton convertRect:self.useAccountButton.bounds toView:self.view];
+    CGRect intersection = CGRectIntersection(visible, button);
+    BOOL buttonVisible = self.view.window && !self.useAccountButton.hidden &&
+        !CGRectIsNull(intersection) && CGRectGetHeight(intersection) >= 40;
+    BOOL navigationVisible = self.navigationController.topViewController == self &&
+        !self.navigationController.navigationBarHidden && self.navigationController.navigationBar.window != nil;
+    BHTWebSignInAction action = BHTWebSignInActionForState(self.webView.URL,
+        self.busy || self.completed, self.savedConnection != nil, self.pageReady);
+    NSString* page = BHTWebSessionURLIsAllowed(self.webView.URL) ? @"x_page" :
+        (BHTWebSessionNavigationURLIsAllowed(self.webView.URL) ? @"identity_provider" : @"not_available");
+    if (self.pageReady) page = @"signed_in_landing";
+    return @{
+        @"measured":@YES, @"phoneLayout":@(self.traitCollection.userInterfaceIdiom == UIUserInterfaceIdiomPhone),
+        @"windowAttached":@(self.view.window != nil),
+        @"viewWidth":@(CGRectGetWidth(self.view.bounds)), @"viewHeight":@(CGRectGetHeight(self.view.bounds)),
+        @"webViewHeight":@(CGRectGetHeight(self.webView.bounds)),
+        @"keyboardSafeHeight":@(CGRectGetHeight(visible)),
+        @"footerConfirmationVisible":@(buttonVisible),
+        @"navigationConfirmationVisible":@(navigationVisible),
+        @"confirmationEnabled":@(action != BHTWebSignInActionUnavailable),
+        @"confirmationAction":action == BHTWebSignInActionReconnect ? @"reconnect" :
+            (action == BHTWebSignInActionConfirm ? @"manual_confirmation" : @"disabled"),
+        @"pageKind":page, @"webViewLoading":@(self.webView.loading),
+        @"signedInLayoutDetected":@(self.pageReady),
+    };
 }
 
 - (void)dealloc {
@@ -602,6 +719,7 @@ static char kBHTSignInURLObservation;
 
 - (void)viewDidAppear:(BOOL)animated {
     [super viewDidAppear:animated];
+    [self updateReadiness];
     if (!self.rootSignIn || self.attemptedRestore) return;
     self.attemptedRestore = YES;
     NSDictionary* session = BHTWebSessionCopySession();
@@ -613,32 +731,40 @@ static char kBHTSignInURLObservation;
     }
 }
 
+- (void)viewWillAppear:(BOOL)animated {
+    [super viewWillAppear:animated];
+    [self.navigationController setNavigationBarHidden:NO animated:NO];
+}
+
 - (void)observeValueForKeyPath:(NSString*)keyPath ofObject:(id)object change:(NSDictionary*)change context:(void*)context {
     if (context != &kBHTSignInURLObservation) { [super observeValueForKeyPath:keyPath ofObject:object change:change context:context]; return; }
     dispatch_async(dispatch_get_main_queue(), ^{ [self updateReadiness]; });
 }
 
 - (void)updateReadiness {
-    if (self.busy || self.completed || !BHTWebSessionURLIsAllowed(self.webView.URL)) return;
+    NSURL* URL = self.webView.URL;
+    if (![self.readinessURL isEqual:URL]) {
+        self.readinessURL = URL;
+        self.pageReady = NO;
+        self.detectedHandle = nil;
+    }
+    [self updateConfirmationControls];
+    [self updateBrowserMenu];
+    if (self.busy || self.completed || !BHTWebSessionURLIsAllowed(URL)) return;
     NSString* script = @"(() => { const a = document.querySelector('a[data-testid=\"AppTabBar_Profile_Link\"]'); if (!a) return null; const m = (a.getAttribute('href') || '').match(/^\\/([A-Za-z0-9_]{1,15})(?:\\/|$)/); return m ? m[1] : null; })()";
     __weak typeof(self) weakSelf = self;
-    [self.webView evaluateJavaScript:script completionHandler:^(id value, __unused NSError* error) {
+    [self.webView evaluateJavaScript:script completionHandler:^(id value, NSError* error) {
         typeof(self) strongSelf = weakSelf;
-        if (!strongSelf || strongSelf.busy || strongSelf.completed) return;
+        if (!strongSelf || strongSelf.busy || strongSelf.completed || ![strongSelf.webView.URL isEqual:URL]) return;
+        if (error) BHTWebSessionRecord(BHTWebSessionEventReadinessUnavailable);
         strongSelf.detectedHandle = BHTWebSessionNormalizedHandle(value);
         NSString* path = strongSelf.webView.URL.path;
         strongSelf.pageReady = strongSelf.detectedHandle.length > 0 || [path isEqualToString:@"/home"];
         if (strongSelf.pageReady) {
             strongSelf.savedConnection = nil;
-            strongSelf.useAccountButton.enabled = YES;
             strongSelf.statusLabel.text = BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_READY");
-            NSString* title = strongSelf.detectedHandle.length ?
-                [NSString stringWithFormat:BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_CONTINUE_AS"),strongSelf.detectedHandle] :
-                BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_USE_ACCOUNT");
-            [strongSelf.useAccountButton setTitle:title forState:UIControlStateNormal];
-        } else if (!strongSelf.savedConnection) {
-            strongSelf.useAccountButton.enabled = NO;
         }
+        [strongSelf updateConfirmationControls];
     }];
 }
 
@@ -653,9 +779,9 @@ static char kBHTSignInURLObservation;
 - (void)setBusy:(BOOL)busy message:(NSString*)message {
     self.busy = busy;
     self.webView.userInteractionEnabled = !busy;
-    self.useAccountButton.enabled = !busy && (self.pageReady || self.savedConnection != nil);
     self.navigationItem.leftBarButtonItem.enabled = !busy;
     for (UIBarButtonItem* item in self.navigationItem.rightBarButtonItems) item.enabled = !busy;
+    [self updateConfirmationControls];
     self.statusLabel.text = message ?: @"";
     self.statusLabel.textColor = UIColor.secondaryLabelColor;
     if (busy) [self.activity startAnimating];
@@ -689,7 +815,7 @@ static char kBHTSignInURLObservation;
         }]];
     }
     [accounts addAction:[UIAlertAction actionWithTitle:BHTWebSessionLocalized(@"SECURE_WEB_SIGN_IN_CANCEL") style:UIAlertActionStyleCancel handler:nil]];
-    accounts.popoverPresentationController.barButtonItem = self.navigationItem.rightBarButtonItems.firstObject;
+    accounts.popoverPresentationController.barButtonItem = self.browserMenuItem;
     [self presentViewController:accounts animated:YES completion:nil];
 }
 
@@ -839,8 +965,11 @@ static char kBHTSignInURLObservation;
 }
 
 - (void)useAccountTapped {
-    if (self.busy) return;
-    if (self.savedConnection && !self.pageReady) { [self connectSavedSession:self.savedConnection]; return; }
+    BHTWebSignInAction action = BHTWebSignInActionForState(self.webView.URL,
+        self.busy || self.completed, self.savedConnection != nil, self.pageReady);
+    if (action == BHTWebSignInActionUnavailable) return;
+    [self.view endEditing:YES];
+    if (action == BHTWebSignInActionReconnect) { [self connectSavedSession:self.savedConnection]; return; }
     NSUInteger generation = ++self.operationGeneration;
     BHTWebSessionRecord(BHTWebSessionEventConfirmationTapped);
     if (!BHTWebSessionURLIsAllowed(self.webView.URL)) {
@@ -905,14 +1034,23 @@ static char kBHTSignInURLObservation;
 
 - (void)webView:(WKWebView*)webView
     didStartProvisionalNavigation:(WKNavigation*)navigation {
+    BHTWebSessionRecord(BHTWebSessionEventNavigationStarted);
     if (!self.busy) {
         self.statusLabel.text = BHTWebSessionLocalized(
             @"SECURE_WEB_SIGN_IN_LOADING");
+        self.statusLabel.textColor = UIColor.secondaryLabelColor;
     }
+    [self updateReadiness];
+}
+
+- (void)webView:(WKWebView*)webView didCommitNavigation:(WKNavigation*)navigation {
+    BHTWebSessionRecord(BHTWebSessionEventNavigationCommitted);
+    [self updateReadiness];
 }
 
 - (void)webView:(WKWebView*)webView
     didFinishNavigation:(WKNavigation*)navigation {
+    BHTWebSessionRecord(BHTWebSessionEventNavigationFinished);
     if (!self.busy) {
         self.statusLabel.text = BHTWebSessionLocalized(
             @"SECURE_WEB_SIGN_IN_STATUS");
@@ -923,9 +1061,20 @@ static char kBHTSignInURLObservation;
 - (void)webView:(WKWebView*)webView
     didFailProvisionalNavigation:(WKNavigation*)navigation
                        withError:(NSError*)error {
+    if (error.code != NSURLErrorCancelled) BHTWebSessionRecord(BHTWebSessionEventNavigationFailed);
     if (!self.busy && error.code != NSURLErrorCancelled) {
         [self showErrorKey:@"SECURE_WEB_SIGN_IN_LOAD_ERROR"];
     }
+}
+
+- (void)webView:(WKWebView*)webView didFailNavigation:(WKNavigation*)navigation withError:(NSError*)error {
+    [self webView:webView didFailProvisionalNavigation:navigation withError:error];
+}
+
+- (void)webViewWebContentProcessDidTerminate:(WKWebView*)webView {
+    BHTWebSessionRecord(BHTWebSessionEventWebProcessTerminated);
+    if (!self.busy) [self showErrorKey:@"SECURE_WEB_SIGN_IN_PROCESS_STOPPED"];
+    // Recovery is user initiated; do not replay a sign-in form automatically.
 }
 
 - (void)webView:(WKWebView*)webView
@@ -935,8 +1084,9 @@ static char kBHTSignInURLObservation;
         (!action.targetFrame.isMainFrame && [action.request.URL.scheme isEqualToString:@"about"])) {
         handler(WKNavigationActionPolicyAllow);
     } else {
+        BHTWebSessionRecord(BHTWebSessionEventNavigationBlocked);
         handler(WKNavigationActionPolicyCancel);
-        if (!self.busy) {
+        if (!self.busy && action.navigationType == WKNavigationTypeLinkActivated) {
             [self showErrorKey:@"SECURE_WEB_SIGN_IN_BLOCKED_HOST"];
         }
     }
@@ -964,6 +1114,9 @@ UIViewController* BHTSecureWebSessionOnboardingController(void) {
     BHTSecureWebSessionViewController* controller = [BHTSecureWebSessionViewController new];
     controller.rootSignIn = YES;
     UINavigationController* navigation = [[UINavigationController alloc] initWithRootViewController:controller];
+    if (UIDevice.currentDevice.userInterfaceIdiom == UIUserInterfaceIdiomPhone) {
+        navigation.modalPresentationStyle = UIModalPresentationFullScreen;
+    }
     BHTWebSessionPresentedController = navigation;
     BHTWebSessionRecord(BHTWebSessionEventPresented);
     return navigation;
@@ -987,7 +1140,8 @@ static void BHTPresentSecureWebSessionBrowser(
     UINavigationController* navigation =
         [[UINavigationController alloc]
             initWithRootViewController:controller];
-    navigation.modalPresentationStyle = UIModalPresentationFormSheet;
+    navigation.modalPresentationStyle = source.traitCollection.userInterfaceIdiom == UIUserInterfaceIdiomPhone
+        ? UIModalPresentationFullScreen : UIModalPresentationFormSheet;
     navigation.preferredContentSize = CGSizeMake(620.0, 760.0);
     BHTWebSessionPresentedController = navigation;
     BHTWebSessionRecord(BHTWebSessionEventPresented);
@@ -1041,6 +1195,15 @@ BHTSecureWebSessionDiagnosticSnapshot(void) {
         @"restored",
         @"refreshSaved",
         @"keychainRetry",
+        @"navigationStarted",
+        @"navigationCommitted",
+        @"navigationFinished",
+        @"navigationFailed",
+        @"navigationBlocked",
+        @"webProcessTerminated",
+        @"readinessScriptUnavailable",
+        @"reloadTapped",
+        @"keyboardDismissed",
     ];
     NSMutableDictionary* counters =
         [NSMutableDictionary dictionaryWithCapacity:names.count];
@@ -1049,6 +1212,12 @@ BHTSecureWebSessionDiagnosticSnapshot(void) {
         counters[name] = @(atomic_load_explicit(
             &BHTWebSessionCounters[index], memory_order_relaxed));
     }];
+    NSDictionary* presentation = @{@"measured":@NO};
+    if (NSThread.isMainThread) {
+        UIViewController* source = BHTWebSessionPresentedController;
+        if ([source isKindOfClass:UINavigationController.class]) source = ((UINavigationController*)source).topViewController;
+        if ([source isKindOfClass:BHTSecureWebSessionViewController.class]) presentation = [(BHTSecureWebSessionViewController*)source presentationSnapshot];
+    }
     return @{
         @"available": @(BHTSecureWebSessionSignInIsAvailable()),
         @"activeSessionPresent":
@@ -1070,6 +1239,10 @@ BHTSecureWebSessionDiagnosticSnapshot(void) {
         @"temporaryKeychainErrorsAreRetryable": @YES,
         @"savedAccountRestorationIncluded": @YES,
         @"freshSignInUsesEphemeralStore": @YES,
+        @"manualConfirmationWithoutProfileLink": @YES,
+        @"confirmationAvailableInNavigationBar": @YES,
+        @"keyboardAwareSignInLayout": @YES,
+        @"presentation": presentation,
         @"revocationClearsKeychainAndWebData": @YES,
         @"counters": [counters copy],
     };

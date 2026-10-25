@@ -114,7 +114,7 @@
 "COMPATIBILITY_SIGN_IN_ADD_ACCOUNT_ACTION" = "Secure Web Sign-in";
 "SECURE_WEB_SIGN_IN_TITLE" = "Sign in to X";
 "SECURE_WEB_SIGN_IN_PRIVACY" = "Sign in directly on X's website below. NeoFreeBird does not read your password. Tap Continue when you're ready; your saved sign-in stays on this device.";
-"SECURE_WEB_SIGN_IN_STATUS" = "Finish signing in on x.com, then tap Use This Account.";
+"SECURE_WEB_SIGN_IN_STATUS" = "Finish signing in on X above, then tap Continue. You can also use Continue in the top bar.";
 "SECURE_WEB_SIGN_IN_LOADING" = "Loading X's secure sign-in page…";
 "SECURE_WEB_SIGN_IN_USE_ACCOUNT" = "Use This Account";
 "SECURE_WEB_SIGN_IN_CHECKING" = "Checking the signed-in X session…";
@@ -138,6 +138,11 @@
 "SECURE_WEB_SIGN_IN_HANDLE_DETAIL" = "Enter the @username for the account visible in the web page. This label is stored with the encrypted session; your password is never requested.";
 "SECURE_WEB_SIGN_IN_HANDLE_INVALID" = "Enter a valid X username with up to 15 letters, numbers, or underscores.";
 "SECURE_WEB_SIGN_IN_CONTINUE" = "Continue";
+"SECURE_WEB_SIGN_IN_RETRY" = "Retry";
+"SECURE_WEB_SIGN_IN_BROWSER_OPTIONS" = "Sign-in options";
+"SECURE_WEB_SIGN_IN_BACK" = "Back";
+"SECURE_WEB_SIGN_IN_RELOAD" = "Reload sign-in page";
+"SECURE_WEB_SIGN_IN_HIDE_KEYBOARD" = "Hide keyboard";
 "SECURE_WEB_SIGN_IN_CANCEL" = "Cancel";
 "SECURE_WEB_SIGN_IN_REMOVE" = "Remove Session";
 "SECURE_WEB_SIGN_IN_REMOVE_TITLE" = "Remove saved web session?";
@@ -145,7 +150,8 @@
 "SECURE_WEB_SIGN_IN_REMOVING" = "Removing the saved X session…";
 "SECURE_WEB_SIGN_IN_REMOVED" = "The saved session was removed.";
 "SECURE_WEB_SIGN_IN_REMOVED_ACCOUNT_REMAINS" = "The saved session and website data were removed. X did not expose its account-removal method, so remove any stale account entry from X's account picker.";
-"SECURE_WEB_SIGN_IN_LOAD_ERROR" = "X's sign-in page could not be loaded. Check your connection and try again.";
+"SECURE_WEB_SIGN_IN_LOAD_ERROR" = "X's sign-in page could not be loaded. Check your connection, then choose Reload sign-in page from the options at the top.";
+"SECURE_WEB_SIGN_IN_PROCESS_STOPPED" = "The sign-in page stopped responding. Choose Reload sign-in page from the options at the top to continue.";
 "SECURE_WEB_SIGN_IN_BLOCKED_HOST" = "For safety, this sign-in screen only opens X, Google, and Apple account pages.";
 "SECURE_WEB_SIGN_IN_UNAVAILABLE" = "Secure Web Sign-in is unavailable in this X build. Install the matching NeoFreeBird build and try again.";
 

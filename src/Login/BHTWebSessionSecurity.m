@@ -29,6 +29,12 @@ BOOL BHTWebSessionURLIsAllowed(NSURL* URL) {
            BHTWebSessionHostMatchesDomain(host, @"twitter.com");
 }
 
+BHTWebSignInAction BHTWebSignInActionForState(NSURL* URL, BOOL busy, BOOL hasSavedSession, BOOL signedInLanding) {
+    if (busy) return BHTWebSignInActionUnavailable;
+    if (hasSavedSession && !signedInLanding) return BHTWebSignInActionReconnect;
+    return BHTWebSessionURLIsAllowed(URL) ? BHTWebSignInActionConfirm : BHTWebSignInActionUnavailable;
+}
+
 NSString* BHTWebSessionNormalizedHandle(id value) {
     if (![value isKindOfClass:NSString.class]) return nil;
     NSString* handle = [(NSString*)value

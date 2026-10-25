@@ -13,6 +13,27 @@ static NSUInteger countOccurrences(NSString* value, NSString* needle) {
 }
 
 static void testWebSessionSecurity(void) {
+    // On iPhone X can omit the desktop profile link or finish on a different
+    // first-party route. A user must still be able to explicitly confirm.
+    for (NSString* page in @[@"https://x.com/i/flow/login", @"https://x.com/", @"https://x.com/home", @"https://twitter.com/settings/account"]) {
+        NSURL* URL = [NSURL URLWithString:page];
+        NSCAssert(BHTWebSignInActionForState(URL, NO, NO, NO) == BHTWebSignInActionConfirm,
+            @"Missing signed-in page detection must not disable manual confirmation on X");
+        NSCAssert(BHTWebSignInActionForState(URL, YES, NO, YES) == BHTWebSignInActionUnavailable,
+            @"A confirmation already in progress cannot be started twice");
+        NSCAssert(BHTWebSignInActionForState(URL, NO, YES, NO) == BHTWebSignInActionReconnect,
+            @"Keep the explicit saved-session retry action when connecting failed");
+        NSCAssert(BHTWebSignInActionForState(URL, NO, YES, YES) == BHTWebSignInActionConfirm,
+            @"A newly signed-in web account must take priority over the old retry");
+    }
+    for (NSString* page in @[@"about:blank", @"https://accounts.google.com/", @"https://appleid.apple.com/", @"https://x.com.evil.example/home", @"http://x.com/home"]) {
+        NSCAssert(BHTWebSignInActionForState([NSURL URLWithString:page], NO, NO, YES) == BHTWebSignInActionUnavailable,
+            @"A stale ready flag cannot enable cookie confirmation outside first-party HTTPS");
+    }
+    NSCAssert(BHTWebSignInActionForState(nil, NO, NO, NO) == BHTWebSignInActionUnavailable,
+        @"Wait for a real X page instead of confirming a blank browser");
+    NSCAssert(BHTWebSignInActionForState(nil, NO, YES, NO) == BHTWebSignInActionReconnect,
+        @"A confirmed saved account can reconnect even if the new login page has not loaded");
     for (NSString* allowed in @[
              @"https://x.com/home",
              @"https://api.x.com/2/timeline",
@@ -87,5 +108,5 @@ static void testWebSessionSecurity(void) {
               @"Emit exactly one value for each authentication cookie");
     NSCAssert([merged containsString:@"twid=u%3D99"],
               @"Encode the validated user ID in X's cookie form");
-    puts("PASS: secure web-session host, identifier, credential, and cookie validation");
+    puts("PASS: mobile/manual sign-in confirmation, saved-session retries, and secure host, identifier, credential, and cookie validation");
 }
