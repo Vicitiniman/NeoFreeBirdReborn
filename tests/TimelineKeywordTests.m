@@ -136,6 +136,7 @@ static BOOL hiddenForContentGeneration(
 
 int main(void) {
     @autoreleasepool {
+        testTabViewAppearance();
         testProfileMediaAndGrok();
         testHostCompatibility();
         testSwiftFieldMetadata();

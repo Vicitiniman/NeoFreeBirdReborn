@@ -4296,7 +4296,7 @@ def main() -> None:
             "navigation delegate"
         )
 
-    if "Version: 6.1.0-beta.69" not in (
+    if "Version: 6.1.0-beta.70" not in (
         ROOT / "control"
     ).read_text(encoding="utf-8"):
         raise AssertionError(

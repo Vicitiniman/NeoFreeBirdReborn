@@ -43,6 +43,9 @@ void BHTRefreshTabViewAppearance(UIView* tabView) {
     if (!tabView) return;
     BOOL show = [BHTSettings boolForKey:@"restore_tab_labels"];
     UILabel* label = objc_getAssociatedObject(tabView, &BHTTabLabelKey);
+    // With labels off there is no label to update. Messaging nil reports
+    // hidden == NO, which otherwise schedules a new layout on every pass.
+    if (!show && !label) return;
     if (show && !label) {
         label = [[UILabel alloc] initWithFrame:CGRectZero];
         label.font = [UIFont systemFontOfSize:10 weight:UIFontWeightMedium];
@@ -64,6 +67,7 @@ void BHTRefreshTabViewAppearance(UIView* tabView) {
         label.hidden = hidden;
         [tabView setNeedsLayout];
     }
+    if (hidden) return;
     BOOL selected = NO;
     SEL selector = NSSelectorFromString(@"isSelected");
     Method method = class_getInstanceMethod([tabView class], selector);
@@ -132,5 +136,7 @@ void BHTLayoutTabViewAppearance(UIView* tabView) {
             state.appliedCenter = container.center;
         }
     }
-    [tabView bringSubviewToFront:label];
+    if (tabView.subviews.lastObject != label) {
+        [tabView bringSubviewToFront:label];
+    }
 }

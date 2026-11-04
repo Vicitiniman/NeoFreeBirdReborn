@@ -72,6 +72,10 @@ static NSUInteger BHTTestSettingsGeneration = 1;
 static BOOL ReportGenuineTabGates = NO;
 static BOOL AccountIsGenuinelyPremium(void) { return NO; }
 '''
+    unit += (ROOT / "tests/TabViewAppearanceFixture.m").read_text(encoding="utf8")
+    tabs_source = (ROOT / "src/CustomTabBar/BHTTabViewAppearance.m").read_text(encoding="utf8")
+    unit += tabs_source[tabs_source.index("static char BHTTabLabelKey;"):]
+    unit += (ROOT / "tests/TabViewAppearanceTests.m").read_text(encoding="utf8")
     unit += section(media_source, "static NSArray<BHTLikedMediaItem*>* BHTProfileMediaSnapshot", "@protocol BHTWaterfallLayoutDelegate")
     unit += section(media_source, "static CGFloat BHTMediaViewerCaptionWidth", "@interface BHTMediaPagerController")
     profile_source = (ROOT / "src/Hooks/Profile.x").read_text(encoding="utf8")
@@ -99,7 +103,8 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
         test_source.write_text(unit, encoding="utf8")
         binary = base / "native-tests"
         subprocess.run(["xcrun", "clang", "-fobjc-arc", "-fblocks", "-Werror=implicit-function-declaration",
-                        "-framework", "Foundation", "-framework", "Security", "-I", str(ROOT / "src"), str(test_source),
+                        "-framework", "Foundation", "-framework", "Security", "-framework", "CoreGraphics",
+                        "-I", str(ROOT / "src"), str(test_source),
                         str(ROOT / "src/Timeline/BHTForYouKeywordFilter.m"),
                         str(ROOT / "src/Timeline/BHTTimelineCleanup.m"),
                         str(ROOT / "src/Timeline/BHTTimelineModelRuntime.m"),
