@@ -119,5 +119,14 @@ static void testProfileMediaAndGrok(void) {
               @"Opting out restores X's own redesign decision");
     if (previousClassic) [defaults setObject:previousClassic forKey:@"classic_navigation"];
     else [defaults removeObjectForKey:@"classic_navigation"];
+    id previousBird = [defaults objectForKey:@"color_twitter_icon_in_top_bar"];
+    [defaults setBool:YES forKey:@"color_twitter_icon_in_top_bar"];
+    NSCAssert([FeatureSwitchOverrideValueForKey(@"ios_home_timeline_logo_pull_to_refresh_enabled") isEqual:@NO],
+              @"Restoring the bird avoids the new animated X-only title host");
+    [defaults setBool:NO forKey:@"color_twitter_icon_in_top_bar"];
+    NSCAssert(FeatureSwitchOverrideValueForKey(@"ios_home_timeline_logo_pull_to_refresh_enabled") == nil,
+              @"Turning bird branding off restores the native logo policy");
+    if (previousBird) [defaults setObject:previousBird forKey:@"color_twitter_icon_in_top_bar"];
+    else [defaults removeObjectForKey:@"color_twitter_icon_in_top_bar"];
     NSLog(@"PASS: profile media menu ordering, header offsets, snapshots, dimensions, isolation, and Grok promotion gate");
 }

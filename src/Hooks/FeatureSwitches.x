@@ -44,6 +44,11 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
     if ([key isEqualToString:@"ios_liquid_glass_redesign_enabled"]) {
         return [BHTSettings boolForKey:@"classic_navigation"] ? @NO : nil;
     }
+    // The new animated Home-logo host is not an UIImageView. While restoring
+    // the bird, retain X's image-based title path instead of its X animation.
+    if ([key isEqualToString:@"ios_home_timeline_logo_pull_to_refresh_enabled"]) {
+        return [BHTSettings boolForKey:@"color_twitter_icon_in_top_bar"] ? @NO : nil;
+    }
 
     // Custom timelines overrides
     BOOL hideCustomTimelines = [BHTSettings boolForKey:@"hide_custom_timelines"];
