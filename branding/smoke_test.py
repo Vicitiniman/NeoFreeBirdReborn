@@ -138,9 +138,9 @@ def main():
         assert b"xLogo" not in launch_archive
         assert b"tBird" in launch_archive
         for filename, size in {
-            "tBird.png": 24,
-            "tBird@2x.png": 48,
-            "tBird@3x.png": 72,
+            "tBird.png": 256,
+            "tBird@2x.png": 512,
+            "tBird@3x.png": 768,
         }.items():
             assert png_size(branded_app / filename) == (size, size)
         for key in ("CFBundleIcons", "CFBundleIcons~ipad"):

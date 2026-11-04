@@ -9,6 +9,15 @@ static BHTLikedMediaItem* media(NSString* identifier, double ratio, BOOL decoded
 }
 
 static void testProfileMediaAndGrok(void) {
+    NSCAssert(BHTMediaViewerCaptionWidth(393, NO) == 369,
+              @"iPhone captions retain their 12-point side margins");
+    NSCAssert(BHTMediaViewerCaptionWidth(1024, YES) == 640 &&
+              BHTMediaViewerCaptionWidth(1366, YES) == 640,
+              @"iPad captions stay centered at a readable width in both orientations");
+    NSCAssert(BHTMediaViewerCaptionWidth(320, YES) == 272,
+              @"Narrow iPad Split View uses the window width instead of the full screen");
+    NSCAssert(BHTMediaViewerCaptionWidth(20, YES) == 0,
+              @"Transient zero-sized windows cannot produce a negative caption width");
     // Native X 12.24.1 groups media as [Videos, Photos] and selects inner
     // index zero initially. The outer group index varies across accounts.
     NSObject* photos = [NSObject new];

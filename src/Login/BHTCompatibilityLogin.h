@@ -37,6 +37,9 @@ BOOL BHTCompatibilityInstallWebSessionAccount(
     UIViewController* _Nullable addAccountController,
     BHTCompatibilityWebSessionAccountCompletion _Nullable completion);
 BOOL BHTCompatibilityRemoveWebSessionAccount(NSString* screenName);
+BOOL BHTCompatibilityRemoveWebSessionAccountWithUserID(uint64_t userID);
+BOOL BHTCompatibilityRestoreWebSessionAccount(NSString* screenName, uint64_t userID);
+void BHTShareCompatibilitySignInReport(UIViewController* presenter, id _Nullable sender);
 
 // Aggregate stages, counters, and fixed capability identifiers only.
 // Credentials, tokens, URLs, response bodies, account identifiers, and raw

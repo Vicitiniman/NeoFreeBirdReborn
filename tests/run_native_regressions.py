@@ -27,6 +27,7 @@ def main():
 #import "Likes/BHTLikesNavigationUtility.h"
 #import "Compatibility/BHTCompatibilityReporter.h"
 #import "Login/BHTWebSessionSecurity.h"
+#import "Login/BHTWebSessionVault.h"
 NSString* const BHTSettingsProfileDidApplyNotification = @"TestProfileChanged";
 NSString* const TabPageKey = @"page";
 NSString* const TabTitleKey = @"title";
@@ -70,6 +71,7 @@ static BOOL ReportGenuineTabGates = NO;
 static BOOL AccountIsGenuinelyPremium(void) { return NO; }
 '''
     unit += section(media_source, "static NSArray<BHTLikedMediaItem*>* BHTProfileMediaSnapshot", "@protocol BHTWaterfallLayoutDelegate")
+    unit += section(media_source, "static CGFloat BHTMediaViewerCaptionWidth", "@interface BHTMediaPagerController")
     profile_source = (ROOT / "src/Hooks/Profile.x").read_text(encoding="utf8")
     unit += section(profile_source, "static NSArray* BHTProfileMainEntriesWithPhotosFirst", "// Keep the profile's native")
     unit += section(switches, "static NSNumber* FeatureSwitchOverrideValueForKey", "// Every feature switch facade")
@@ -79,6 +81,7 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
     unit += section(login_source, "static NSString* BHTCompatibilityFailureCategory(", "static NSString* BHTNormalizedCompatibilityIdentifier(")
     unit += (ROOT / "tests/CompatibilityLoginTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/WebSessionSecurityTests.m").read_text(encoding="utf8")
+    unit += (ROOT / "tests/WebSessionVaultTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/TimelineCleanupTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/TimelineKeywordTests.m").read_text(encoding="utf8")
     if args.emit_only:
@@ -90,11 +93,12 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
         test_source.write_text(unit, encoding="utf8")
         binary = base / "native-tests"
         subprocess.run(["xcrun", "clang", "-fobjc-arc", "-fblocks", "-Werror=implicit-function-declaration",
-                        "-framework", "Foundation", "-I", str(ROOT / "src"), str(test_source),
+                        "-framework", "Foundation", "-framework", "Security", "-I", str(ROOT / "src"), str(test_source),
                         str(ROOT / "src/Timeline/BHTForYouKeywordFilter.m"),
                         str(ROOT / "src/Timeline/BHTTimelineCleanup.m"),
                         str(ROOT / "src/Likes/BHTLikesNavigationUtility.m"),
                         str(ROOT / "src/Login/BHTWebSessionSecurity.m"),
+                        str(ROOT / "src/Login/BHTWebSessionVault.m"),
                         str(ROOT / "src/Core/BHTBundle.m"), "-o", str(binary)], check=True)
         subprocess.run([str(binary)], check=True)
 

@@ -5,6 +5,7 @@
 #import "Compatibility/BHTCompatibilityReporter.h"
 #import "Core/BHTBundle.h"
 #import "Login/BHTSecureWebSession.h"
+#import "Login/BHTWebSessionSecurity.h"
 
 #import <WebKit/WebKit.h>
 #import <dlfcn.h>
@@ -1121,6 +1122,16 @@ static BOOL BHTStartPasswordCommand(id command) {
     return YES;
 }
 
+static id BHTExistingNativeAccount(uint64_t userID) {
+    id twitter = BHTSendObject(NSClassFromString(@"TFNTwitter"), NSSelectorFromString(@"sharedTwitter"));
+    id accounts = BHTSendObject(twitter, NSSelectorFromString(@"accounts"));
+    if (![accounts isKindOfClass:NSArray.class]) return nil;
+    for (id account in accounts) {
+        if (BHTWebSessionNativeAccountUserID(account) == userID) return account;
+    }
+    return nil;
+}
+
 static id BHTBuildNativeAccount(
     NSString* token,
     NSString* secret,
@@ -1143,8 +1154,8 @@ static id BHTBuildNativeAccount(
         return nil;
     }
 
-    id<BHTNativeAccountInitializing> account =
-        [(id<BHTNativeAccountInitializing>)[accountClass alloc]
+    id<BHTNativeAccountInitializing> account = BHTExistingNativeAccount(userID);
+    if (!account) account = [(id<BHTNativeAccountInitializing>)[accountClass alloc]
             initWithUsername:screenName
                      userID:userID];
     if (!account) return nil;
@@ -1169,8 +1180,13 @@ static BOOL BHTRegisterNativeAccount(id account) {
         return NO;
     }
 
-    ((void (*)(id, SEL, id))objc_msgSend)(
-        accountService, addAccount, account);
+    if (!BHTExistingNativeAccount(BHTWebSessionNativeAccountUserID(account))) {
+        ((void (*)(id, SEL, id))objc_msgSend)(accountService, addAccount, account);
+    }
+    SEL persistCredentials = NSSelectorFromString(@"saveOAuthTokenSecretToKeychainIfNecessary");
+    if ([account respondsToSelector:persistCredentials]) {
+        ((void (*)(id, SEL))objc_msgSend)(account, persistCredentials);
+    }
     ((void (*)(id, SEL))objc_msgSend)(twitterClass, save);
 
     SEL refresh = NSSelectorFromString(@"refreshForced:source:");
@@ -1315,6 +1331,9 @@ static void BHTCompleteSignedOutFlowAndSwitchAccount(
     }
 
     void (^switchAccount)(void) = ^{
+        if (!BHTSecureWebSessionMayCompleteHandoff(compatibilityController, account)) {
+            if (result) result(NO, @"account_handoff_cancelled"); return;
+        }
         BOOL switched = BHTSwitchToNativeAccount(account);
         if (result) {
             result(
@@ -1376,6 +1395,9 @@ static void BHTCompleteAddAccountFlow(
             : nil;
 
     void (^finishAccountFlow)(void) = ^{
+        if (!BHTSecureWebSessionMayCompleteHandoff(compatibilityController, account)) {
+            if (result) result(NO, @"account_handoff_cancelled"); return;
+        }
         if (didAddAccount) {
             atomic_fetch_add_explicit(
                 &BHTCompatibilityAccountHandoffAttempted, 1,
@@ -2695,6 +2717,10 @@ void BHTPresentCompatibilitySignIn(
     BHTPresentSecureWebSessionSignIn(presenter, nil);
 }
 
+void BHTShareCompatibilitySignInReport(UIViewController* presenter, id sender) {
+    BHTSharePreLoginCompatibilityReport(presenter, sender);
+}
+
 void BHTPresentCompatibilitySignInForAddingAccount(
     UIViewController* accountsController) {
     BHTPresentSecureWebSessionSignIn(
@@ -2717,7 +2743,7 @@ BOOL BHTCompatibilityInstallWebSessionAccount(
     // web session remains in the device-only Keychain and is added at the
     // guarded request boundary.
     id account = BHTBuildNativeAccount(
-        @"neofreebird_web_session",
+        BHTWebSessionAccountMarker(userID),
         @"neofreebird_web_session",
         screenName,
         userID);
@@ -2744,8 +2770,34 @@ BOOL BHTCompatibilityInstallWebSessionAccount(
     return YES;
 }
 
-BOOL BHTCompatibilityRemoveWebSessionAccount(NSString* screenName) {
-    if (screenName.length == 0 || screenName.length > 15) return NO;
+BOOL BHTCompatibilityRestoreWebSessionAccount(NSString* screenName, uint64_t userID) {
+    if (!userID || !BHTWebSessionNormalizedHandle(screenName) ||
+        !BHTCompatibilityWebSessionAccountRuntimeIsAvailable()) return NO;
+    id existing = BHTExistingNativeAccount(userID);
+    static NSMutableSet* repaired;
+    static dispatch_once_t once;
+    dispatch_once(&once, ^{ repaired = [NSMutableSet set]; });
+    BOOL repairedThisRun;
+    @synchronized(repaired) { repairedThisRun = [repaired containsObject:@(userID)]; }
+    NSString* token = BHTSendObject(existing, NSSelectorFromString(@"oAuthToken"));
+    if ([token isEqualToString:BHTWebSessionAccountMarker(userID)]) {
+        // Repair a native secret lost during an interrupted native save too.
+        NSString* secret = BHTSendObject(existing, NSSelectorFromString(@"oAuthTokenSecret"));
+        if (repairedThisRun && [secret isEqualToString:@"neofreebird_web_session"]) return YES;
+    } else if (token.length && !BHTWebSessionAccountUsesPlaceholder(existing)) {
+        return NO; // An ordinary, working OAuth account keeps its credentials.
+    }
+    @try {
+        id account = BHTBuildNativeAccount(BHTWebSessionAccountMarker(userID),
+            @"neofreebird_web_session", screenName, userID);
+        BOOL restored = account && BHTRegisterNativeAccount(account);
+        if (restored) { @synchronized(repaired) { [repaired addObject:@(userID)]; } }
+        return restored;
+    } @catch (__unused NSException* exception) { return NO; }
+}
+
+static BOOL BHTCompatibilityRemoveWebSessionAccountMatching(NSString* screenName, uint64_t userID) {
+    if (!userID && (screenName.length == 0 || screenName.length > 15)) return NO;
     Class twitterClass = NSClassFromString(@"TFNTwitter");
     id twitter = BHTSendObject(
         twitterClass, NSSelectorFromString(@"sharedTwitter"));
@@ -2768,9 +2820,9 @@ BOOL BHTCompatibilityRemoveWebSessionAccount(NSString* screenName) {
     for (id account in [accounts copy]) {
         NSString* username = BHTSendObject(
             account, NSSelectorFromString(@"username"));
-        if (![username isKindOfClass:NSString.class] ||
-            [username caseInsensitiveCompare:screenName] !=
-                NSOrderedSame) {
+        BOOL matches = userID ? BHTWebSessionNativeAccountUserID(account) == userID :
+            ([username isKindOfClass:NSString.class] && [username caseInsensitiveCompare:screenName] == NSOrderedSame);
+        if (!matches || !BHTWebSessionAccountUsesPlaceholder(account)) {
             continue;
         }
         @try {
@@ -2798,6 +2850,13 @@ BOOL BHTCompatibilityRemoveWebSessionAccount(NSString* screenName) {
                           object:twitter userInfo:nil];
     }
     return YES;
+}
+
+BOOL BHTCompatibilityRemoveWebSessionAccount(NSString* screenName) {
+    return BHTCompatibilityRemoveWebSessionAccountMatching(screenName, 0);
+}
+BOOL BHTCompatibilityRemoveWebSessionAccountWithUserID(uint64_t userID) {
+    return BHTCompatibilityRemoveWebSessionAccountMatching(nil, userID);
 }
 
 @interface BHTCompatibilityEntryTarget : NSObject
@@ -3130,12 +3189,12 @@ BHTCompatibilitySignInDiagnosticSnapshot(void) {
             BHTSecureWebSessionDiagnosticSnapshot(),
         @"compatibilitySignInMode":
             @"user_confirmed_web_session_bridge",
-        @"nativeSignInRemainsDefault": @YES,
+        @"nativeSignInRemainsDefault": @NO,
         @"legacyPasswordCommandIsDefault": @NO,
         @"legacyPasswordCommandReachable": @NO,
         @"credentialEntryOwner": @"x_webview",
         @"credentialPersistence":
-            @"device_only_keychain_and_webkit_store",
+            @"per_account_device_only_keychain_with_isolated_webkit",
         @"xAuthClientMetadataPolicy":
             @"native_x_12_24_1",
         @"xAuthClientMetadataTargetVersion":
@@ -3145,7 +3204,7 @@ BHTCompatibilitySignInDiagnosticSnapshot(void) {
         @"xAuthClientMetadataOverrideApplied": @0,
         @"xAuthClientMetadataScopeTimedOut": @0,
         @"compatibilityRequestProfile":
-            @"secure_web_session_v1",
+            @"secure_web_session_v2_account_bound",
         @"preflightPolicy": @"user_confirmed_x_web_sign_in",
         @"preflightMinimumDelaySeconds": @0,
         @"attestationOverridesIncluded": @NO,

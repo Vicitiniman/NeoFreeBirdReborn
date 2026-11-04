@@ -36,6 +36,9 @@
 @end
 
 @interface TFNActionItem : NSObject
+@property (copy, nonatomic) NSString* title;
+@property (copy, nonatomic) NSString* imageName;
+@property (nonatomic, getter=isDisabled) BOOL disabled;
 + (instancetype)cancelActionItemWithAction:(void (^)(void))arg1;
 + (instancetype)cancelActionItemWithTitle:(NSString*)arg1;
 + (instancetype)actionItemWithTitle:(NSString*)arg1 action:(void (^)(void))arg2;
@@ -46,6 +49,7 @@
                            subtitle:(NSString*)arg2
                           imageName:(NSString*)arg3
                              action:(void (^)(void))arg4;
++ (instancetype)nestedMenuWithTitle:(NSString*)arg1 items:(NSArray*)arg2;
 @end
 
 @interface TFNAttributedTextModel : NSObject

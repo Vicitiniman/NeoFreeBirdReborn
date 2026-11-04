@@ -53,7 +53,10 @@ static BOOL BHTWebSessionTaskMethodHasObjectShape(
 %hook NSURLSession
 
 - (NSURLSessionDataTask*)dataTaskWithRequest:(NSURLRequest*)request {
-    return %orig(BHTSecureWebSessionAuthenticatedRequest(request));
+    NSURLRequest* authenticated = BHTSecureWebSessionAuthenticatedRequest(request);
+    NSURLSessionDataTask* task = %orig(authenticated);
+    BHTSecureWebSessionWatchTask(task, authenticated);
+    return task;
 }
 
 %end
@@ -67,9 +70,10 @@ static BOOL BHTWebSessionTaskMethodHasObjectShape(
 
 - (NSURLSessionDataTask*)dataTaskWithRequest:(NSURLRequest*)request
                            completionHandler:(id)completionHandler {
-    return %orig(
-        BHTSecureWebSessionAuthenticatedRequest(request),
-        completionHandler);
+    NSURLRequest* authenticated = BHTSecureWebSessionAuthenticatedRequest(request);
+    NSURLSessionDataTask* task = %orig(authenticated, completionHandler);
+    BHTSecureWebSessionWatchTask(task, authenticated);
+    return task;
 }
 
 %end
@@ -83,8 +87,10 @@ static BOOL BHTWebSessionTaskMethodHasObjectShape(
 
 - (NSURLSessionUploadTask*)uploadTaskWithRequest:(NSURLRequest*)request
                                         fromData:(NSData*)bodyData {
-    return %orig(
-        BHTSecureWebSessionAuthenticatedRequest(request), bodyData);
+    NSURLRequest* authenticated = BHTSecureWebSessionAuthenticatedRequest(request);
+    NSURLSessionUploadTask* task = %orig(authenticated, bodyData);
+    BHTSecureWebSessionWatchTask(task, authenticated);
+    return task;
 }
 
 %end
@@ -99,9 +105,10 @@ static BOOL BHTWebSessionTaskMethodHasObjectShape(
 - (NSURLSessionUploadTask*)uploadTaskWithRequest:(NSURLRequest*)request
                                         fromData:(NSData*)bodyData
                                completionHandler:(id)completionHandler {
-    return %orig(
-        BHTSecureWebSessionAuthenticatedRequest(request),
-        bodyData, completionHandler);
+    NSURLRequest* authenticated = BHTSecureWebSessionAuthenticatedRequest(request);
+    NSURLSessionUploadTask* task = %orig(authenticated, bodyData, completionHandler);
+    BHTSecureWebSessionWatchTask(task, authenticated);
+    return task;
 }
 
 %end
@@ -115,8 +122,10 @@ static BOOL BHTWebSessionTaskMethodHasObjectShape(
 
 - (NSURLSessionUploadTask*)uploadTaskWithRequest:(NSURLRequest*)request
                                         fromFile:(NSURL*)fileURL {
-    return %orig(
-        BHTSecureWebSessionAuthenticatedRequest(request), fileURL);
+    NSURLRequest* authenticated = BHTSecureWebSessionAuthenticatedRequest(request);
+    NSURLSessionUploadTask* task = %orig(authenticated, fileURL);
+    BHTSecureWebSessionWatchTask(task, authenticated);
+    return task;
 }
 
 %end
@@ -131,9 +140,10 @@ static BOOL BHTWebSessionTaskMethodHasObjectShape(
 - (NSURLSessionUploadTask*)uploadTaskWithRequest:(NSURLRequest*)request
                                         fromFile:(NSURL*)fileURL
                                completionHandler:(id)completionHandler {
-    return %orig(
-        BHTSecureWebSessionAuthenticatedRequest(request),
-        fileURL, completionHandler);
+    NSURLRequest* authenticated = BHTSecureWebSessionAuthenticatedRequest(request);
+    NSURLSessionUploadTask* task = %orig(authenticated, fileURL, completionHandler);
+    BHTSecureWebSessionWatchTask(task, authenticated);
+    return task;
 }
 
 %end
@@ -146,7 +156,10 @@ static BOOL BHTWebSessionTaskMethodHasObjectShape(
 %hook NSURLSession
 
 - (NSURLSessionDownloadTask*)downloadTaskWithRequest:(NSURLRequest*)request {
-    return %orig(BHTSecureWebSessionAuthenticatedRequest(request));
+    NSURLRequest* authenticated = BHTSecureWebSessionAuthenticatedRequest(request);
+    NSURLSessionDownloadTask* task = %orig(authenticated);
+    BHTSecureWebSessionWatchTask(task, authenticated);
+    return task;
 }
 
 %end
@@ -160,9 +173,10 @@ static BOOL BHTWebSessionTaskMethodHasObjectShape(
 
 - (NSURLSessionDownloadTask*)downloadTaskWithRequest:(NSURLRequest*)request
                                completionHandler:(id)completionHandler {
-    return %orig(
-        BHTSecureWebSessionAuthenticatedRequest(request),
-        completionHandler);
+    NSURLRequest* authenticated = BHTSecureWebSessionAuthenticatedRequest(request);
+    NSURLSessionDownloadTask* task = %orig(authenticated, completionHandler);
+    BHTSecureWebSessionWatchTask(task, authenticated);
+    return task;
 }
 
 %end
@@ -170,10 +184,50 @@ static BOOL BHTWebSessionTaskMethodHasObjectShape(
 %end
 
 
+%group BHTWebSessionDelegateRequestHooks
+%hook NSURLSession
+- (NSURLSessionDataTask*)dataTaskWithRequest:(NSURLRequest*)request delegate:(id)delegate {
+    NSURLRequest* authenticated = BHTSecureWebSessionAuthenticatedRequest(request);
+    NSURLSessionDataTask* task = %orig(authenticated, delegate);
+    BHTSecureWebSessionWatchTask(task, authenticated); return task;
+}
+%end
+%end
+
+%group BHTWebSessionDelegateQueueRequestHooks
+%hook NSURLSession
+- (NSURLSessionDataTask*)dataTaskWithRequest:(NSURLRequest*)request delegate:(id)delegate delegateQueue:(id)queue {
+    NSURLRequest* authenticated = BHTSecureWebSessionAuthenticatedRequest(request);
+    NSURLSessionDataTask* task = %orig(authenticated, delegate, queue);
+    BHTSecureWebSessionWatchTask(task, authenticated); return task;
+}
+%end
+%end
+
+%group BHTWebSessionStreamedRequestHooks
+%hook NSURLSession
+- (NSURLSessionUploadTask*)uploadTaskWithStreamedRequest:(NSURLRequest*)request {
+    NSURLRequest* authenticated = BHTSecureWebSessionAuthenticatedRequest(request);
+    NSURLSessionUploadTask* task = %orig(authenticated);
+    BHTSecureWebSessionWatchTask(task, authenticated); return task;
+}
+%end
+%end
+
 %ctor {
     NSString* version = [NSBundle.mainBundle
         objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
     if (![version isEqualToString:@"12.24.1"]) return;
+
+    if (BHTWebSessionTaskMethodHasObjectShape(@selector(dataTaskWithRequest:delegate:), 2)) {
+        %init(BHTWebSessionDelegateRequestHooks);
+    }
+    if (BHTWebSessionTaskMethodHasObjectShape(@selector(dataTaskWithRequest:delegate:delegateQueue:), 3)) {
+        %init(BHTWebSessionDelegateQueueRequestHooks);
+    }
+    if (BHTWebSessionTaskMethodHasObjectShape(@selector(uploadTaskWithStreamedRequest:), 1)) {
+        %init(BHTWebSessionStreamedRequestHooks);
+    }
 
     if (BHTWebSessionTaskMethodHasObjectShape(
             @selector(dataTaskWithRequest:), 1)) {

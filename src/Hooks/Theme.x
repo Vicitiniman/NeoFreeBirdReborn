@@ -739,11 +739,12 @@ static BOOL BHTIsSafeRailHeaderCandidate(UIImageView* candidate,
     CGFloat aspectRatio = width / MAX(height, 1.0);
     if (aspectRatio < 0.65 || aspectRatio > 1.35) return NO;
 
-    // FLEX identified the X 12.9 rail header as a 28x28 UIImageView at
-    // {34,35}. Keep the fallback inside the safe-area header band so the
-    // first Home tab can never qualify even if its internal class changes.
+    // X 12.9 placed the mark at {34,35}; X 12.24 moved ownership to the
+    // split-sidebar controller and can place it slightly lower. The first
+    // T1TabView is explicitly excluded above, so this wider header band still
+    // cannot replace the Home house.
     UIEdgeInsets safeAreaInsets = hostView.safeAreaInsets;
-    CGFloat headerBottom = MAX(72.0, safeAreaInsets.top + 48.0);
+    CGFloat headerBottom = MAX(104.0, safeAreaInsets.top + 64.0);
     if (CGRectGetMinY(frame) < -1.0 ||
         CGRectGetMaxY(frame) > headerBottom) {
         return NO;
@@ -887,6 +888,17 @@ static UIImageView* BHTRailHeaderLogoImageView(UIView* hostView,
     return fallback;
 }
 
+static BOOL BHTShouldRecordUnresolvedRailHost(UIView* hostView) {
+    Class splitSidebarClass =
+        NSClassFromString(@"T1AppSplitSideBarViewController");
+    Class tabBarHostClass = NSClassFromString(@"T1TabBarHostView");
+    // On X 12.24 the child tab host contains only the navigation buttons.
+    // Let the full split-sidebar owner report resolution so the child's
+    // expected zero-candidate scan cannot overwrite a successful diagnostic.
+    return !splitSidebarClass || !tabBarHostClass ||
+           ![hostView isKindOfClass:tabBarHostClass];
+}
+
 static void BHTUpdateRailHostBranding(UIView* hostView) {
     if (!BHTUsesPadNavigation(hostView.traitCollection)) return;
     NSString* resolution = nil;
@@ -894,8 +906,10 @@ static void BHTUpdateRailHostBranding(UIView* hostView) {
     UIImageView* logoView =
         BHTRailHeaderLogoImageView(hostView, &resolution, &matchCount);
     if (!logoView) {
-        BHTRecordRailBrandingObservation(
-            resolution ?: @"unresolved", hostView, nil, matchCount);
+        if (BHTShouldRecordUnresolvedRailHost(hostView)) {
+            BHTRecordRailBrandingObservation(
+                resolution ?: @"unresolved", hostView, nil, matchCount);
+        }
         return;
     }
 
@@ -1003,6 +1017,33 @@ static void BHTScheduleDeferredRailHostBranding(UIView* hostView) {
         BHTUpdateRailHostBranding(strongHostView);
     });
 }
+
+// X 12.24 owns the permanent iPad rail header in this controller. Its
+// T1TabBarHostView child starts below the mark and therefore cannot see it.
+%hook T1AppSplitSideBarViewController
+
+- (void)viewDidLoad {
+    %orig;
+    UIView* railView = ((UIViewController*)self).view;
+    BHTUpdateRailHostBranding(railView);
+    BHTScheduleDeferredRailHostBranding(railView);
+}
+
+- (void)viewWillLayoutSubviews {
+    %orig;
+    UIView* railView = ((UIViewController*)self).view;
+    BHTUpdateRailHostBranding(railView);
+    BHTScheduleDeferredRailHostBranding(railView);
+}
+
+- (void)viewSafeAreaInsetsDidChange {
+    %orig;
+    UIView* railView = ((UIViewController*)self).view;
+    BHTUpdateRailHostBranding(railView);
+    BHTScheduleDeferredRailHostBranding(railView);
+}
+
+%end
 
 %hook T1TabBarHostView
 
