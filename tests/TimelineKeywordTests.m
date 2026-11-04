@@ -88,16 +88,33 @@ static NSUInteger BHTScribeComponentReadCount = 0;
 @implementation TFNTwitterTweetContext
 @end
 
-@interface T1URTTimelineStatusItemViewModel : NSObject
+@interface URTTimelineStatusItemViewModel : NSObject
 @property(nonatomic, strong) TFNTwitterStatus* tweet;
 @end
-@implementation T1URTTimelineStatusItemViewModel
+@implementation URTTimelineStatusItemViewModel
 @end
 @interface T1CompositionStatusViewModel : NSObject
 @property(nonatomic, strong) TFNTwitterStatus* tweet;
 @end
 @implementation T1CompositionStatusViewModel
 @end
+
+static id BHTFixtureNoTweet(id object, SEL selector) { return nil; }
+
+static id BHTUntypedStatusFixture(BOOL knownURT, id status) {
+    const char* name = knownURT ? "BHTCurrentURTWithoutAccessors" : "BHTUnrelatedUntypedModel";
+    Class cls = objc_lookUpClass(name);
+    if (!cls) {
+        cls = objc_allocateClassPair(knownURT ? URTTimelineStatusItemViewModel.class : NSObject.class, name, 0);
+        NSCAssert(class_addIvar(cls, "status", sizeof(id), sizeof(id) == 8 ? 3 : 2, "?"),
+                  @"Fixture has the host's untyped object field");
+        class_addMethod(cls, @selector(tweet), (IMP)BHTFixtureNoTweet, "@@:");
+        objc_registerClassPair(cls);
+    }
+    id instance = [[cls alloc] init];
+    object_setIvar(instance, class_getInstanceVariable(cls, "status"), status);
+    return instance;
+}
 
 static BOOL hidden(id item) {
     BOOL usernames, text;
@@ -120,6 +137,8 @@ static BOOL hiddenForContentGeneration(
 int main(void) {
     @autoreleasepool {
         testProfileMediaAndGrok();
+        testHostCompatibility();
+        testSwiftFieldMetadata();
         testCompatibilityLogin();
         testWebSessionSecurity();
         testWebSessionVault();
@@ -139,7 +158,7 @@ int main(void) {
         status.fullText = @"Explain this please";
         status.text = status.fullText;
         status.fromUserName = @"reader";
-        T1URTTimelineStatusItemViewModel* item = [T1URTTimelineStatusItemViewModel new];
+        URTTimelineStatusItemViewModel* item = [URTTimelineStatusItemViewModel new];
         item.tweet = status;
         BOOL promotionStatusResolved = NO;
         NSCAssert(!StatusItemPromotionDecision(
@@ -161,9 +180,22 @@ int main(void) {
         topicContext.topicFeedbackContext =
             [TFNTwitterTweetTopicFeedbackContext new];
         status.tweetContext = topicContext;
+        TFNTwitterStatus* untypedStatus = [TFNTwitterStatus new];
+        untypedStatus.fullText = @"@grok explain this";
+        untypedStatus.canonicalStatus = [TFNTwitterCanonicalStatus new];
+        untypedStatus.canonicalStatus.originalText = untypedStatus.fullText;
+        untypedStatus.tweetContext = topicContext;
+        id currentUntyped = BHTUntypedStatusFixture(YES, untypedStatus);
+        NSCAssert(hidden(currentUntyped), @"Current URT wrappers filter mentions without a typed tweet accessor");
+        NSCAssert((BHTTimelineCleanupKindsForItem(currentUntyped) & BHTTimelineCleanupKindTopicPost) != 0,
+                  @"Current URT untyped fields preserve Topic context extraction");
+        id unrelatedUntyped = BHTUntypedStatusFixture(NO, untypedStatus);
+        NSCAssert(!hidden(unrelatedUntyped), @"Do not interpret an unrelated model's untyped bytes as a status");
+        NSCAssert((BHTTimelineCleanupKindsForItem(unrelatedUntyped) & BHTTimelineCleanupKindTopicPost) == 0,
+                  @"Topic extraction also rejects an unrecognized untyped model");
         NSCAssert((BHTTimelineCleanupKindsForItem(item) &
                        BHTTimelineCleanupKindTopicPost) != 0,
-                  @"X 12.24.1 topic feedback metadata identifies Topic posts");
+                  @"X 12.40.1 topic feedback metadata identifies Topic posts");
         status.tweetContext = nil;
         NSCAssert((BHTTimelineCleanupKindsForItem(item) &
                        BHTTimelineCleanupKindTopicPost) == 0,
@@ -176,8 +208,8 @@ int main(void) {
         countingTopicContext.topicFeedbackContext =
             [TFNTwitterTweetTopicFeedbackContext new];
         countingStatus.tweetContext = countingTopicContext;
-        T1URTTimelineStatusItemViewModel* countingItem =
-            [T1URTTimelineStatusItemViewModel new];
+        URTTimelineStatusItemViewModel* countingItem =
+            [URTTimelineStatusItemViewModel new];
         countingItem.tweet = countingStatus;
         BHTTopicContextReadCount = 0;
         NSCAssert(!BHTShouldHideTimelineCleanupItemForKinds(
@@ -246,8 +278,8 @@ int main(void) {
             [TFNTwitterCanonicalStatus new];
         snapshotStatus.canonicalStatus.originalText =
             @"ordinary text";
-        T1URTTimelineStatusItemViewModel* snapshotItem =
-            [T1URTTimelineStatusItemViewModel new];
+        URTTimelineStatusItemViewModel* snapshotItem =
+            [URTTimelineStatusItemViewModel new];
         snapshotItem.tweet = snapshotStatus;
         NSCAssert(!hiddenForContentGeneration(
                        snapshotItem, timelineOwner, 1),

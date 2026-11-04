@@ -1,3 +1,4 @@
+#import "Compatibility/BHTHostCompatibility.h"
 //
 //  WebSessionAuthentication.x
 //  NeoFreeBird
@@ -215,9 +216,7 @@ static BOOL BHTWebSessionTaskMethodHasObjectShape(
 %end
 
 %ctor {
-    NSString* version = [NSBundle.mainBundle
-        objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-    if (![version isEqualToString:@"12.24.1"]) return;
+    if (!BHTIsSupportedHost()) return;
 
     if (BHTWebSessionTaskMethodHasObjectShape(@selector(dataTaskWithRequest:delegate:), 2)) {
         %init(BHTWebSessionDelegateRequestHooks);

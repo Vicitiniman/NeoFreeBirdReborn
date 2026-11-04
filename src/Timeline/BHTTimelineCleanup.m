@@ -1,4 +1,5 @@
 #import "Timeline/BHTTimelineCleanup.h"
+#import "Timeline/BHTTimelineModelRuntime.h"
 
 #import "Core/BHTSettings.h"
 #import <objc/message.h>
@@ -243,8 +244,7 @@ static id BHTCleanupStatusFromItem(id item) {
     // reading any status metadata.
     NSString* className = NSStringFromClass([viewModel classForCoder]);
     BOOL knownStatusViewModel =
-        [className isEqualToString:
-            @"T1URTTimelineStatusItemViewModel"] ||
+        BHTIsURTStatusItemViewModel(viewModel) ||
         [className isEqualToString:
             @"T1CompositionStatusViewModel"];
     id status = BHTCleanupObjectValue(

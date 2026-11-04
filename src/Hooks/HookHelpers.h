@@ -23,6 +23,8 @@
 #import "Padlock/AuthViewController.h"
 #import "Settings/ModernSettingsViewController.h"
 #import "ThemeColor/Palette.h"
+#import "Compatibility/BHTHostCompatibility.h"
+#import "Timeline/BHTTimelineModelRuntime.h"
 
 // Recursive view traversal (BHTHookHelpers.m)
 void EnumerateSubviewsRecursively(UIView* view,

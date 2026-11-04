@@ -1,3 +1,4 @@
+#import "Compatibility/BHTHostCompatibility.h"
 //
 //  AccountBoundWebReply.x
 //  NeoFreeBird
@@ -56,10 +57,7 @@ static BOOL BHTAccountBoundKeepMethodHasExactABI(
 %end
 
 %ctor {
-    NSString* version = [NSBundle.mainBundle
-        objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-    if (![version isKindOfClass:NSString.class] ||
-        ![version isEqualToString:@"12.24.1"]) {
+    if (!BHTIsSupportedHost()) {
         return;
     }
     Class webClass = NSClassFromString(@"T1WebViewController");

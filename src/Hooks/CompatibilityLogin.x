@@ -1,3 +1,4 @@
+#import "Compatibility/BHTHostCompatibility.h"
 #import "Login/BHTCompatibilityLogin.h"
 #import "Sidebar/BHTSidebarNavigationUtility.h"
 #import "Login/BHTSecureWebSession.h"
@@ -82,7 +83,7 @@
 
 %group BHTCompatibilityAccountRemovalHook
 %hook T1AccountController
-- (void)removeAccount:(id)account withAccountRemovalCompletionHandler:(id)completion {
+- (void)removeAccount:(id)account source:(NSInteger)source withAccountRemovalCompletionHandler:(id)completion {
     // This is X's explicit account-removal command, not its account-state
     // checks or network-error callbacks. Removed accounts must stay removed.
     BHTSecureWebSessionForgetAccount(account);
@@ -108,9 +109,7 @@
 %end
 
 %ctor {
-    NSString* version = [NSBundle.mainBundle
-        objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-    if ([version isEqualToString:@"12.24.1"]) {
+    if (BHTIsSupportedHost()) {
         %init(BHTCompatibilityLoginHooks);
         if (class_getInstanceMethod(NSClassFromString(@"TFNTwitterAccount"), @selector(oAuthToken))) {
             %init(BHTCompatibilityLegacyMarkerHook);
@@ -120,7 +119,8 @@
             %init(BHTCompatibilityAccountSelectionHook);
         }
         Class removal = NSClassFromString(@"T1AccountController");
-        if (class_getInstanceMethod(removal, @selector(removeAccount:withAccountRemovalCompletionHandler:))) {
+        if (BHTAccountRemovalMethodIsSupported(class_getInstanceMethod(
+                removal, @selector(removeAccount:source:withAccountRemovalCompletionHandler:)))) {
             %init(BHTCompatibilityAccountRemovalHook);
         }
 

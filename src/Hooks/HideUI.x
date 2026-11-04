@@ -24,29 +24,76 @@
 
 %end
 
-// iPad sidebars use dedicated controllers rather than timeline sections.  Hook
-// those controllers directly instead of every UIView in the process.
-%hook _TtC14T1TwitterSwift27TrendsSidebarViewController
+static char BHTAuxiliaryChromeOriginalStateKey;
 
-- (void)viewDidAppear:(BOOL)animated {
-    %orig;
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad &&
-        [BHTSettings boolForKey:@"hide_trends"]) {
-        self.view.hidden = YES;
-        self.view.userInteractionEnabled = NO;
+static void BHTSetAuxiliaryControllerHidden(UIViewController* controller, BOOL hidden) {
+    if (!controller.isViewLoaded) return;
+    UIView* view = controller.view;
+    NSDictionary* original = objc_getAssociatedObject(view, &BHTAuxiliaryChromeOriginalStateKey);
+    if (hidden && !original) {
+        original = @{@"hidden": @(view.hidden), @"interactive": @(view.userInteractionEnabled)};
+        objc_setAssociatedObject(view, &BHTAuxiliaryChromeOriginalStateKey, original,
+                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    }
+    if (hidden) {
+        view.hidden = YES;
+        view.userInteractionEnabled = NO;
+    } else if (original) {
+        view.hidden = [original[@"hidden"] boolValue];
+        view.userInteractionEnabled = [original[@"interactive"] boolValue];
+        objc_setAssociatedObject(view, &BHTAuxiliaryChromeOriginalStateKey, nil,
+                                 OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
 }
 
+// The old concrete TrendsSidebarViewController is gone. SwiftUI hosting
+// subclasses may only be registered at runtime, so discover dedicated trend
+// sidebar children in the navigation owner's bounded controller tree. Never
+// hide a whole content/search column based on its position or visible text.
+static void BHTUpdateAuxiliaryControllers(UIViewController* owner,
+                                           NSUInteger depth, NSUInteger* budget) {
+    if (depth > 6 || *budget == 0) return;
+    (*budget)--;
+    NSString* name = NSStringFromClass(owner.class);
+    BOOL dedicatedTrends =
+        [name rangeOfString:@"TrendsSidebar" options:NSCaseInsensitiveSearch].location != NSNotFound ||
+        [name rangeOfString:@"TrendSidebar" options:NSCaseInsensitiveSearch].location != NSNotFound;
+    if (dedicatedTrends) {
+        BHTSetAuxiliaryControllerHidden(owner, [BHTSettings boolForKey:@"hide_trends"]);
+    }
+    for (UIViewController* child in owner.childViewControllers) {
+        BHTUpdateAuxiliaryControllers(child, depth + 1, budget);
+        if (*budget == 0) break;
+    }
+}
+
+static void BHTUpdateIPadAuxiliaryChrome(UIViewController* owner) {
+    if (UI_USER_INTERFACE_IDIOM() != UIUserInterfaceIdiomPad) return;
+    NSUInteger budget = 64;
+    BHTUpdateAuxiliaryControllers(owner, 0, &budget);
+}
+
+%hook T1TabbedAppNavigationViewController
+- (void)viewDidLayoutSubviews {
+    %orig;
+    BHTUpdateIPadAuxiliaryChrome((UIViewController*)self);
+}
+%end
+
+%hook _TtC14T1TwitterSwift34XTabbedAppNavigationViewController
+- (void)viewDidLayoutSubviews {
+    %orig;
+    BHTUpdateIPadAuxiliaryChrome((UIViewController*)self);
+}
 %end
 
 %hook T1UserRecommendationsViewController
 
 - (void)viewDidAppear:(BOOL)animated {
     %orig;
-    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad &&
-        [BHTSettings boolForKey:@"hide_who_to_follow"]) {
-        self.view.hidden = YES;
-        self.view.userInteractionEnabled = NO;
+    if (UI_USER_INTERFACE_IDIOM() == UIUserInterfaceIdiomPad) {
+        BHTSetAuxiliaryControllerHidden((UIViewController*)self,
+                                        [BHTSettings boolForKey:@"hide_who_to_follow"]);
     }
 }
 
@@ -78,7 +125,9 @@
 
 %end
 
-%hook TFSDirectMessageUser
+// XChat replaced TFSDirectMessageUser. Its sender adapter still supplies the
+// two verified getters used by the new conversation UI.
+%hook _TtC14T1TwitterSwift27XChatSenderCardSourceObject
 
 - (id)isBlueVerified {
     return [BHTSettings boolForKey:@"hide_blue_verified"] ? nil : %orig;

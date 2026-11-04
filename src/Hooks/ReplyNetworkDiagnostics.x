@@ -1,3 +1,4 @@
+#import "Compatibility/BHTHostCompatibility.h"
 //
 //  ReplyNetworkDiagnostics.x
 //  NeoFreeBird
@@ -248,10 +249,7 @@ didCompleteWithError:(NSError*)error {
 %end
 
 %ctor {
-    NSString* version = [NSBundle.mainBundle
-        objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-    if (![version isKindOfClass:NSString.class] ||
-        ![version isEqualToString:@"12.24.1"]) {
+    if (!BHTIsSupportedHost()) {
         return;
     }
 

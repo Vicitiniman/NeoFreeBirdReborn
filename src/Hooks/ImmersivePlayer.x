@@ -7,11 +7,28 @@
 
 // MARK: - Immersive Player Timestamp
 
-// Field indexes in ImmersiveCardState's declaration order.
-enum {
-    CardStateFieldIsPanningBetweenCards = 19,
-    CardStateFieldIsChromeFadedOutWhilePanning = 20,
-};
+// Resolve declaration indexes by their reflected names. X 12.40 removed a
+// field and added three more; an offset vector cannot fix a wrong ordinal.
+static BOOL cardStateFieldIndex(const uint8_t* descriptor,
+                                const char* fieldName,
+                                uint32_t* result) {
+    int32_t relative = *(const int32_t*)(descriptor + 16);
+    if (!relative) return NO;
+    const uint8_t* fields = descriptor + 16 + relative;
+    uint16_t recordSize = *(const uint16_t*)(fields + 10);
+    uint32_t count = *(const uint32_t*)(fields + 12);
+    if (recordSize < 12 || recordSize > 64 || count == 0 || count > 128 ||
+        count != *(const uint32_t*)(descriptor + 20)) return NO;
+    for (uint32_t index = 0; index < count; index++) {
+        const uint8_t* nameField = fields + 16 + index * recordSize + 8;
+        int32_t nameOffset = *(const int32_t*)nameField;
+        if (nameOffset && strncmp((const char*)nameField + nameOffset, fieldName, 64) == 0) {
+            *result = index;
+            return YES;
+        }
+    }
+    return NO;
+}
 
 static const uint8_t* immersiveCardStateMetadata(void) {
     static const uint8_t* metadata;
@@ -31,7 +48,7 @@ static const uint8_t* immersiveCardStateMetadata(void) {
 // Reads a Bool field through the struct's field offset vector, the same way the
 // app's own compiled accesses do, so byte offsets never have to be hardcoded.
 static BOOL cardStateBoolField(const uint8_t* state,
-                               uint32_t fieldIndex,
+                               const char* fieldName,
                                BOOL* outValue) {
     const uint8_t* metadata = immersiveCardStateMetadata();
     if (!metadata) {
@@ -39,6 +56,8 @@ static BOOL cardStateBoolField(const uint8_t* state,
     }
 
     const uint8_t* descriptor = *(const uint8_t* const*)(metadata + 8);
+    uint32_t fieldIndex = 0;
+    if (!cardStateFieldIndex(descriptor, fieldName, &fieldIndex)) return NO;
     uint32_t numFields = *(const uint32_t*)(descriptor + 20);
     uint32_t offsetVectorOffset = *(const uint32_t*)(descriptor + 24);
     if (fieldIndex >= numFields || offsetVectorOffset == 0) {
@@ -56,6 +75,7 @@ static BOOL cardStateBoolField(const uint8_t* state,
 // Empty cases: regular = 0, repliesOpen = 1, repliesCompletelyOpen = 2,
 // controlsHidden = 3, scrubbing = 4, statusExpanded = 5.
 static BOOL progressLabelAlphaFromState(id pluginView, CGFloat* outAlpha) {
+    if (!BHTIsSupportedHost()) return NO;
     Ivar stateIvar = class_getInstanceVariable([pluginView class], "state");
     if (!stateIvar) {
         return NO;
@@ -71,12 +91,12 @@ static BOOL progressLabelAlphaFromState(id pluginView, CGFloat* outAlpha) {
 
     if (visible) {
         BOOL panning = NO, chromeFaded = NO;
-        if (cardStateBoolField(state, CardStateFieldIsPanningBetweenCards,
+        if (cardStateBoolField(state, "isPanningBetweenCards",
                                &panning) &&
             panning) {
             visible = NO;
         } else if (cardStateBoolField(state,
-                                      CardStateFieldIsChromeFadedOutWhilePanning,
+                                      "isChromeFadedOutWhilePanning",
                                       &chromeFaded) &&
                    chromeFaded) {
             visible = NO;
@@ -110,6 +130,10 @@ static BOOL isImmersiveCardPan(id viewController,
                                UIGestureRecognizer* gesture) {
     Ivar panIvar =
         class_getInstanceVariable([viewController class], "panRecognizer");
+    if (!panIvar) {
+        panIvar = class_getInstanceVariable([viewController class],
+                                           "$__lazy_storage_$_panRecognizer");
+    }
     return panIvar && object_getIvar(viewController, panIvar) == gesture;
 }
 

@@ -4,7 +4,7 @@
 
 NS_ASSUME_NONNULL_BEGIN
 
-// Reports whether the user-confirmed X 12.24.1 web-session bridge can run.
+// Reports whether the user-confirmed supported-build web-session bridge can run.
 // X owns the visible password form; NeoFreeBird never receives the password.
 BOOL BHTCompatibilitySignInIsAvailable(void);
 void BHTPresentCompatibilitySignIn(

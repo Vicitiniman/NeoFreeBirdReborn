@@ -461,10 +461,15 @@ NSString* BHTFontTypeForPicker(UIFontPickerViewController* picker) {
         NSString* key = toggleData[@"key"];
         NSString* title = [self localizedTitleForEntry:toggleData];
         NSString* subtitle = [self localizedDetailForKey:key];
+        NSString* unavailable = [BHTSettings unavailableReasonKeyForPreference:key];
+        if (unavailable) subtitle = [[BHTBundle sharedBundle] localizedStringForKey:unavailable];
         [cell configureWithTitle:title subtitle:subtitle];
         BOOL isEnabled = [[[NSUserDefaults standardUserDefaults] objectForKey:key]
                               ?: toggleData[@"default"] boolValue];
-        cell.toggleSwitch.on = isEnabled;
+        cell.toggleSwitch.enabled = unavailable == nil;
+        cell.toggleSwitch.on = unavailable ? NO : isEnabled;
+        cell.contentView.alpha = unavailable ? 0.55 : 1.0;
+        cell.accessibilityHint = unavailable ? subtitle : nil;
         objc_setAssociatedObject(
             cell.toggleSwitch, &kBHTSettingsPreferenceKeyAssociation, key,
             OBJC_ASSOCIATION_COPY_NONATOMIC);

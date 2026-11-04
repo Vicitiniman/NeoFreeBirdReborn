@@ -38,6 +38,13 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         return nil;
     }
 
+    // X 12.40's glass navigation has a separate Swift tab/router pipeline.
+    // The classic native pipeline preserves entry identity and our custom
+    // Likes/reorder integration on both older and newer iOS releases.
+    if ([key isEqualToString:@"ios_liquid_glass_redesign_enabled"]) {
+        return [BHTSettings boolForKey:@"classic_navigation"] ? @NO : nil;
+    }
+
     // Custom timelines overrides
     BOOL hideCustomTimelines = [BHTSettings boolForKey:@"hide_custom_timelines"];
     if ([key isEqualToString:@"hometimeline_pinned_tabs_topics_enabled"] ||
@@ -177,7 +184,11 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         [key isEqualToString:@"grok_ios_imagine_cta_reply_enabled"] ||
         [key isEqualToString:@"grok_ios_imagine_cta_timeline_enabled"] ||
         [key isEqualToString:@"grok_ios_imagine_cta_profile_enabled"] ||
-        [key isEqualToString:@"grok_immersive_create_own_button_enabled"]) {
+        [key isEqualToString:@"grok_immersive_create_own_button_enabled"] ||
+        [key isEqualToString:@"grok_ios_imagine_2_cta_enabled"] ||
+        [key isEqualToString:@"grok_ios_imagine_2_render_card_enabled"] ||
+        [key isEqualToString:@"grok_ios_unify_gateway_imagine_image_gen_enabled"] ||
+        [key isEqualToString:@"grok_imagine_inter_app_transfer_image_enabled"]) {
         return [BHTSettings boolForKey:@"hide_grok_create"] ? @NO : nil;
     }
 
@@ -553,10 +564,8 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
     return YES;
 }
 
-// Expose the native video cache only while downloading is enabled.
-- (BOOL)isVideoCacheEnabled {
-    return [BHTSettings boolForKey:@"download_videos"] ? YES : %orig;
-}
+// X 12.40 removed isVideoCacheEnabled. Our downloader uses authenticated media
+// URLs directly and does not need to turn on automatic native video caching.
 
 %end
 
@@ -785,13 +794,17 @@ static BOOL BHTURTIsPossiblySensitiveViewModelForAccount(id receiver,
 // original decision for users who leave the warning toggle disabled.
 __attribute__((constructor)) static void
 BHTInstallURTSensitiveStatusDecisionHook(void) {
-    Class viewModelClass = objc_getClass("T1URTTimelineStatusItemViewModel");
+    Class viewModelClass = BHTURTStatusItemViewModelClass();
     SEL selector =
         NSSelectorFromString(@"isPossiblySensitiveViewModelForAccount:");
     Method method = class_getInstanceMethod(viewModelClass, selector);
-    if (!method) {
+    if (!method || method_getNumberOfArguments(method) != 3) {
         return;
     }
+    char resultType[16] = {0}, accountType[16] = {0};
+    method_getReturnType(method, resultType, sizeof(resultType));
+    method_getArgumentType(method, 2, accountType, sizeof(accountType));
+    if ((resultType[0] != 'B' && resultType[0] != 'c') || accountType[0] != '@') return;
 
     IMP replacement = (IMP)BHTURTIsPossiblySensitiveViewModelForAccount;
     IMP original = method_getImplementation(method);
@@ -830,7 +843,26 @@ BHTInstallURTSensitiveStatusDecisionHook(void) {
 }
 
 - (BOOL)photoUploadHighQualityImagesSettingIsVisible {
-    return [BHTSettings boolForKey:@"auto_highest_load"] ? YES : %orig;
+    return ([BHTSettings boolForKey:@"auto_highest_load"] ||
+            [BHTSettings boolForKey:@"media_upload_4k_enabled"]) ? YES : %orig;
+}
+
+// The old media_upload_4k feature key is gone. Use the current account's
+// native resolution policy, preserving higher native limits and the user's
+// network-quality preference. This does not upscale a smaller source image.
+- (NSInteger)photoHighBandwidthUploadDimension {
+    NSInteger native = %orig;
+    return [BHTSettings boolForKey:@"media_upload_4k_enabled"] ? MAX(native, 4096) : native;
+}
+
+- (NSInteger)photoMediumBandwidthUploadDimension {
+    NSInteger native = %orig;
+    return [BHTSettings boolForKey:@"media_upload_4k_enabled"] ? MAX(native, 4096) : native;
+}
+
+- (NSInteger)photoUploadHighQualityImagesUploadDefaultResolution {
+    NSInteger native = %orig;
+    return [BHTSettings boolForKey:@"media_upload_4k_enabled"] ? MAX(native, 4096) : native;
 }
 
 - (BOOL)isLoadingHighestQualityImageVariantPermitted {

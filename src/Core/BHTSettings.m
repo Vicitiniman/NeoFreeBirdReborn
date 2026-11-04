@@ -90,6 +90,10 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                         @"searchAutoOpen": @YES,
                         @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"
                     },
+                    @{@"key": @"classic_navigation",
+                      @"default": @YES,
+                      @"type": @"toggle",
+                      @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"},
                     @{@"key": @"tab_bar_theming",
                       @"default": @NO,
                       @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"},
@@ -902,7 +906,21 @@ static BOOL BHTIsValidKeywordArray(id value, BOOL usernameKeywords) {
     return nil;
 }
 
++ (NSString*)unavailableReasonKeyForPreference:(NSString*)key {
+    // These old DM/voice gates have no verified implementation in the current
+    // host. Preserve stored values for a future port, but do not present an
+    // active switch which silently does nothing.
+    if ([key isEqualToString:@"voice_creation_enabled"] ||
+        [key isEqualToString:@"no_voice_messages"] ||
+        [key isEqualToString:@"old_compose_bar"] ||
+        [key isEqualToString:@"dm_reply_later_enabled"]) {
+        return @"SETTINGS_UNAVAILABLE_CURRENT_X";
+    }
+    return nil;
+}
+
 + (BOOL)boolForKey:(NSString*)key {
+    if ([self unavailableReasonKeyForPreference:key]) return NO;
     id value = [[NSUserDefaults standardUserDefaults] objectForKey:key];
     if (value != nil) {
         return [value boolValue];

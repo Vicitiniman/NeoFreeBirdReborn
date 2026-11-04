@@ -1,3 +1,4 @@
+#import "CustomTabBar/BHTTabViewAppearance.h"
 //
 //  AppearanceSettingsViewController.m
 //  NeoFreeBird
@@ -131,32 +132,13 @@
 
 - (void)refreshTabViewsWithThemingInView:(UIView*)view {
     if ([view isKindOfClass:NSClassFromString(@"T1TabView")]) {
-        if ([view respondsToSelector:@selector(_t1_updateImageViewAnimated:)]) {
-            ((void (*)(id, SEL, BOOL))objc_msgSend)(
-                view, @selector(_t1_updateImageViewAnimated:), NO);
+        SEL selector = NSSelectorFromString(@"_t1_updateImageViewAnimated:");
+        if ([view respondsToSelector:selector]) {
+            ((void (*)(id, SEL, BOOL))objc_msgSend)(view, selector, NO);
         }
-        if ([view respondsToSelector:@selector(_t1_updateTitleLabel)]) {
-            [view performSelector:@selector(_t1_updateTitleLabel)];
-        }
-        if ([view respondsToSelector:@selector(_t1_layoutForTabBar)]) {
-            [view performSelector:@selector(_t1_layoutForTabBar)];
-        }
-        if ([view respondsToSelector:@selector(_t1_layoutBadgeViewMaximized)]) {
-            [view performSelector:@selector(_t1_layoutBadgeViewMaximized)];
-        }
-        if ([view respondsToSelector:@selector(_t1_layoutBadgeViewMinimized)]) {
-            [view performSelector:@selector(_t1_layoutBadgeViewMinimized)];
-        }
-
-        // Clearing the override lets the label fall back to its default color.
-        if (![BHTSettings boolForKey:@"tab_bar_theming"]) {
-            UILabel* titleLabel = [view valueForKey:@"titleLabel"];
-            if (titleLabel) {
-                titleLabel.textColor = nil;
-            }
-        }
+        BHTRefreshTabViewAppearance(view);
+        [view setNeedsLayout];
     }
-
     for (UIView* subview in view.subviews) {
         [self refreshTabViewsWithThemingInView:subview];
     }
@@ -172,24 +154,13 @@
 
 - (void)refreshTabViewsInView:(UIView*)view {
     if ([view isKindOfClass:NSClassFromString(@"T1TabView")]) {
-        if ([view respondsToSelector:@selector(_t1_updateTitleLabel)]) {
-            [view performSelector:@selector(_t1_updateTitleLabel)];
+        SEL selector = NSSelectorFromString(@"_t1_updateImageViewAnimated:");
+        if ([view respondsToSelector:selector]) {
+            ((void (*)(id, SEL, BOOL))objc_msgSend)(view, selector, NO);
         }
-        if ([view respondsToSelector:@selector(_t1_layoutForTabBar)]) {
-            [view performSelector:@selector(_t1_layoutForTabBar)];
-        }
-        if ([view respondsToSelector:@selector(_t1_layoutBadgeViewMaximized)]) {
-            [view performSelector:@selector(_t1_layoutBadgeViewMaximized)];
-        }
-
-        if (![BHTSettings boolForKey:@"tab_bar_theming"]) {
-            UILabel* titleLabel = [view valueForKey:@"titleLabel"];
-            if (titleLabel) {
-                titleLabel.textColor = nil;
-            }
-        }
+        BHTRefreshTabViewAppearance(view);
+        [view setNeedsLayout];
     }
-
     for (UIView* subview in view.subviews) {
         [self refreshTabViewsInView:subview];
     }

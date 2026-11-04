@@ -93,5 +93,31 @@ static void testProfileMediaAndGrok(void) {
               @"Showing the promotion restores the native account gate, without forcing it on");
     if (previous) [defaults setObject:previous forKey:@"hide_grok_sidebar"];
     else [defaults removeObjectForKey:@"hide_grok_sidebar"];
+    id previousCreation = [defaults objectForKey:@"hide_grok_create"];
+    NSArray* currentCreationKeys = @[@"grok_ios_imagine_2_cta_enabled",
+                                     @"grok_ios_imagine_2_render_card_enabled",
+                                     @"grok_ios_unify_gateway_imagine_image_gen_enabled",
+                                     @"grok_imagine_inter_app_transfer_image_enabled"];
+    [defaults setBool:YES forKey:@"hide_grok_create"];
+    for (NSString* key in currentCreationKeys) {
+        NSCAssert([FeatureSwitchOverrideValueForKey(key) isEqual:@NO], @"Hide current Imagine entry points");
+    }
+    NSCAssert(FeatureSwitchOverrideValueForKey(@"x_ios_timeline_imagine_cta") == nil,
+              @"An analytics placement name must not become a Boolean feature gate");
+    [defaults setBool:NO forKey:@"hide_grok_create"];
+    for (NSString* key in currentCreationKeys) {
+        NSCAssert(FeatureSwitchOverrideValueForKey(key) == nil, @"Restore each native creation decision when disabled");
+    }
+    if (previousCreation) [defaults setObject:previousCreation forKey:@"hide_grok_create"];
+    else [defaults removeObjectForKey:@"hide_grok_create"];
+    id previousClassic = [defaults objectForKey:@"classic_navigation"];
+    [defaults setBool:YES forKey:@"classic_navigation"];
+    NSCAssert([FeatureSwitchOverrideValueForKey(@"ios_liquid_glass_redesign_enabled") isEqual:@NO],
+              @"Classic navigation keeps the native entry-based integration");
+    [defaults setBool:NO forKey:@"classic_navigation"];
+    NSCAssert(FeatureSwitchOverrideValueForKey(@"ios_liquid_glass_redesign_enabled") == nil,
+              @"Opting out restores X's own redesign decision");
+    if (previousClassic) [defaults setObject:previousClassic forKey:@"classic_navigation"];
+    else [defaults removeObjectForKey:@"classic_navigation"];
     NSLog(@"PASS: profile media menu ordering, header offsets, snapshots, dimensions, isolation, and Grok promotion gate");
 }

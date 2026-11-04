@@ -92,7 +92,7 @@
 /* Compatibility sign-in */
 "COMPATIBILITY_SIGN_IN_TITLE" = "Secure Web Sign-in";
 "COMPATIBILITY_SIGN_IN_HEADING" = "Compatibility Sign-in";
-"COMPATIBILITY_SIGN_IN_DETAIL" = "Tries an alternative sign-in with X 12.24.1's account service. Complete any verification X requests. If it fails, Share Report helps identify the cause.";
+"COMPATIBILITY_SIGN_IN_DETAIL" = "Sign in on X's website, then use that account in NeoFreeBird. Complete any verification X requests. Your saved sign-in stays on this device.";
 "COMPATIBILITY_SIGN_IN_USERNAME_PLACEHOLDER" = "Username, email, or phone";
 "COMPATIBILITY_SIGN_IN_PASSWORD_PLACEHOLDER" = "Password";
 "COMPATIBILITY_SIGN_IN_ACTION" = "Sign in";
@@ -100,7 +100,7 @@
 "COMPATIBILITY_SIGN_IN_PREPARING" = "Preparing X's sign-in request…";
 "COMPATIBILITY_SIGN_IN_CONTACTING_X" = "Contacting X…";
 "COMPATIBILITY_SIGN_IN_REQUIRED_ERROR" = "Enter both your account identifier and password.";
-"COMPATIBILITY_SIGN_IN_VERSION_ERROR" = "This version of Compatibility Sign-in supports X 12.24.1. Install the matching NeoFreeBird build to continue.";
+"COMPATIBILITY_SIGN_IN_VERSION_ERROR" = "This version of Compatibility Sign-in supports X 12.40.1 build 1. Install the matching NeoFreeBird build to continue.";
 "COMPATIBILITY_SIGN_IN_RUNTIME_ERROR" = "The guarded compatibility account service is unavailable in this X build. Export a pre-login compatibility report so its selector checks can be reviewed.";
 "COMPATIBILITY_SIGN_IN_REJECTED_ERROR" = "X did not accept this sign-in. If your details work on x.com, use Share Report so we can check why the app was rejected.";
 "COMPATIBILITY_SIGN_IN_REQUEST_ERROR" = "X could not complete this compatibility request. This does not confirm an incorrect password. Use Share Report to help diagnose the failure.";
@@ -317,6 +317,9 @@
 "UNDO_SEND_DESCRIPTION" = "Choose how long to hold a post before sending, giving you time to undo it.";
 "BHT_DOWNLOAD_PROGRESS" = "Downloading…";
 "BHT_RESTORE_DEFAULTS" = "Restore defaults";
+"CLASSIC_NAVIGATION_TITLE" = "Classic navigation";
+"CLASSIC_NAVIGATION_DETAIL" = "Use the familiar navigation layout for custom tabs and Likes. Reopen X after changing this.";
+"SETTINGS_UNAVAILABLE_CURRENT_X" = "Not supported in this version of X. Your saved preference is preserved.";
 "SIDEBAR_GROK_BOT_TITLE" = "Try Grok Bot";
 
 "DOWNLOAD_VIDEOS_TITLE" = "Download media";
@@ -649,7 +652,7 @@
 "HIDE_SCREENSHOT_BRANDING_TITLE" = "Hide screenshot branding";
 "HIDE_SCREENSHOT_BRANDING_DETAIL" = "Hide X's custom overlay on timeline screenshots.";
 "EXPORT_COMPATIBILITY_REPORT_TITLE" = "Export compatibility report";
-"EXPORT_COMPATIBILITY_REPORT_DETAIL" = "Share the X 12.9 runtime hook report for troubleshooting.";
+"EXPORT_COMPATIBILITY_REPORT_DETAIL" = "Share the runtime compatibility report for troubleshooting.";
 "DETAILED_REPLY_DIAGNOSTICS_TITLE" = "Compare native posting and replies";
 "DETAILED_REPLY_DIAGNOSTICS_DETAIL" = "Temporary testing mode. Send one normal post first, verify it is visible, then send one native reply and export the compatibility report.";
 "DETAILED_REPLY_DIAGNOSTICS_WARNING_TITLE" = "Compare one post and one reply?";

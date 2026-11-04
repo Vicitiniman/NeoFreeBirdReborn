@@ -1,3 +1,4 @@
+#import "Compatibility/BHTHostCompatibility.h"
 #import "Login/BHTSecureWebSession.h"
 
 #import "Core/BHTBundle.h"
@@ -11,7 +12,6 @@
 #import <objc/message.h>
 #import <stdatomic.h>
 
-static NSString* const BHTWebSessionTargetVersion = @"12.24.1";
 
 typedef NS_ENUM(NSUInteger, BHTWebSessionEvent) {
     BHTWebSessionEventPresented = 0,
@@ -68,9 +68,7 @@ static NSString* BHTWebSessionLocalized(NSString* key) {
 }
 
 static BOOL BHTWebSessionVersionIsSupported(void) {
-    NSString* version = [NSBundle.mainBundle
-        objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-    return [version isEqualToString:BHTWebSessionTargetVersion];
+    return BHTIsSupportedHost();
 }
 
 static NSDictionary<NSString*, id>*

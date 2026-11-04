@@ -26,6 +26,8 @@ def main():
 #import "Timeline/BHTTimelineCleanup.h"
 #import "Likes/BHTLikesNavigationUtility.h"
 #import "Compatibility/BHTCompatibilityReporter.h"
+#import "Compatibility/BHTHostCompatibility.h"
+#import "Timeline/BHTTimelineModelRuntime.h"
 #import "Login/BHTWebSessionSecurity.h"
 #import "Login/BHTWebSessionVault.h"
 NSString* const BHTSettingsProfileDidApplyNotification = @"TestProfileChanged";
@@ -75,6 +77,9 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
     profile_source = (ROOT / "src/Hooks/Profile.x").read_text(encoding="utf8")
     unit += section(profile_source, "static NSArray* BHTProfileMainEntriesWithPhotosFirst", "// Keep the profile's native")
     unit += section(switches, "static NSNumber* FeatureSwitchOverrideValueForKey", "// Every feature switch facade")
+    player_source = (ROOT / "src/Hooks/ImmersivePlayer.x").read_text(encoding="utf8")
+    unit += section(player_source, "static BOOL cardStateFieldIndex", "static const uint8_t* immersiveCardStateMetadata")
+    unit += (ROOT / "tests/SwiftFieldMetadataTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/ProfileMediaTests.m").read_text(encoding="utf8")
     login_source = (ROOT / "src/Login/BHTCompatibilityLogin.m").read_text(encoding="utf8")
     unit += section(login_source, "static NSInteger BHTCompatibilityAPIErrorCode(", "static void BHTCompatibilityRecordCommandCompletion(")
@@ -82,6 +87,7 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
     unit += (ROOT / "tests/CompatibilityLoginTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/WebSessionSecurityTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/WebSessionVaultTests.m").read_text(encoding="utf8")
+    unit += (ROOT / "tests/HostCompatibilityTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/TimelineCleanupTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/TimelineKeywordTests.m").read_text(encoding="utf8")
     if args.emit_only:
@@ -96,6 +102,8 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
                         "-framework", "Foundation", "-framework", "Security", "-I", str(ROOT / "src"), str(test_source),
                         str(ROOT / "src/Timeline/BHTForYouKeywordFilter.m"),
                         str(ROOT / "src/Timeline/BHTTimelineCleanup.m"),
+                        str(ROOT / "src/Timeline/BHTTimelineModelRuntime.m"),
+                        str(ROOT / "src/Compatibility/BHTHostCompatibility.m"),
                         str(ROOT / "src/Likes/BHTLikesNavigationUtility.m"),
                         str(ROOT / "src/Login/BHTWebSessionSecurity.m"),
                         str(ROOT / "src/Login/BHTWebSessionVault.m"),
