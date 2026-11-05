@@ -16,6 +16,17 @@ private func BHTGlassFieldOffset(_ type: Any.Type, index: Int) -> Int
 @_silgen_name("swift_reflectionMirror_recursiveChildMetadata")
 private func BHTGlassFieldMetadata(_ type: Any.Type, index: Int,
                                   fieldMetadata: UnsafeMutablePointer<_FieldReflectionMetadata>) -> Any.Type
+@_silgen_name("swift_retain")
+private func BHTGlassRetain(_ object: UnsafeRawPointer) -> UnsafeRawPointer
+@_silgen_name("swift_release")
+private func BHTGlassRelease(_ object: UnsafeRawPointer)
+
+// A function stored in a concrete struct uses its concrete return convention.
+// UnsafeMutablePointer<Function>.pointee instead reabstracts it to an indirect
+// result. Copy this concrete slot's representation and balance its context.
+private struct BHTGlassFactorySlot {
+    var factory: () -> UIViewController
+}
 
 @_silgen_name("BHTInvokeGlassReplaceTabs")
 private func BHTInvokeGlassReplaceTabs(
@@ -144,15 +155,33 @@ public final class BHTGlassNavigationRuntime: NSObject {
             }
         }
         var result = template
+        var factoryInstalled = false
         withUnsafeMutablePointer(to: &result) { pointer in
             let base = UnsafeMutableRawPointer(pointer)
             base.advanced(by: writes[0].0).assumingMemoryBound(to: String.self).pointee = id
             base.advanced(by: icon.offset).assumingMemoryBound(to: UIImage.self).pointee = image
             base.advanced(by: selectedIcon.offset).assumingMemoryBound(to: UIImage.self).pointee = selectedImage
             base.advanced(by: label.offset).assumingMemoryBound(to: String.self).pointee = title
-            base.advanced(by: root.offset).assumingMemoryBound(to: (() -> UIViewController).self).pointee = factory
+            var slot = BHTGlassFactorySlot(factory: factory)
+            guard MemoryLayout<BHTGlassFactorySlot>.size == 2 * MemoryLayout<UInt>.size,
+                  BHTGlassFieldOffset(BHTGlassFactorySlot.self, index: 0) == 0 else { return }
+            withUnsafePointer(to: &slot) { source in
+                let bytes = UnsafeRawPointer(source)
+                let function = bytes.load(as: UInt.self)
+                let context = bytes.load(fromByteOffset: MemoryLayout<UInt>.size, as: UInt.self)
+                let destination = base.advanced(by: root.offset)
+                let oldContext = destination.load(fromByteOffset: MemoryLayout<UInt>.size, as: UInt.self)
+                guard function != 0, context % MemoryLayout<UInt>.alignment == 0,
+                      oldContext % MemoryLayout<UInt>.alignment == 0 else { return }
+                if let address = UnsafeRawPointer(bitPattern: context) { _ = BHTGlassRetain(address) }
+                destination.storeBytes(of: function, as: UInt.self)
+                destination.storeBytes(of: context, toByteOffset: MemoryLayout<UInt>.size, as: UInt.self)
+                if let address = UnsafeRawPointer(bitPattern: oldContext) { BHTGlassRelease(address) }
+                factoryInstalled = true
+            }
+            withExtendedLifetime(slot) {}
         }
-        return result
+        return factoryInstalled ? result : nil
     }
 
     @objc(applyToController:account:generation:visiblePages:registry:settingsFactory:likesFactory:)
