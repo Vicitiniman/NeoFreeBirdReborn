@@ -130,7 +130,10 @@ jobs:
           swiftc main/src/Timeline/BHTHomeTimelineRuntime.swift main/tests/HomeTimelineRuntimeTests.swift -o "$RUNNER_TEMP/home-tests"
           "$RUNNER_TEMP/home-tests"
           swiftc -D BHT_GLASS_TESTS main/src/Navigation/BHTGlassNavigationRuntime.swift main/tests/GlassNavigationRuntimeTests.swift -o "$RUNNER_TEMP/glass-tests"
-          "$RUNNER_TEMP/glass-tests"
+          if ! "$RUNNER_TEMP/glass-tests"; then
+            lldb --batch -o run -o "thread backtrace all" -- "$RUNNER_TEMP/glass-tests"
+            exit 1
+          fi
           python3 main/tests/run_native_regressions.py
 
       - name: Restore Theos Toolchain

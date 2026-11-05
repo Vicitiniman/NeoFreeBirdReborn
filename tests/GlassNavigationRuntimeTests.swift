@@ -122,6 +122,12 @@ private final class Controller: NSObject {
         precondition(BHTGlassNavigationRuntime.clone(withAction, id: "x", title: "x", image: native[0].icon,
             selectedImage: native[0].selectedIcon, factory: { UIViewController() }) == nil,
             "Do not copy an unrelated native action into an owned tab")
+        let renamedHome = Controller([tab("new-home-format"), tab("search"), tab("notifications")])
+        _ = BHTGlassNavigationRuntime.apply(to: renamedHome, account: account, generation: 1,
+            visiblePages: ["home", "ntab", "guide"], registry: [],
+            settingsFactory: { UIViewController() }, likesFactory: { UIViewController() })
+        precondition(renamedHome.orderedTabs.first?.identifier.rawValue == "new-home-format",
+                     "An unrecognized Home identifier must preserve native order")
         print("PASS: concrete glass descriptors, lazy settings/Likes, ordering, selection, idle layout, account isolation and shape rejection")
     }
 }

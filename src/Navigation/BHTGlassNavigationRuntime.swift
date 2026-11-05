@@ -15,7 +15,7 @@ private func BHTGlassFieldCount(_ type: Any.Type) -> Int
 private func BHTGlassFieldOffset(_ type: Any.Type, index: Int) -> Int
 @_silgen_name("swift_reflectionMirror_recursiveChildMetadata")
 private func BHTGlassFieldMetadata(_ type: Any.Type, index: Int,
-                                  fieldMetadata: UnsafeMutablePointer<_FieldReflectionMetadata>) -> Any.Type?
+                                  fieldMetadata: UnsafeMutablePointer<_FieldReflectionMetadata>) -> Any.Type
 
 @_silgen_name("BHTInvokeGlassReplaceTabs")
 private func BHTInvokeGlassReplaceTabs(
@@ -83,7 +83,8 @@ public final class BHTGlassNavigationRuntime: NSObject {
             var metadata = _FieldReflectionMetadata()
             let childType = BHTGlassFieldMetadata(type, index: index, fieldMetadata: &metadata)
             defer { metadata.freeFunc?(metadata.name) }
-            guard let name = metadata.name, let childType, metadata.isStrong else { return nil }
+            guard let name = metadata.name, unsafeBitCast(childType, to: UInt.self) != 0,
+                  metadata.isStrong else { return nil }
             fields[String(cString: name)] = (BHTGlassFieldOffset(type, index: index), childType)
         }
         return fields.count == count ? fields : nil
@@ -247,7 +248,8 @@ public final class BHTGlassNavigationRuntime: NSObject {
             if let tab = byPage[page] { ordered.append(tab) }
         }
         ordered.append(contentsOf: unknown)
-        if ordered.isEmpty { ordered = originals }
+        let homeRecognized = byPage["home"] != nil
+        if ordered.isEmpty || !homeRecognized { ordered = originals }
         let settingsID = "nfb.settings." + cache.accountToken
         let likesID = "nfb.likes." + cache.accountToken
         let settingsImage = UIImage(systemName: "gearshape")
@@ -267,7 +269,7 @@ public final class BHTGlassNavigationRuntime: NSObject {
             }
         }
         if let likesTab {
-            let rank = visiblePages.firstIndex(of: "likes") ?? ordered.count
+            let rank = homeRecognized ? visiblePages.firstIndex(of: "likes") ?? ordered.count : ordered.count
             ordered.insert(likesTab, at: min(rank, ordered.count))
         }
         // Both compact phones and the iPad rail have room for at least five
@@ -288,6 +290,7 @@ public final class BHTGlassNavigationRuntime: NSObject {
                        "nativePages": originals.compactMap { rawID($0).flatMap { canonicalPage($0, registry: registry) } },
                        "visiblePages": wantedIDs.compactMap { canonicalPage($0, registry: registry) },
                        "unrecognizedNativeCount": unknown.count, "settingsDestinationInstalled": settingsTab != nil,
+                       "nativeHomeRecognized": homeRecognized, "customOrderApplied": homeRecognized,
                        "likesDestinationInstalled": likesTab != nil, "concreteDescriptorType": String(reflecting: Element.self)]
         return metadata
     }
