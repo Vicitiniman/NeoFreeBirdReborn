@@ -16,10 +16,6 @@ private func BHTGlassFieldOffset(_ type: Any.Type, index: Int) -> Int
 @_silgen_name("swift_reflectionMirror_recursiveChildMetadata")
 private func BHTGlassFieldMetadata(_ type: Any.Type, index: Int,
                                   fieldMetadata: UnsafeMutablePointer<_FieldReflectionMetadata>) -> Any.Type
-@_silgen_name("swift_retain")
-private func BHTGlassRetain(_ object: UnsafeRawPointer) -> UnsafeRawPointer
-@_silgen_name("swift_release")
-private func BHTGlassRelease(_ object: UnsafeRawPointer)
 
 // A function stored in a concrete struct uses its concrete return convention.
 // UnsafeMutablePointer<Function>.pointee instead reabstracts it to an indirect
@@ -154,6 +150,14 @@ public final class BHTGlassNavigationRuntime: NSObject {
                 guard !ranges[i].overlaps(ranges[j]) else { return nil }
             }
         }
+        guard let handle = dlopen(nil, RTLD_LAZY),
+              let retainSymbol = dlsym(handle, "swift_retain"),
+              let releaseSymbol = dlsym(handle, "swift_release") else { return nil }
+        defer { dlclose(handle) }
+        typealias RetainContext = @convention(c) (UnsafeRawPointer) -> UnsafeRawPointer
+        typealias ReleaseContext = @convention(c) (UnsafeRawPointer) -> Void
+        let retainContext = unsafeBitCast(retainSymbol, to: RetainContext.self)
+        let releaseContext = unsafeBitCast(releaseSymbol, to: ReleaseContext.self)
         var result = template
         var factoryInstalled = false
         withUnsafeMutablePointer(to: &result) { pointer in
@@ -171,12 +175,12 @@ public final class BHTGlassNavigationRuntime: NSObject {
                 let context = bytes.load(fromByteOffset: MemoryLayout<UInt>.size, as: UInt.self)
                 let destination = base.advanced(by: root.offset)
                 let oldContext = destination.load(fromByteOffset: MemoryLayout<UInt>.size, as: UInt.self)
-                guard function != 0, context % MemoryLayout<UInt>.alignment == 0,
-                      oldContext % MemoryLayout<UInt>.alignment == 0 else { return }
-                if let address = UnsafeRawPointer(bitPattern: context) { _ = BHTGlassRetain(address) }
+                guard function != 0, context % UInt(MemoryLayout<UInt>.alignment) == 0,
+                      oldContext % UInt(MemoryLayout<UInt>.alignment) == 0 else { return }
+                if let address = UnsafeRawPointer(bitPattern: context) { _ = retainContext(address) }
                 destination.storeBytes(of: function, as: UInt.self)
                 destination.storeBytes(of: context, toByteOffset: MemoryLayout<UInt>.size, as: UInt.self)
-                if let address = UnsafeRawPointer(bitPattern: oldContext) { BHTGlassRelease(address) }
+                if let address = UnsafeRawPointer(bitPattern: oldContext) { releaseContext(address) }
                 factoryInstalled = true
             }
             withExtendedLifetime(slot) {}

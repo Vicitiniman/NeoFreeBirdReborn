@@ -27,6 +27,7 @@ private final class Controller: NSObject {
     var selectedIdentifier = Identifier(rawValue: "home")
     init(_ tabs: [Tab]) { orderedTabs = tabs }
 }
+private final class FactoryCapture { let marker = "retained-factory" }
 
 @main struct GlassNavigationTests {
     static func main() {
@@ -128,6 +129,18 @@ private final class Controller: NSObject {
             settingsFactory: { UIViewController() }, likesFactory: { UIViewController() })
         precondition(renamedHome.orderedTabs.first?.identifier.rawValue == "new-home-format",
                      "An unrecognized Home identifier must preserve native order")
+        weak var captured: FactoryCapture?
+        var held: Tab? = {
+            let context = FactoryCapture()
+            captured = context
+            return BHTGlassNavigationRuntime.clone(native[0], id: "lifetime", title: "Lifetime",
+                image: native[0].icon, selectedImage: native[0].selectedIcon,
+                factory: { UIViewController(context.marker) })
+        }()
+        precondition(captured != nil && held?.makeRootViewController().marker == "retained-factory",
+                     "An owned destination must retain its concrete factory context")
+        held = nil
+        precondition(captured == nil, "Removing the destination must release its factory context")
         print("PASS: concrete glass descriptors, lazy settings/Likes, ordering, selection, idle layout, account isolation and shape rejection")
     }
 }
