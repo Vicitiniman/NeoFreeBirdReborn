@@ -101,7 +101,7 @@ void BHTPresentSettingsFromController(UIViewController* controller) {
         UIAction* close = [UIAction actionWithTitle:@"Done" image:nil identifier:nil handler:^(__kindof UIAction* action) {
             [weakModal dismissViewControllerAnimated:YES completion:nil];
         }];
-        settings.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithPrimaryAction:close menu:nil];
+        settings.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Done" image:nil primaryAction:close menu:nil];
         [controller presentViewController:modal animated:YES completion:nil];
     }
 }
