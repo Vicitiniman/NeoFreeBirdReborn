@@ -22,6 +22,7 @@
 @property(nonatomic, strong) NSMutableArray<BHTGlassSavedView*>* savedViews;
 @property(nonatomic, strong) UITraitCollection* traits;
 @property(nonatomic, copy) NSString* materialKind;
+@property(nonatomic, copy) NSString* requestedMaterialKind;
 @property(nonatomic) NSUInteger generation;
 @property(nonatomic) BOOL updating;
 @property(nonatomic) BOOL vertical;
@@ -131,12 +132,15 @@ static void BHTGlassUpdateMaterial(BHTGlassChromeState* state, UIView* host) {
     NSString* kind = UIAccessibilityIsReduceTransparencyEnabled() ? @"opaque_accessibility" :
         (BHTNativeLiquidGlassAvailable() ? @"native_liquid_glass" : @"system_material");
     BOOL colorChanged = !state.traits || [host.traitCollection hasDifferentColorAppearanceComparedToTraitCollection:state.traits];
-    if (state.generation == BHTLiquidGlassGeneration && !colorChanged && [state.materialKind isEqual:kind]) return;
+    if (state.generation == BHTLiquidGlassGeneration && !colorChanged && [state.requestedMaterialKind isEqual:kind]) return;
+    state.requestedMaterialKind = kind;
     UIVisualEffect* effect = nil;
     if ([kind isEqualToString:@"native_liquid_glass"]) {
-        // UIGlassEffect's public default initializer uses regular glass. Resolve
-        // it at runtime so the project can retain its iOS 16.5 build SDK.
-        id candidate = [[NSClassFromString(@"UIGlassEffect") alloc] init];
+        // Public UIKit factory, verified against UIGlassEffect.h. Regular is
+        // the first (zero-valued) NSInteger style. Runtime dispatch retains the
+        // iOS 16.5 build SDK without relying on an inherited initializer.
+        id candidate = ((id (*)(id, SEL, NSInteger))objc_msgSend)(NSClassFromString(@"UIGlassEffect"),
+            NSSelectorFromString(@"effectWithStyle:"), 0);
         if ([candidate isKindOfClass:UIVisualEffect.class]) effect = candidate;
     }
     if (!effect && !UIAccessibilityIsReduceTransparencyEnabled()) {
@@ -165,7 +169,10 @@ void BHTUpdateLiquidGlassTabBar(UIViewController* controller) {
     UIView* tabBar = BHTGlassObject(controller, @"tabBar");
     NSArray* tabs = BHTGlassObject(controller, @"tabViews");
     if (![tabBar isKindOfClass:UIView.class] || ![tabs isKindOfClass:NSArray.class] || !tabs.count ||
-        ![tabBar isDescendantOfView:controller.view] || CGRectIsEmpty(tabBar.bounds)) return;
+        ![tabBar isDescendantOfView:controller.view] || CGRectIsEmpty(tabBar.bounds)) {
+        BHTGlassRestore(controller);
+        return;
+    }
     UIView* host = tabBar == controller.view ? tabBar : tabBar.superview;
     BHTGlassChromeState* state = BHTGlassState(controller, YES);
     if (state.updating) return;
@@ -186,8 +193,10 @@ void BHTUpdateLiquidGlassTabBar(UIViewController* controller) {
             if (host == tabBar) [host insertSubview:state.material atIndex:0];
             else [host insertSubview:state.material belowSubview:tabBar];
         }
-        if (state.material.hidden != tabBar.hidden) state.material.hidden = tabBar.hidden;
-        if (state.material.alpha != tabBar.alpha) state.material.alpha = tabBar.alpha;
+        BOOL hidden = host == tabBar ? NO : tabBar.hidden;
+        CGFloat alpha = host == tabBar ? 1 : tabBar.alpha;
+        if (state.material.hidden != hidden) state.material.hidden = hidden;
+        if (state.material.alpha != alpha) state.material.alpha = alpha;
         if (!CGRectEqualToRect(state.material.frame, frame)) state.material.frame = frame;
         CGFloat radius = state.vertical ? MIN(24, frame.size.width / 2) : frame.size.height / 2;
         if (state.material.layer.cornerRadius != radius) state.material.layer.cornerRadius = radius;
