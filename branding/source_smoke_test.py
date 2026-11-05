@@ -4296,11 +4296,11 @@ def main() -> None:
             "navigation delegate"
         )
 
-    if "Version: 6.1.0-beta.71" not in (
+    if "Version: 6.1.0-beta.72" not in (
         ROOT / "control"
     ).read_text(encoding="utf-8"):
         raise AssertionError(
-            "Current compatibility changes must ship as beta.71"
+            "Current compatibility changes must ship as beta.72"
         )
 
     require_source_tokens(

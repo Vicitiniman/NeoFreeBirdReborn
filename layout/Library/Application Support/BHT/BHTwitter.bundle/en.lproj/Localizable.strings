@@ -4,6 +4,7 @@
 */
 
 "NFB_SETTINGS_TITLE" = "NeoFreeBird";
+"NFB_SETTINGS_ENTRY_SUBTITLE" = "Settings and customization";
 "NFB_SETTINGS_DETAIL" = "Tweak your Twitter. Hide ads, enable Blue features, and much more.";
 
 /*Alerts and popups*/

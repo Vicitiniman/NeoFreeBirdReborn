@@ -6,6 +6,7 @@
 #import "HookHelpers.h"
 #import "Settings/ModernSettingsPageViewController.h"
 #import "Navigation/BHTGlassNavigation.h"
+#import "Settings/BHTSettingsEntry.h"
 
 static UIFont* _Nonnull remapFont(UIFont* origFont) {
     UIFont* newFont = getDefaultFont(origFont);
@@ -32,31 +33,13 @@ NSDictionary* BHTSettingsEntryDiagnosticSnapshot(void) {
 }
 
 static BOOL isSettingsClass(UIViewController* viewController) {
-    return [viewController isKindOfClass:objc_getClass("T1GenericSettingsViewController")] ||
-           [viewController isKindOfClass:objc_getClass("T1SettingsViewController")];
+    return BHTSettingsEntryIsContainer(viewController);
 }
 
 // The generic controller backs the root and every sub-page alike, so the root is
 // the first settings-class controller in the navigation stack.
 static BOOL settingsVCIsRoot(TFNItemsDataViewController* settingsVC) {
-    if (settingsVC.navigationController.viewControllers.count == 0) {
-        // XNavigation can host this root without a UIKit navigation stack.
-        for (UIViewController* parent = settingsVC.parentViewController; parent; parent = parent.parentViewController) {
-            if (isSettingsClass(parent)) return NO;
-        }
-        return YES;
-    }
-    for (UIViewController* viewController in settingsVC.navigationController.viewControllers) {
-        if (viewController == settingsVC) {
-            return YES;
-        }
-
-        if (isSettingsClass(viewController)) {
-            return NO;
-        }
-    }
-
-    return NO;
+    return BHTSettingsEntryIsRootController(settingsVC);
 }
 
 static BOOL sectionsContainNeoFreeBirdEntry(NSArray* sections) {

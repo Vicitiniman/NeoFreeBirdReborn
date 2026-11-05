@@ -1,6 +1,7 @@
 #import "Compatibility/BHTHostCompatibility.h"
 #import "Compatibility/BHTCompatibilityReporter.h"
 #import "Navigation/BHTGlassNavigation.h"
+#import "Settings/BHTSettingsEntry.h"
 #import "Core/BHTManager.h"
 #import "Core/BHTSettings.h"
 #import "Likes/BHTLikesTab.h"
@@ -1651,6 +1652,8 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"grok", @"T1StatusPhotoEditorHandler", @"photoEditorCanEditWithGrok:", NO),
 
         BHTProbe(@"settings", @"T1GenericSettingsViewController", @"viewWillAppear:", NO),
+        BHTProbe(@"settings", @"XSettings.SettingsListViewController", @"viewWillAppear:", NO),
+        BHTProbe(@"settings", @"T1TwitterSwift.SettingsChromeViewController", @"viewDidLoad", NO),
         BHTProbe(@"glassNavigation", @"T1TwitterSwift.XTabbedAppNavigationViewController", @"viewDidAppear:", NO),
         BHTProbe(@"glassNavigation", @"XNavigation.TabBarController", @"viewDidLoad", NO),
         BHTProbe(@"settings", @"TFSFeatureSwitches", @"boolForKey:", NO),
@@ -1892,6 +1895,7 @@ static NSURL* BHTWriteCompatibilityReportNow(
         @"navigationMethods": BHTNavigationMethodSnapshot(),
         @"glassNavigationRuntime": BHTGlassNavigationDiagnosticSnapshot(),
         @"settingsEntryRuntime": BHTSettingsEntryDiagnosticSnapshot(),
+        @"modernSettingsEntryRuntime": BHTModernSettingsEntryDiagnosticSnapshot(),
         @"timelineItemObservations": BHTTimelineObservationSnapshot(),
         @"mediaActionRuntime": BHTMediaActionObservationSnapshot(),
         @"railBrandingRuntime": BHTRailBrandingObservationSnapshot(),

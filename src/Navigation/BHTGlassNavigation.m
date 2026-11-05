@@ -158,14 +158,20 @@ BOOL BHTRefreshGlassNavigation(void) {
 }
 
 static void BHTNavigationHierarchy(UIViewController* controller, NSUInteger depth,
-                                    NSUInteger* budget, NSMutableArray* rows) {
-    if (!controller || depth > 6 || *budget == 0) return;
+                                    NSUInteger* budget, NSMutableArray* rows, NSHashTable* visited) {
+    if (!controller || depth > 14 || *budget == 0 || [visited containsObject:controller]) return;
+    [visited addObject:controller];
     (*budget)--;
     [rows addObject:@{@"class": NSStringFromClass(controller.class), @"depth": @(depth),
                      @"loaded": @(controller.isViewLoaded),
                      @"onScreen": @(controller.isViewLoaded && controller.view.window != nil)}];
-    for (UIViewController* child in controller.childViewControllers) BHTNavigationHierarchy(child, depth + 1, budget, rows);
-    BHTNavigationHierarchy(controller.presentedViewController, depth + 1, budget, rows);
+    BHTNavigationHierarchy(controller.presentedViewController, depth + 1, budget, rows, visited);
+    if ([controller isKindOfClass:UINavigationController.class]) {
+        BHTNavigationHierarchy(((UINavigationController*)controller).visibleViewController, depth + 1, budget, rows, visited);
+    } else if ([controller isKindOfClass:UITabBarController.class]) {
+        BHTNavigationHierarchy(((UITabBarController*)controller).selectedViewController, depth + 1, budget, rows, visited);
+    }
+    for (UIViewController* child in controller.childViewControllers) BHTNavigationHierarchy(child, depth + 1, budget, rows, visited);
 }
 
 NSDictionary* BHTGlassNavigationDiagnosticSnapshot(void) {
@@ -176,11 +182,13 @@ NSDictionary* BHTGlassNavigationDiagnosticSnapshot(void) {
     }
     NSMutableDictionary* result = [[BHTGlassNavigationRuntime diagnosticSnapshot] mutableCopy];
     NSMutableArray* hierarchy = [NSMutableArray array];
-    NSUInteger budget = 64;
+    NSUInteger budget = 96;
+    NSHashTable* visited = [NSHashTable hashTableWithOptions:NSPointerFunctionsObjectPointerPersonality];
     for (UIWindow* window in UIApplication.sharedApplication.windows) {
-        if (!window.hidden) BHTNavigationHierarchy(window.rootViewController, 0, &budget, hierarchy);
+        if (!window.hidden) BHTNavigationHierarchy(window.rootViewController, 0, &budget, hierarchy, visited);
     }
     result[@"controllerHierarchy"] = hierarchy;
+    result[@"hierarchyPolicy"] = @"deduplicated_presented_and_visible_first_depth14_budget96";
     result[@"capturesTextOrAccountIdentifiers"] = @NO;
     result[@"nativeGlassMaterialsPreserved"] = @YES;
     result[@"nativeABIImageMatches"] = @(BHTGlassABIIsSupported());

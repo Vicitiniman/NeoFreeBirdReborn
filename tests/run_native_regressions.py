@@ -77,6 +77,8 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
     unit += tabs_source[tabs_source.index("static char BHTTabLabelKey;"):]
     unit += (ROOT / "tests/TabViewAppearanceTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/SettingsEntryFixture.m").read_text(encoding="utf8")
+    entry_source = (ROOT / "src/Settings/BHTSettingsEntry.m").read_text(encoding="utf8")
+    unit += section(entry_source, "BOOL BHTSettingsEntryIsContainer(", "@interface BHTModernSettingsEntryState")
     settings_source = (ROOT / "src/Hooks/Settings.x").read_text(encoding="utf8")
     unit += section(settings_source, "static BOOL isSettingsClass(", "static BOOL sectionsContainNeoFreeBirdEntry(")
     unit += (ROOT / "tests/SettingsEntryTests.m").read_text(encoding="utf8")
