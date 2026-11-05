@@ -5,6 +5,7 @@
 
 #import "HookHelpers.h"
 #import "Settings/ModernSettingsPageViewController.h"
+#import "Navigation/BHTGlassNavigation.h"
 
 static UIFont* _Nonnull remapFont(UIFont* origFont) {
     UIFont* newFont = getDefaultFont(origFont);
@@ -15,6 +16,20 @@ static UIFont* _Nonnull remapFont(UIFont* origFont) {
 
 static const void* SettingsEntryKey = &SettingsEntryKey;
 static const void* SettingsRootKey = &SettingsRootKey;
+static char SettingsButtonKey;
+static NSUInteger SettingsRootAppearances;
+static NSUInteger SettingsRowBuilds;
+static NSUInteger SettingsButtonInstalls;
+
+NSDictionary* BHTSettingsEntryDiagnosticSnapshot(void) {
+    if (!NSThread.isMainThread) {
+        __block NSDictionary* result;
+        dispatch_sync(dispatch_get_main_queue(), ^{ result = BHTSettingsEntryDiagnosticSnapshot(); });
+        return result;
+    }
+    return @{@"rootAppearances": @(SettingsRootAppearances), @"rowBuilds": @(SettingsRowBuilds),
+             @"buttonInstalls": @(SettingsButtonInstalls), @"requiresUIKitNavigationStack": @NO};
+}
 
 static BOOL isSettingsClass(UIViewController* viewController) {
     return [viewController isKindOfClass:objc_getClass("T1GenericSettingsViewController")] ||
@@ -24,6 +39,13 @@ static BOOL isSettingsClass(UIViewController* viewController) {
 // The generic controller backs the root and every sub-page alike, so the root is
 // the first settings-class controller in the navigation stack.
 static BOOL settingsVCIsRoot(TFNItemsDataViewController* settingsVC) {
+    if (settingsVC.navigationController.viewControllers.count == 0) {
+        // XNavigation can host this root without a UIKit navigation stack.
+        for (UIViewController* parent = settingsVC.parentViewController; parent; parent = parent.parentViewController) {
+            if (isSettingsClass(parent)) return NO;
+        }
+        return YES;
+    }
     for (UIViewController* viewController in settingsVC.navigationController.viewControllers) {
         if (viewController == settingsVC) {
             return YES;
@@ -92,6 +114,7 @@ static TFNSettingsNavigationItem* makeNeoFreeBirdSettingsItem(
         }];
 
     if (!bhtwitter) return nil;
+    SettingsRowBuilds++;
     if (twitterIcon) {
         @try {
             [bhtwitter setValue:twitterIcon forKey:@"icon"];
@@ -124,6 +147,32 @@ static void insertNeoFreeBirdSettingsIfRoot(TFNItemsDataViewController* settings
     }
 
     objc_setAssociatedObject(settingsVC, SettingsRootKey, @YES, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    SettingsRootAppearances++;
+    if (!objc_getAssociatedObject(settingsVC, &SettingsButtonKey)) {
+        __weak TFNItemsDataViewController* weakController = settingsVC;
+        UIAction* action = [UIAction actionWithTitle:@"NeoFreeBird" image:nil identifier:nil handler:^(__kindof UIAction* action) {
+            TFNItemsDataViewController* source = weakController;
+            if (!source) return;
+            id account = [source respondsToSelector:@selector(account)]
+                ? ((id (*)(id, SEL))objc_msgSend)(source, @selector(account)) : nil;
+            UIViewController* settings = [BHTManager BHTSettingsWithAccount:account];
+            if (source.navigationController) [source.navigationController pushViewController:settings animated:YES];
+            else [source presentViewController:[[UINavigationController alloc] initWithRootViewController:settings] animated:YES completion:nil];
+        }];
+        UIBarButtonItem* button = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"gearshape"] primaryAction:action];
+        button.accessibilityLabel = @"NeoFreeBird Settings";
+        NSMutableArray* buttons = [settingsVC.navigationItem.rightBarButtonItems mutableCopy] ?: [NSMutableArray array];
+        [buttons addObject:button];
+        settingsVC.navigationItem.rightBarButtonItems = buttons;
+        objc_setAssociatedObject(settingsVC, &SettingsButtonKey, button, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        SettingsButtonInstalls++;
+    }
+    UIBarButtonItem* button = objc_getAssociatedObject(settingsVC, &SettingsButtonKey);
+    if (button && ![settingsVC.navigationItem.rightBarButtonItems containsObject:button]) {
+        NSMutableArray* buttons = [settingsVC.navigationItem.rightBarButtonItems mutableCopy] ?: [NSMutableArray array];
+        [buttons addObject:button];
+        settingsVC.navigationItem.rightBarButtonItems = buttons;
+    }
 
     if (sectionsContainNeoFreeBirdEntry(settingsVC.sections)) {
         return;

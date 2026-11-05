@@ -76,6 +76,10 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
     tabs_source = (ROOT / "src/CustomTabBar/BHTTabViewAppearance.m").read_text(encoding="utf8")
     unit += tabs_source[tabs_source.index("static char BHTTabLabelKey;"):]
     unit += (ROOT / "tests/TabViewAppearanceTests.m").read_text(encoding="utf8")
+    unit += (ROOT / "tests/SettingsEntryFixture.m").read_text(encoding="utf8")
+    settings_source = (ROOT / "src/Hooks/Settings.x").read_text(encoding="utf8")
+    unit += section(settings_source, "static BOOL isSettingsClass(", "static BOOL sectionsContainNeoFreeBirdEntry(")
+    unit += (ROOT / "tests/SettingsEntryTests.m").read_text(encoding="utf8")
     unit += section(media_source, "static NSArray<BHTLikedMediaItem*>* BHTProfileMediaSnapshot", "@protocol BHTWaterfallLayoutDelegate")
     unit += section(media_source, "static CGFloat BHTMediaViewerCaptionWidth", "@interface BHTMediaPagerController")
     profile_source = (ROOT / "src/Hooks/Profile.x").read_text(encoding="utf8")

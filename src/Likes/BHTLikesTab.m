@@ -1,5 +1,6 @@
 #import "Likes/BHTLikesTab.h"
 #import "Likes/BHTNativeLikesContract.h"
+#import "Navigation/BHTGlassNavigation.h"
 
 #import <AVFoundation/AVFoundation.h>
 #import <AVKit/AVKit.h>
@@ -175,6 +176,7 @@ static UIViewController* BHTFindController(UIViewController* root, Class wanted)
 }
 
 void BHTRefreshVisibleAppTabs(void) {
+    BHTRefreshGlassNavigation();
     Class navigationClass = NSClassFromString(@"T1TabbedAppNavigationViewController");
     if (!navigationClass) return;
     for (UIWindow* window in UIApplication.sharedApplication.windows) {
@@ -4300,4 +4302,9 @@ UIViewController* BHTProfileMediaController(UIViewController* nativeController,
                           NSStringFromClass(nativeController.class));
     return [[BHTLikesViewController alloc] initWithPostsController:nativeController
                                                  profileMediaKind:mediaKind];
+}
+
+UIViewController* BHTMakeStandaloneLikesController(id account) {
+    return [[BHTLikesViewController alloc]
+        initWithPostsController:BHTMakeNativeLikesController(account) profileMediaKind:nil];
 }

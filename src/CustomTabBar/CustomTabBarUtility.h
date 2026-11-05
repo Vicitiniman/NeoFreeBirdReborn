@@ -25,6 +25,7 @@ extern NSString* const TabPanelIDKey; // T1 panel ID (NSNumber)
 // icons without hardcoding them. Called from the tab bar hook with the live tab
 // views.
 + (void)recordTabViews:(NSArray*)tabViews;
++ (void)recordTabMetadata:(NSArray<NSDictionary*>*)metadata;
 
 // Every tab the app has built this session (or last session), in the order
 // seen.

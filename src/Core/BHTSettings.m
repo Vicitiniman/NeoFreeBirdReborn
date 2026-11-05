@@ -91,7 +91,7 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                         @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"
                     },
                     @{@"key": @"classic_navigation",
-                      @"default": @YES,
+                      @"default": @NO,
                       @"type": @"toggle",
                       @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"},
                     @{@"key": @"tab_bar_theming",

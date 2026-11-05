@@ -38,7 +38,8 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         return nil;
     }
 
-    // X 12.40's glass navigation has a separate Swift tab/router pipeline.
+    // Keep classic navigation as an explicit fallback. The glass pipeline
+    // now has its own model adapter and remains the native default.
     // The classic native pipeline preserves entry identity and our custom
     // Likes/reorder integration on both older and newer iOS releases.
     if ([key isEqualToString:@"ios_liquid_glass_redesign_enabled"]) {

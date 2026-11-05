@@ -318,7 +318,7 @@
 "BHT_DOWNLOAD_PROGRESS" = "Downloading…";
 "BHT_RESTORE_DEFAULTS" = "Restore defaults";
 "CLASSIC_NAVIGATION_TITLE" = "Classic navigation";
-"CLASSIC_NAVIGATION_DETAIL" = "Use the familiar navigation layout for custom tabs and Likes. Reopen X after changing this.";
+"CLASSIC_NAVIGATION_DETAIL" = "Use the older navigation layout instead of X's native glass design. Off by default. Reopen X after changing this.";
 "SETTINGS_UNAVAILABLE_CURRENT_X" = "Not supported in this version of X. Your saved preference is preserved.";
 "SIDEBAR_GROK_BOT_TITLE" = "Try Grok Bot";
 

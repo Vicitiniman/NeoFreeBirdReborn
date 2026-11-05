@@ -1,5 +1,6 @@
 #import "Compatibility/BHTHostCompatibility.h"
 #import "Compatibility/BHTCompatibilityReporter.h"
+#import "Navigation/BHTGlassNavigation.h"
 #import "Core/BHTManager.h"
 #import "Core/BHTSettings.h"
 #import "Likes/BHTLikesTab.h"
@@ -1650,6 +1651,8 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"grok", @"T1StatusPhotoEditorHandler", @"photoEditorCanEditWithGrok:", NO),
 
         BHTProbe(@"settings", @"T1GenericSettingsViewController", @"viewWillAppear:", NO),
+        BHTProbe(@"glassNavigation", @"T1TwitterSwift.XTabbedAppNavigationViewController", @"viewDidAppear:", NO),
+        BHTProbe(@"glassNavigation", @"XNavigation.TabBarController", @"viewDidLoad", NO),
         BHTProbe(@"settings", @"TFSFeatureSwitches", @"boolForKey:", NO),
         BHTProbe(@"settings", @"TFSInstrumentedFeatureSwitches", @"boolForKey:", NO),
 
@@ -1724,7 +1727,7 @@ static NSDictionary* BHTSettingsSnapshot(void) {
         @"padlock", @"hide_promoted", @"hide_premium_offer",
         @"no_tab_bar_hiding", @"disable_rtl", @"strip_share_tracking",
         @"expand_tco_links", @"show_scroll_indicator",
-        @"tab_bar_theming", @"restore_tab_labels",
+        @"classic_navigation", @"tab_bar_theming", @"restore_tab_labels",
         @"restore_launch_animation", @"restore_refresh_sounds",
         @"custom_fonts", @"hide_who_to_follow",
         @"hide_timeline_prompts", @"hide_discover_more", @"hide_topics",
@@ -1887,6 +1890,8 @@ static NSURL* BHTWriteCompatibilityReportNow(
         },
         @"navigationEntryClasses": BHTNavigationEntryClassSnapshot(),
         @"navigationMethods": BHTNavigationMethodSnapshot(),
+        @"glassNavigationRuntime": BHTGlassNavigationDiagnosticSnapshot(),
+        @"settingsEntryRuntime": BHTSettingsEntryDiagnosticSnapshot(),
         @"timelineItemObservations": BHTTimelineObservationSnapshot(),
         @"mediaActionRuntime": BHTMediaActionObservationSnapshot(),
         @"railBrandingRuntime": BHTRailBrandingObservationSnapshot(),
