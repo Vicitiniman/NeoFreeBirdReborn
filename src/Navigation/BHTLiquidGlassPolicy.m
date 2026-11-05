@@ -112,4 +112,3 @@ BOOL BHTGlassDockRoute(id owner, id originalTab, BOOL longPress) {
     ((void (*)(id, SEL, id, NSInteger, id))objc_msgSend)(owner, selector, bar, (NSInteger)index, originalTab);
     return YES;
 }
-}

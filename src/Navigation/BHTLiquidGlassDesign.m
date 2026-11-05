@@ -213,7 +213,8 @@ void BHTUpdateLiquidGlassTabBar(UIViewController* controller) {
                 ![tabBar isDescendantOfView:background]) BHTGlassClearView(state, background, YES);
         }
         if (state.material.superview != host) {
-            [host addSubview:state.material];
+            if (controller.view.superview == host) [host insertSubview:state.material aboveSubview:controller.view];
+            else [host addSubview:state.material];
         }
         BOOL hidden = BHTGlassNumber(controller, @"isTabBarHidden", NO) != 0;
         double collapse = BHTGlassNumber(controller, @"tabBarCollapseRatio", 0);

@@ -108,6 +108,8 @@ static NSUInteger BHTDockNumber(id object, NSString* name) {
     if (![self.caption.textColor isEqual:foreground]) self.caption.textColor = foreground;
     NSUInteger count = BHTDockNumber(native, @"badgeCount");
     BOOL unread = BHTDockNumber(native, @"hasUnreadContent") != 0;
+    UIColor* badgeColor = count ? UIColor.systemRedColor : accent;
+    if (![self.badge.backgroundColor isEqual:badgeColor]) self.badge.backgroundColor = badgeColor;
     NSString* badge = count ? (count > 999 ? @"999+" : [NSString stringWithFormat:@"%lu", (unsigned long)count]) : @"";
     if (![self.badge.text isEqual:badge]) { self.badge.text = badge; [self setNeedsLayout]; }
     if (self.badge.hidden != !(count || unread)) { self.badge.hidden = !(count || unread); [self setNeedsLayout]; }
