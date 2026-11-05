@@ -1,6 +1,7 @@
 #import "Compatibility/BHTHostCompatibility.h"
 #import "Compatibility/BHTCompatibilityReporter.h"
 #import "Navigation/BHTGlassNavigation.h"
+#import "Navigation/BHTLiquidGlassDesign.h"
 #import "Settings/BHTSettingsEntry.h"
 #import "Core/BHTManager.h"
 #import "Core/BHTSettings.h"
@@ -1896,6 +1897,7 @@ static NSURL* BHTWriteCompatibilityReportNow(
         @"glassNavigationRuntime": BHTGlassNavigationDiagnosticSnapshot(),
         @"settingsEntryRuntime": BHTSettingsEntryDiagnosticSnapshot(),
         @"modernSettingsEntryRuntime": BHTModernSettingsEntryDiagnosticSnapshot(),
+        @"liquidGlassDesignRuntime": BHTLiquidGlassDesignDiagnosticSnapshot(),
         @"timelineItemObservations": BHTTimelineObservationSnapshot(),
         @"mediaActionRuntime": BHTMediaActionObservationSnapshot(),
         @"railBrandingRuntime": BHTRailBrandingObservationSnapshot(),

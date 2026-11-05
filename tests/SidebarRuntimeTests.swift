@@ -102,6 +102,33 @@ struct SidebarRuntimeTests {
         defaults.set(["grok_bot"], forKey: key)
         _ = BHTSidebarRuntime.applyResult(forDashContentController: controller)
         precondition(source.primaryItems.map(\.title) == ["Try Grok Bot"])
+        let subscriptionSource = Source()
+        let subscriptions = Row(title: "Abonnements", iconName: "subscriptions_stroke", revision: 1)
+        let premium = Row(title: "Premium", iconName: "verified_stroke", revision: 1)
+        let nativeSettings = Row(title: "Settings and privacy", iconName: "settings_stroke", revision: 1)
+        defaults.set(["profile", "lists"], forKey: key)
+        subscriptionSource.primaryItems = [subscriptions, premium, nativeSettings]
+        BHTSidebarRuntime.apply(to: subscriptionSource)
+        precondition(subscriptionSource.primaryItems.map(\.title) == ["Settings and privacy"],
+                     "New Subscriptions must follow an existing saved selection, retaining native Settings")
+        defaults.set(["subscriptions", "blue"], forKey: key)
+        BHTSidebarRuntime.apply(to: subscriptionSource)
+        precondition(subscriptionSource.primaryItems.map(\.title) == ["Abonnements", "Premium", "Settings and privacy"],
+                     "Subscriptions and Premium are separate, restorable choices")
+        defaults.set(["blue", "subscriptions"], forKey: key)
+        BHTSidebarRuntime.apply(to: subscriptionSource)
+        precondition(subscriptionSource.primaryItems.map(\.title) == ["Premium", "Abonnements", "Settings and privacy"])
+        defaults.set([String](), forKey: key)
+        BHTSidebarRuntime.apply(to: subscriptionSource)
+        subscriptionSource.primaryItems = [Row(title: "Subscribe", iconName: "new_icon", revision: 2), nativeSettings]
+        drain()
+        precondition(subscriptionSource.primaryItems.map(\.title) == ["Settings and privacy"],
+                     "Subscribe title fallback must stay hidden after a native refresh")
+        defaults.removeObject(forKey: key)
+        BHTSidebarRuntime.apply(to: subscriptionSource)
+        precondition(subscriptionSource.primaryItems.contains { $0.title == "Subscribe" && $0.revision == 2 },
+                     "Restore uses the latest native Subscriptions row")
         print("PASS: sidebar refresh, localization, duplicate preferences, hide-all, restore, and observer idempotence")
+        print("PASS: localized Subscriptions, Premium isolation, saved selection, reorder, native refresh and restore")
     }
 }

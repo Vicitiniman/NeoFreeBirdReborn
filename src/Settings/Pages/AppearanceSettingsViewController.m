@@ -13,6 +13,7 @@
 #import "Headers/TWHeaders.h"
 #import "Settings/ModernSettingsCells.h"
 #import "Settings/Pages/PresetSettingsViewController.h"
+#import "Navigation/BHTLiquidGlassDesign.h"
 
 @interface AppearanceSettingsViewController () <UIFontPickerViewControllerDelegate>
 @end
@@ -169,7 +170,15 @@
 - (void)switchChanged:(UISwitch*)sender {
     [super switchChanged:sender];
     NSString* key = BHTSettingsKeyForSwitch(sender);
-    if ([key isEqualToString:@"tab_bar_theming"]) {
+    if ([key isEqualToString:@"liquid_glass_design"] || [key isEqualToString:@"classic_navigation"]) {
+        if (sender.isOn) {
+            NSString* other = [key isEqualToString:@"liquid_glass_design"] ? @"classic_navigation" : @"liquid_glass_design";
+            [NSUserDefaults.standardUserDefaults setBool:NO forKey:other];
+            [BHTSettings notePreferencesChanged];
+            [self updateVisibleToggles];
+        }
+        BHTRefreshLiquidGlassDesign();
+    } else if ([key isEqualToString:@"tab_bar_theming"]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [self refreshAllTabViewsWithTheming];
         });

@@ -138,6 +138,8 @@ int main(void) {
     @autoreleasepool {
         testTabViewAppearance();
         testSettingsEntryRoot();
+        testLiquidGlassPolicy();
+        testLiquidGlassRestoration();
         testProfileMediaAndGrok();
         testHostCompatibility();
         testSwiftFieldMetadata();

@@ -7,6 +7,7 @@
 #import "Login/BHTSecureWebSession.h"
 #import "Login/BHTWebSessionSecurity.h"
 #import "Sidebar/BHTSidebarNavigationUtility.h"
+#import "Navigation/BHTLiquidGlassDesign.h"
 
 #import <objc/runtime.h>
 
@@ -38,12 +39,12 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         return nil;
     }
 
-    // Keep classic navigation as an explicit fallback. The glass pipeline
-    // now has its own model adapter and remains the native default.
-    // The classic native pipeline preserves entry identity and our custom
-    // Likes/reorder integration on both older and newer iOS releases.
-    if ([key isEqualToString:@"ios_liquid_glass_redesign_enabled"]) {
-        return [BHTSettings boolForKey:@"classic_navigation"] ? @NO : nil;
+    // Explicit opt-in is necessary on accounts where X keeps the rollout off.
+    // Only request native glass on the supported host with UIKit glass present.
+    if ([key isEqualToString:@"ios_liquid_glass_redesign_enabled"] ||
+        [key isEqualToString:@"ios_liquid_glass_redesign_quick_composer_enabled"]) {
+        return BHTLiquidGlassNavigationOverride([BHTSettings boolForKey:@"liquid_glass_design"],
+            [BHTSettings boolForKey:@"classic_navigation"], BHTNativeLiquidGlassAvailable());
     }
     // The new animated Home-logo host is not an UIImageView. While restoring
     // the bird, retain X's image-based title path instead of its X animation.

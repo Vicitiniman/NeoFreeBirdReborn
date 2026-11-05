@@ -90,6 +90,10 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                         @"searchAutoOpen": @YES,
                         @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"
                     },
+                    @{@"key": @"liquid_glass_design",
+                      @"default": @NO,
+                      @"type": @"toggle",
+                      @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"},
                     @{@"key": @"classic_navigation",
                       @"default": @NO,
                       @"type": @"toggle",

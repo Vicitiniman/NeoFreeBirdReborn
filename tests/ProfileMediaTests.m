@@ -111,12 +111,24 @@ static void testProfileMediaAndGrok(void) {
     if (previousCreation) [defaults setObject:previousCreation forKey:@"hide_grok_create"];
     else [defaults removeObjectForKey:@"hide_grok_create"];
     id previousClassic = [defaults objectForKey:@"classic_navigation"];
+    id previousGlass = [defaults objectForKey:@"liquid_glass_design"];
+    [defaults setBool:NO forKey:@"liquid_glass_design"];
     [defaults setBool:YES forKey:@"classic_navigation"];
     NSCAssert([FeatureSwitchOverrideValueForKey(@"ios_liquid_glass_redesign_enabled") isEqual:@NO],
               @"Classic navigation keeps the native entry-based integration");
     [defaults setBool:NO forKey:@"classic_navigation"];
     NSCAssert(FeatureSwitchOverrideValueForKey(@"ios_liquid_glass_redesign_enabled") == nil,
               @"Opting out restores X's own redesign decision");
+    BHTTestNativeGlassAvailable = YES;
+    [defaults setBool:YES forKey:@"liquid_glass_design"];
+    for (NSString* key in @[@"ios_liquid_glass_redesign_enabled", @"ios_liquid_glass_redesign_quick_composer_enabled"]) {
+        NSCAssert([FeatureSwitchOverrideValueForKey(key) isEqual:@YES], @"Opt-in requests the current native glass UI");
+    }
+    BHTTestNativeGlassAvailable = NO;
+    NSCAssert(FeatureSwitchOverrideValueForKey(@"ios_liquid_glass_redesign_enabled") == nil,
+              @"The visual material fallback does not force native glass on unsupported UIKit");
+    if (previousGlass) [defaults setObject:previousGlass forKey:@"liquid_glass_design"];
+    else [defaults removeObjectForKey:@"liquid_glass_design"];
     if (previousClassic) [defaults setObject:previousClassic forKey:@"classic_navigation"];
     else [defaults removeObjectForKey:@"classic_navigation"];
     id previousBird = [defaults objectForKey:@"color_twitter_icon_in_top_bar"];

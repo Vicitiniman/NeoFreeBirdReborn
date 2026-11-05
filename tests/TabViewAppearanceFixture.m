@@ -1,6 +1,9 @@
 // Minimal UIKit stand-ins for the Foundation runner. The production adapter
 // is compiled below these; layout requests are coalesced like a UI transaction.
+@class UIColor;
 @interface UIView : NSObject
+@property(nonatomic, strong) UIColor* backgroundColor;
+@property(nonatomic) BOOL opaque;
 @property(nonatomic) CGRect frame;
 @property(nonatomic) CGRect bounds;
 @property(nonatomic) CGPoint center;
@@ -14,6 +17,7 @@
 @property(nonatomic) NSUInteger reorderCount;
 - (instancetype)initWithFrame:(CGRect)frame;
 - (void)addSubview:(UIView*)view;
+- (void)removeFromSuperview;
 - (void)bringSubviewToFront:(UIView*)view;
 - (void)setNeedsLayout;
 - (BOOL)isDescendantOfView:(UIView*)view;
@@ -55,6 +59,11 @@
     [_children addObject:view];
     [self setNeedsLayout];
 }
+- (void)removeFromSuperview {
+    UIView* parent = self.superview;
+    if (parent) [parent->_children removeObjectIdenticalTo:self];
+    self.superview = nil;
+}
 - (void)setNeedsLayout {
     self.layoutPending = YES;
     self.layoutRequestCount++;
@@ -76,8 +85,16 @@
 
 @interface UIImageView : UIView @end
 @implementation UIImageView @end
-@interface UIColor : NSObject @end
-@implementation UIColor @end
+@interface UIColor : NSObject
++ (instancetype)clearColor;
+@end
+@implementation UIColor
++ (instancetype)clearColor {
+    static UIColor* clear;
+    if (!clear) clear = [self new];
+    return clear;
+}
+@end
 @interface UIFont : NSObject
 + (instancetype)systemFontOfSize:(CGFloat)size weight:(CGFloat)weight;
 @end

@@ -319,7 +319,9 @@
 "BHT_DOWNLOAD_PROGRESS" = "Downloading…";
 "BHT_RESTORE_DEFAULTS" = "Restore defaults";
 "CLASSIC_NAVIGATION_TITLE" = "Classic navigation";
-"CLASSIC_NAVIGATION_DETAIL" = "Use the older navigation layout instead of X's native glass design. Off by default. Reopen X after changing this.";
+"CLASSIC_NAVIGATION_DETAIL" = "Use the older navigation layout. Turning this on turns off Liquid Glass design. Reopen X after changing this.";
+"LIQUID_GLASS_DESIGN_TITLE" = "Liquid Glass design";
+"LIQUID_GLASS_DESIGN_DETAIL" = "Floating glass tabs and translucent navigation with your existing layout. Requests X's native glass navigation on supported iOS versions; uses a soft material on older devices. Reopen X to switch the native navigation layout.";
 "SETTINGS_UNAVAILABLE_CURRENT_X" = "Not supported in this version of X. Your saved preference is preserved.";
 "SIDEBAR_GROK_BOT_TITLE" = "Try Grok Bot";
 
@@ -628,6 +630,7 @@
 "SIDEBAR_NAVIGATION_RESET_MESSAGE" = "Restore the sidebar to its default layout?";
 "SIDEBAR_PROFILE_TITLE" = "Profile";
 "SIDEBAR_BLUE_TITLE" = "Blue";
+"SIDEBAR_SUBSCRIPTIONS_TITLE" = "Subscriptions";
 "SIDEBAR_HISTORY_TITLE" = "History";
 "SIDEBAR_COMMUNITIES_TITLE" = "Communities";
 "SIDEBAR_NEWS_TITLE" = "News";

@@ -9,6 +9,7 @@
 #import "Likes/BHTLikesTab.h"
 #import "CustomTabBar/BHTTabViewAppearance.h"
 #import "ThemeColor/BHTThemePresets.h"
+#import "Navigation/BHTLiquidGlassDesign.h"
 
 // MARK: - Custom accent color
 
@@ -500,11 +501,13 @@ static BOOL shouldPinCollapsibleTabBar(
     BHTTrackThemedTabBarController(self);
     BHTApplyCurrentThemeToTabBarController(self, YES);
     BHTRefreshCurrentThemeTabItems(self);
+    BHTUpdateLiquidGlassTabBar(self);
 }
 
 - (void)viewDidLayoutSubviews {
     %orig;
     BHTApplyCurrentThemeToTabBarController(self, NO);
+    BHTUpdateLiquidGlassTabBar(self);
 }
 
 - (void)traitCollectionDidChange:
@@ -512,6 +515,27 @@ static BOOL shouldPinCollapsibleTabBar(
     %orig(previousTraits);
     BHTApplyCurrentThemeToTabBarController(self, YES);
     BHTRefreshCurrentThemeTabItems(self);
+    BHTUpdateLiquidGlassTabBar(self);
+}
+
+- (void)setSelectedTabIndex:(NSInteger)index {
+    %orig(index);
+    BHTUpdateLiquidGlassTabBar(self);
+}
+
+- (void)_t1_updateBackground {
+    %orig;
+    BHTUpdateLiquidGlassTabBar(self);
+}
+
+- (void)setTabBarOpacity:(double)opacity {
+    %orig(opacity);
+    BHTUpdateLiquidGlassTabBar(self);
+}
+
+- (void)_t1_updateTabBarHidden {
+    %orig;
+    BHTUpdateLiquidGlassTabBar(self);
 }
 
 // X 12.9 consults these capabilities before sending collapse-ratio updates.

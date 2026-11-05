@@ -27,6 +27,7 @@ def main():
 #import "Likes/BHTLikesNavigationUtility.h"
 #import "Compatibility/BHTCompatibilityReporter.h"
 #import "Compatibility/BHTHostCompatibility.h"
+#import "Navigation/BHTLiquidGlassPolicy.h"
 #import "Timeline/BHTTimelineModelRuntime.h"
 #import "Login/BHTWebSessionSecurity.h"
 #import "Login/BHTWebSessionVault.h"
@@ -86,6 +87,12 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
     unit += section(media_source, "static CGFloat BHTMediaViewerCaptionWidth", "@interface BHTMediaPagerController")
     profile_source = (ROOT / "src/Hooks/Profile.x").read_text(encoding="utf8")
     unit += section(profile_source, "static NSArray* BHTProfileMainEntriesWithPhotosFirst", "// Keep the profile's native")
+    unit += (ROOT / "tests/LiquidGlassPolicyTests.m").read_text(encoding="utf8")
+    glass_source = (ROOT / "src/Navigation/BHTLiquidGlassDesign.m").read_text(encoding="utf8")
+    unit += section(glass_source, "@interface BHTGlassSavedView", "@interface BHTGlassChromeState")
+    unit += (ROOT / "tests/LiquidGlassRestorationFixture.m").read_text(encoding="utf8")
+    unit += section(glass_source, "static void BHTGlassClearView(", "static void BHTGlassUpdateMaterial(")
+    unit += (ROOT / "tests/LiquidGlassRestorationTests.m").read_text(encoding="utf8")
     unit += section(switches, "static NSNumber* FeatureSwitchOverrideValueForKey", "// Every feature switch facade")
     player_source = (ROOT / "src/Hooks/ImmersivePlayer.x").read_text(encoding="utf8")
     unit += section(player_source, "static BOOL cardStateFieldIndex", "static const uint8_t* immersiveCardStateMetadata")
@@ -115,6 +122,7 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
                         str(ROOT / "src/Timeline/BHTTimelineCleanup.m"),
                         str(ROOT / "src/Timeline/BHTTimelineModelRuntime.m"),
                         str(ROOT / "src/Compatibility/BHTHostCompatibility.m"),
+                        str(ROOT / "src/Navigation/BHTLiquidGlassPolicy.m"),
                         str(ROOT / "src/Likes/BHTLikesNavigationUtility.m"),
                         str(ROOT / "src/Login/BHTWebSessionSecurity.m"),
                         str(ROOT / "src/Login/BHTWebSessionVault.m"),

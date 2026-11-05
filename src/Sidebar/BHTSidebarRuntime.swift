@@ -36,6 +36,7 @@ public final class BHTSidebarRuntime: NSObject {
     private static let canonicalIDs = [
         "profile",
         "blue",
+        "subscriptions",
         "history",
         "communities",
         "news",
@@ -542,6 +543,8 @@ public final class BHTSidebarRuntime: NSObject {
             case "messages", "messages_stroke", "message_stroke", "envelope_stroke": return "chat"
             case "notifications", "notifications_stroke", "bell_stroke": return "notifications"
             case "spaces", "spaces_stroke": return "spaces"
+            case "subscriptions", "subscriptions_stroke", "subscription", "subscription_stroke",
+                 "subscribe", "subscribe_stroke", "super_follow", "super_follow_stroke": return "subscriptions"
             case "grok_bot", "grok_bot_stroke", "grok_bot_logo", "grokbot": return "grok_bot"
             default: break
             }
@@ -564,6 +567,8 @@ public final class BHTSidebarRuntime: NSObject {
             return "blue"
         case "history", "bookmarks":
             return "history"
+        case "subscriptions", "subscription", "subscribe", "super follows":
+            return "subscriptions"
         case "communities":
             return "communities"
         case "news":
