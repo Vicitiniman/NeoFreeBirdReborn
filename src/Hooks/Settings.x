@@ -150,7 +150,7 @@ static void insertNeoFreeBirdSettingsIfRoot(TFNItemsDataViewController* settings
     SettingsRootAppearances++;
     if (!objc_getAssociatedObject(settingsVC, &SettingsButtonKey)) {
         __weak TFNItemsDataViewController* weakController = settingsVC;
-        UIAction* action = [UIAction actionWithTitle:@"NeoFreeBird" image:nil identifier:nil handler:^(__kindof UIAction* action) {
+        UIAction* action = [UIAction actionWithTitle:@"NeoFreeBird" image:[UIImage systemImageNamed:@"gearshape"] identifier:nil handler:^(__kindof UIAction* action) {
             TFNItemsDataViewController* source = weakController;
             if (!source) return;
             id account = [source respondsToSelector:@selector(account)]
@@ -159,7 +159,7 @@ static void insertNeoFreeBirdSettingsIfRoot(TFNItemsDataViewController* settings
             if (source.navigationController) [source.navigationController pushViewController:settings animated:YES];
             else [source presentViewController:[[UINavigationController alloc] initWithRootViewController:settings] animated:YES completion:nil];
         }];
-        UIBarButtonItem* button = [[UIBarButtonItem alloc] initWithImage:[UIImage systemImageNamed:@"gearshape"] primaryAction:action];
+        UIBarButtonItem* button = [[UIBarButtonItem alloc] initWithPrimaryAction:action menu:nil];
         button.accessibilityLabel = @"NeoFreeBird Settings";
         NSMutableArray* buttons = [settingsVC.navigationItem.rightBarButtonItems mutableCopy] ?: [NSMutableArray array];
         [buttons addObject:button];
