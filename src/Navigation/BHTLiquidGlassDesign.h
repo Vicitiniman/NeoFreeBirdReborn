@@ -10,4 +10,6 @@ FOUNDATION_EXPORT void BHTObserveGlassDockScroll(UIViewController* source, UIScr
 FOUNDATION_EXPORT BOOL BHTGlassDockUsesOverlayLayout(UIViewController* owner);
 FOUNDATION_EXPORT BOOL BHTGlassDockHasActiveDockedContent(UIViewController* owner);
 FOUNDATION_EXPORT CGRect BHTGlassDockAvoidanceFrame(UIView* view);
+FOUNDATION_EXPORT CGFloat BHTGlassDockNativeStockHeight(UIViewController* container, CGFloat nativeHeight);
+FOUNDATION_EXPORT void BHTUpdateGlassAppContainer(UIViewController* container);
 FOUNDATION_EXPORT NSDictionary* BHTLiquidGlassDesignDiagnosticSnapshot(void);

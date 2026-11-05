@@ -20,8 +20,18 @@
 %hook T1TabBarViewController
 - (CGRect)visibleTabBarFrame {
     CGRect native = %orig;
-    return BHTGlassDockVisibleFrame(native, BHTGlassDockUsesOverlayLayout((UIViewController*)self),
-        BHTGlassDockHasActiveDockedContent((UIViewController*)self));
+    return BHTGlassDockVisibleFrame(native, BHTGlassDockUsesOverlayLayout((UIViewController*)self));
+}
+%end
+
+%hook T1AppSplitViewController
+- (double)private_bottomTabBarHeight {
+    double native = %orig;
+    return BHTGlassDockNativeStockHeight((UIViewController*)self, native);
+}
+- (void)viewDidLayoutSubviews {
+    %orig;
+    BHTUpdateGlassAppContainer((UIViewController*)self);
 }
 %end
 

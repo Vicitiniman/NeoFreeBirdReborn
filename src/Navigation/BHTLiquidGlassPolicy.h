@@ -20,10 +20,14 @@ FOUNDATION_EXPORT BOOL BHTGlassDockObserveScroll(BHTGlassDockScrollState* state,
     CGFloat maximumOffset, BOOL dragging, BOOL decelerating, BOOL pinned);
 FOUNDATION_EXPORT void BHTGlassDockReveal(BHTGlassDockScrollState* state, BOOL manualOverride);
 FOUNDATION_EXPORT void BHTGlassDockResetScroll(BHTGlassDockScrollState* state, BOOL samePage);
-FOUNDATION_EXPORT CGRect BHTGlassDockVisibleFrame(CGRect nativeFrame, BOOL overlayEnabled, BOOL activeDockedContent);
+FOUNDATION_EXPORT CGRect BHTGlassDockVisibleFrame(CGRect nativeFrame, BOOL overlayEnabled);
 FOUNDATION_EXPORT CGFloat BHTGlassDockOpacity(NSInteger percentage, BOOL reduceTransparency);
 FOUNDATION_EXPORT BOOL BHTGlassOpacityPreferenceIsValid(id value);
 FOUNDATION_EXPORT CGRect BHTGlassDockAvoidedComposeFrame(CGRect nativeFrame, CGRect dockFrame);
+FOUNDATION_EXPORT CGFloat BHTGlassDockStockHeight(CGFloat nativeHeight, BOOL overlayEnabled);
+FOUNDATION_EXPORT CGRect BHTGlassDockOverlayReferenceFrame(CGRect hostBounds, CGFloat stockOriginY);
+FOUNDATION_EXPORT CGFloat BHTGlassDockMaterialFraction(CGFloat opacity);
+FOUNDATION_EXPORT CGFloat BHTGlassDockTintFraction(CGFloat opacity);
 FOUNDATION_EXPORT NSString* BHTGlassDockSymbol(NSString* page, BOOL selected);
 FOUNDATION_EXPORT BOOL BHTGlassDockCanRoute(id owner, BOOL longPress);
 FOUNDATION_EXPORT BOOL BHTGlassDockRoute(id owner, id originalTab, BOOL longPress);

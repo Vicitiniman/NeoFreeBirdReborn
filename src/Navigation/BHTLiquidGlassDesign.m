@@ -15,6 +15,7 @@
 @property(nonatomic) BOOL opaque;
 @property(nonatomic) BOOL hidden;
 @property(nonatomic) BOOL hidesView;
+@property(nonatomic) BOOL clearsBackground;
 @property(nonatomic) BOOL disablesInteraction;
 @property(nonatomic) BOOL interactionEnabled;
 @end
@@ -117,12 +118,13 @@ static void BHTGlassClearView(BHTGlassChromeState* state, UIView* view, BOOL hid
         saved.background = view.backgroundColor;
         saved.opaque = view.opaque;
         saved.hidden = view.hidden;
-        saved.hidesView = hide;
         [state.savedViews addObject:saved];
     }
     if (hide) {
+        saved.hidesView = YES;
         if (!view.hidden) view.hidden = YES;
     } else {
+        saved.clearsBackground = YES;
         if (view.backgroundColor && ![view.backgroundColor isEqual:UIColor.clearColor]) {
             saved.background = view.backgroundColor;
             view.backgroundColor = UIColor.clearColor;
@@ -141,7 +143,8 @@ static void BHTGlassRestore(id owner) {
         if (saved.disablesInteraction && !view.userInteractionEnabled) view.userInteractionEnabled = saved.interactionEnabled;
         if (saved.hidesView) {
             if (view.hidden) view.hidden = saved.hidden;
-        } else {
+        }
+        if (saved.clearsBackground) {
             if ([view.backgroundColor isEqual:UIColor.clearColor]) view.backgroundColor = saved.background;
             if (!view.opaque) view.opaque = saved.opaque;
         }
@@ -174,6 +177,17 @@ BOOL BHTGlassDockHasActiveDockedContent(UIViewController* owner) {
     return NO;
 }
 
+CGFloat BHTGlassDockNativeStockHeight(UIViewController* container, CGFloat nativeHeight) {
+    id owner = BHTGlassObject(container, @"tabBarViewController");
+    return BHTGlassDockStockHeight(nativeHeight,
+        [owner isKindOfClass:UIViewController.class] && BHTGlassDockUsesOverlayLayout(owner));
+}
+
+void BHTUpdateGlassAppContainer(UIViewController* container) {
+    id owner = BHTGlassObject(container, @"tabBarViewController");
+    if ([owner isKindOfClass:UIViewController.class]) BHTUpdateLiquidGlassTabBar(owner);
+}
+
 static void BHTGlassUpdateMaterial(BHTGlassChromeState* state, UIView* host) {
     NSString* kind = UIAccessibilityIsReduceTransparencyEnabled() ? @"opaque_accessibility" :
         (BHTNativeLiquidGlassAvailable() ? @"native_liquid_glass" : @"system_material");
@@ -181,7 +195,7 @@ static void BHTGlassUpdateMaterial(BHTGlassChromeState* state, UIView* host) {
     if (state.generation == BHTLiquidGlassGeneration && !colorChanged && [state.requestedMaterialKind isEqual:kind]) return;
     BOOL rebuild = ![state.requestedMaterialKind isEqual:kind];
     state.requestedMaterialKind = kind;
-    UIVisualEffect* effect = state.material.effect;
+    UIVisualEffect* effect = state.material.materialEffect;
     if (rebuild) effect = nil;
     if (rebuild && [kind isEqualToString:@"native_liquid_glass"]) {
         // Public UIKit clear glass (style 1), with our own controls inside its
@@ -196,7 +210,7 @@ static void BHTGlassUpdateMaterial(BHTGlassChromeState* state, UIView* host) {
         effect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemUltraThinMaterial];
         kind = @"system_material";
     }
-    if (rebuild) { state.material.effect = effect; state.materialRebuilds++; }
+    if (rebuild) { state.material.materialEffect = effect; state.materialRebuilds++; }
     [state.material setGlassOpacity:BHTGlassDockOpacity([BHTSettings integerForKey:@"glass_opacity"],
         UIAccessibilityIsReduceTransparencyEnabled()) surfaceColor:[Palette currentBackgroundColor]];
     state.material.backgroundColor = effect ? UIColor.clearColor : [Palette currentSurfaceColor];
@@ -242,8 +256,9 @@ void BHTUpdateLiquidGlassTabBar(UIViewController* controller) {
         BHTGlassRestore(controller);
         return;
     }
+    BOOL overlay = BHTGlassDockUsesOverlayLayout(controller);
     if (![tabBar isKindOfClass:UIView.class] || ![tabs isKindOfClass:NSArray.class] || !tabs.count ||
-        ![tabBar isDescendantOfView:controller.view] || CGRectIsEmpty(tabBar.bounds)) {
+        ![tabBar isDescendantOfView:controller.view] || (!overlay && CGRectIsEmpty(tabBar.bounds))) {
         // Native navigation can pass through zero-size/reparenting states.
         // Retain the effect rather than rebuilding it and flashing on return.
         BHTGlassChromeState* suspended = BHTGlassState(controller, NO);
@@ -257,14 +272,22 @@ void BHTUpdateLiquidGlassTabBar(UIViewController* controller) {
     if (state.updating) return;
     state.updating = YES;
     @try {
-        CGRect nativeFrame = [tabBar convertRect:tabBar.bounds toView:host];
-        state.vertical = nativeFrame.size.height > nativeFrame.size.width;
+        CGRect nativeFrame = overlay && host != controller.view
+            ? BHTGlassDockOverlayReferenceFrame(host.bounds, CGRectGetMinY(controller.view.frame))
+            : [tabBar convertRect:tabBar.bounds toView:host];
+        state.vertical = !overlay && nativeFrame.size.height > nativeFrame.size.width;
         BOOL labels = [BHTSettings boolForKey:@"restore_tab_labels"];
         CGFloat safeBottom = host.safeAreaInsets.bottom;
         CGRect frame = BHTGlassDockFrame(nativeFrame, host.bounds, safeBottom, tabs.count, state.vertical, labels);
         if (CGRectIsEmpty(frame)) { state.material.hidden = YES; state.material.userInteractionEnabled = NO; return; }
-        BHTGlassClearView(state, controller.view, NO);
-        if (host != controller.view) BHTGlassPassThrough(state, controller.view);
+        if (overlay && host != controller.view) {
+            // Hide the entire stock rendering tree, not only its buttons/fill.
+            // The owned controls are a sibling, outside this hidden subtree.
+            BHTGlassClearView(state, controller.view, YES);
+        } else {
+            BHTGlassClearView(state, controller.view, NO);
+            if (host != controller.view) BHTGlassPassThrough(state, controller.view);
+        }
         if (tabBar != controller.view) BHTGlassClearView(state, tabBar, YES);
         else for (UIView* tab in tabs) BHTGlassClearView(state, tab, YES);
         for (NSString* name in @[@"tabBarBackgroundView", @"tabBarDivider"]) {
@@ -384,6 +407,11 @@ void BHTRefreshLiquidGlassDesign(void) {
     }
 }
 
+static NSDictionary* BHTGlassDiagnosticFrame(CGRect frame) {
+    return @{@"x": @(frame.origin.x), @"y": @(frame.origin.y),
+        @"width": @(frame.size.width), @"height": @(frame.size.height)};
+}
+
 NSDictionary* BHTLiquidGlassDesignDiagnosticSnapshot(void) {
     if (!NSThread.isMainThread) {
         __block NSDictionary* result;
@@ -392,9 +420,19 @@ NSDictionary* BHTLiquidGlassDesignDiagnosticSnapshot(void) {
     }
     NSMutableArray* entries = [NSMutableArray array];
     NSArray* owners = BHTLiquidGlassTabOwners.allObjects ?: @[];
-    for (id owner in owners) {
+    for (UIViewController* owner in owners) {
         BHTGlassChromeState* state = BHTGlassState(owner, NO);
         if (!state) continue;
+        UIView* root = owner.isViewLoaded ? owner.view : nil;
+        BOOL overlay = BHTGlassDockUsesOverlayLayout(owner);
+        BOOL rootSlotRemoved = overlay && root && root.superview && root.hidden && root.bounds.size.height <= 0.5 &&
+            root.superview == state.material.superview;
+        UIScrollView* scroll = state.scrollSource;
+        BOOL viewportAttached = scroll.window && scroll.window == state.material.window;
+        NSDictionary* viewport = viewportAttached ? @{
+            @"frameInWindow": BHTGlassDiagnosticFrame([scroll convertRect:scroll.bounds toView:scroll.window]),
+            @"adjustedBottomInset": @(scroll.adjustedContentInset.bottom),
+            @"safeBottomInset": @(scroll.safeAreaInsets.bottom)} : @{};
         [entries addObject:@{@"ownerClass": NSStringFromClass([owner class]), @"material": state.materialKind ?: @"none",
             @"verticalRail": @(state.vertical), @"windowAttached": @(state.material.window != nil),
             @"width": @(state.material.bounds.size.width), @"height": @(state.material.bounds.size.height),
@@ -402,7 +440,13 @@ NSDictionary* BHTLiquidGlassDesignDiagnosticSnapshot(void) {
             @"materialRebuilds": @(state.materialRebuilds), @"collapsed": @(state.material.isCollapsed),
             @"collapseTransitions": @(state.collapseTransitions),
             @"manuallyExpanded": @(state.scrollState.manuallyExpanded),
-            @"bottomReservationRemoved": @(BHTGlassDockUsesOverlayLayout(owner) && !BHTGlassDockHasActiveDockedContent(owner)),
+            @"overlayLayoutRequested": @(overlay), @"bottomReservationRemoved": @(rootSlotRemoved),
+            @"nativeRootHidden": @(root.hidden), @"nativeRootHeight": @(root.bounds.size.height),
+            @"nativeRootFrame": root ? BHTGlassDiagnosticFrame(root.frame) : @{},
+            @"activeDockedContent": @(BHTGlassDockHasActiveDockedContent(owner)),
+            @"renderedEffectPresent": @(state.material.effect != nil),
+            @"materialFraction": @(state.material.materialFraction), @"tintFraction": @(state.material.tintFraction),
+            @"lastObservedViewportAtReportTime": viewport, @"lastObservedViewportAttached": @(viewportAttached),
             @"customButtons": @(state.material.buttonCount)}];
     }
     return @{@"enabled": @([BHTSettings boolForKey:@"liquid_glass_design"]),
@@ -410,7 +454,7 @@ NSDictionary* BHTLiquidGlassDesignDiagnosticSnapshot(void) {
         @"reduceTransparency": @(UIAccessibilityIsReduceTransparencyEnabled()),
         @"reduceMotion": @(UIAccessibilityIsReduceMotionEnabled()),
         @"opacityPercent": @(BHTGlassDockOpacity([BHTSettings integerForKey:@"glass_opacity"], NO) * 100),
-        @"nativeTabActionsPreserved": @YES, @"nativeTabFramesPreserved": @YES,
+        @"nativeTabActionsPreserved": @YES, @"nativeItemFramesManagedByX": @YES,
         @"implementation": @"owned_glass_dock", @"headerOverlayInstalled": @NO,
         @"surfaces": entries, @"capturesTextOrAccountIdentifiers": @NO};
 }

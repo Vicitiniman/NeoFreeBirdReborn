@@ -323,7 +323,7 @@
 "LIQUID_GLASS_DESIGN_TITLE" = "Liquid Glass design";
 "LIQUID_GLASS_DESIGN_DETAIL" = "Use a floating glass tray without the old bottom-bar space. Scroll up to reveal it, or tap the compact button to keep it open for this page. Reopen X after changing the navigation layout.";
 "GLASS_OPACITY_TITLE" = "Glass opacity";
-"GLASS_OPACITY_DETAIL" = "Choose how much content shows through the glass. Buttons stay fully visible. Reduce Transparency in Accessibility keeps it opaque.";
+"GLASS_OPACITY_DETAIL" = "0% is clear, 50% is the standard glass look, and 100% is opaque. Icons stay fully visible. Reduce Transparency in Accessibility keeps it opaque.";
 "GLASS_OPACITY_CLEAR" = "Clear";
 "GLASS_OPACITY_OPAQUE" = "Opaque";
 "GLASS_OPACITY_RESET" = "Reset to clear";

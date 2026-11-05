@@ -154,11 +154,15 @@ static NSUInteger BHTDockNumber(id object, NSString* name) {
 @property(nonatomic) CGRect expandedFrame;
 @property(nonatomic) CGRect presentationTarget;
 @property(nonatomic, readwrite, getter=isCollapsed) BOOL collapsed;
+@property(nonatomic, strong) UIViewPropertyAnimator* materialAnimator;
+@property(nonatomic, readwrite) CGFloat materialFraction;
+@property(nonatomic, readwrite) CGFloat tintFraction;
 @end
 
 @implementation BHTGlassDockView
 - (instancetype)initWithEffect:(UIVisualEffect*)effect {
-    if ((self = [super initWithEffect:effect])) {
+    if ((self = [super initWithEffect:nil])) {
+        _materialEffect = effect;
         self.isAccessibilityElement = NO;
         self.accessibilityContainerType = UIAccessibilityContainerTypeSemanticGroup;
         self.layer.cornerCurve = kCACornerCurveContinuous;
@@ -201,9 +205,54 @@ static NSUInteger BHTDockNumber(id object, NSString* name) {
     return self;
 }
 - (NSUInteger)buttonCount { return self.buttons.count; }
+- (void)stopMaterialAnimator {
+    if (self.materialAnimator.state == UIViewAnimatingStateActive) [self.materialAnimator stopAnimation:YES];
+    self.materialAnimator = nil;
+}
+- (void)dealloc {
+    if (_materialAnimator.state == UIViewAnimatingStateActive) [_materialAnimator stopAnimation:YES];
+}
+- (void)setMaterialEffect:(UIVisualEffect*)effect {
+    if (_materialEffect == effect) return;
+    [self stopMaterialAnimator];
+    _materialEffect = effect;
+    [self applyMaterialFraction];
+}
+- (void)applyMaterialFraction {
+    if (!self.materialEffect || self.materialFraction <= 0) {
+        [self stopMaterialAnimator];
+        self.effect = nil;
+        return;
+    }
+    if (self.materialAnimator && self.materialAnimator.state == UIViewAnimatingStateActive) {
+        self.materialAnimator.fractionComplete = self.materialFraction;
+        return;
+    }
+    if (self.materialFraction >= 1) { self.effect = self.materialEffect; return; }
+    // Scrub the effect transition. Changing view alpha would also fade the
+    // controls and violates UIVisualEffectView's composition requirements.
+    self.effect = nil;
+    UIVisualEffect* effect = self.materialEffect;
+    __weak BHTGlassDockView* weakSelf = self;
+    self.materialAnimator = [[UIViewPropertyAnimator alloc] initWithDuration:1 curve:UIViewAnimationCurveLinear
+        animations:^{ weakSelf.effect = effect; }];
+    self.materialAnimator.pausesOnCompletion = YES;
+    self.materialAnimator.scrubsLinearly = YES;
+    [self.materialAnimator startAnimation];
+    [self.materialAnimator pauseAnimation];
+    self.materialAnimator.fractionComplete = self.materialFraction;
+}
 - (void)setGlassOpacity:(CGFloat)opacity surfaceColor:(UIColor*)color {
-    UIColor* fill = [color colorWithAlphaComponent:MAX(0, MIN(1, opacity))];
+    CGFloat material = BHTGlassDockMaterialFraction(opacity);
+    self.tintFraction = BHTGlassDockTintFraction(opacity);
+    if (material != self.materialFraction) {
+        self.materialFraction = material;
+        [self applyMaterialFraction];
+    }
+    UIColor* fill = [color colorWithAlphaComponent:self.tintFraction];
     if (![self.opacityFill.backgroundColor isEqual:fill]) self.opacityFill.backgroundColor = fill;
+    self.rim.opacity = 0.25 + 0.75 * material;
+    self.lens.alpha = 0.25 + 0.75 * material;
 }
 - (void)updateTabs:(NSArray<UIView*>*)tabs owner:(UIViewController*)owner vertical:(BOOL)vertical
         showLabels:(BOOL)labels textColor:(UIColor*)text accent:(UIColor*)accent {

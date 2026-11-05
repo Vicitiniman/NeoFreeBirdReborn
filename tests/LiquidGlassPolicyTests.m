@@ -68,16 +68,52 @@ static void testLiquidGlassPolicy(void) {
         BHTGlassDockObserveScroll(&scroll, 100 + (pass % 2) * 0.2, 3000, YES, NO, NO);
     NSCAssert(!scroll.collapsed, @"Subpixel jitter never accumulates into a collapse");
     CGRect visible = CGRectMake(0, 0, 440, 49);
-    CGRect overlay = BHTGlassDockVisibleFrame(visible, YES, NO);
+    CGRect overlay = BHTGlassDockVisibleFrame(visible, YES);
     CGFloat rootHeight = 956, nativeBarOrigin = 873, safeBottom = 34;
     CGFloat reserved = MAX(0, rootHeight - (nativeBarOrigin + CGRectGetMinY(overlay) + safeBottom));
     NSCAssert(overlay.size.height == 0 && reserved == 0, @"Native inset math removes the old bar's reservation");
-    NSCAssert(CGRectEqualToRect(BHTGlassDockVisibleFrame(visible, NO, NO), visible), @"Disabling restores the stock reservation");
-    NSCAssert(CGRectEqualToRect(BHTGlassDockVisibleFrame(visible, YES, YES), visible), @"An active docked composer retains its native space");
-    NSCAssert(CGRectEqualToRect(BHTGlassDockVisibleFrame(CGRectZero, YES, NO), CGRectZero), @"An intentionally hidden native bar stays hidden");
+    NSCAssert(CGRectEqualToRect(BHTGlassDockVisibleFrame(visible, NO), visible), @"Disabling restores the stock reservation");
+    NSCAssert(CGRectEqualToRect(BHTGlassDockVisibleFrame(CGRectZero, YES), CGRectZero), @"An intentionally hidden native bar stays hidden");
     NSCAssert(BHTGlassDockOpacity(-10, NO) == 0 && BHTGlassDockOpacity(50, NO) == 0.5 && BHTGlassDockOpacity(200, NO) == 1,
         @"Opacity clamps safely while exposing the full clear-to-opaque range");
     NSCAssert(BHTGlassDockOpacity(0, YES) == 1, @"Reduce Transparency overrides the slider");
+    CGRect fullHost = CGRectMake(0, 0, 440, 956);
+    NSCAssert(BHTGlassDockStockHeight(83, YES) == 0, @"Overlay mode removes the physical stock navigation slot");
+    NSCAssert(BHTGlassDockStockHeight(83, NO) == 83, @"The stock height is restored outside phone overlay mode");
+    CGRect zeroSlotReference = BHTGlassDockOverlayReferenceFrame(fullHost, 956);
+    NSCAssert(CGRectEqualToRect(BHTGlassDockFrame(zeroSlotReference, fullHost, 34, 4, NO, NO), phone),
+        @"A zero-height native root still positions a full-sized floating tray above the home indicator");
+    CGRect footerReference = BHTGlassDockOverlayReferenceFrame(fullHost, 750);
+    CGRect aboveFooter = BHTGlassDockFrame(footerReference, fullHost, 34, 4, NO, NO);
+    NSCAssert(CGRectGetHeight(aboveFooter) == 58 && CGRectGetMaxY(aboveFooter) == 740,
+        @"The floating tray clears a separate native footer without restoring the stock navigation slot");
+    NSCAssert(CGRectIsEmpty(BHTGlassDockOverlayReferenceFrame(fullHost, NAN)), @"Invalid transition geometry is skipped");
+    for (NSUInteger pass = 0; pass < 1000; pass++) {
+        NSCAssert(BHTGlassDockStockHeight(0, YES) == 0 && CGRectEqualToRect(
+            BHTGlassDockFrame(BHTGlassDockOverlayReferenceFrame(fullHost, 956), fullHost, 34, 4, NO, NO), phone),
+            @"Repeated zero-slot layouts do not shrink the tray or accumulate spacing");
+    }
+    CGFloat previousMaterial = 0, previousTint = 0;
+    for (NSInteger percent = 0; percent <= 100; percent++) {
+        CGFloat opacity = BHTGlassDockOpacity(percent, NO);
+        CGFloat material = BHTGlassDockMaterialFraction(opacity), tint = BHTGlassDockTintFraction(opacity);
+        NSCAssert(material >= previousMaterial && material <= 1 && tint >= previousTint && tint <= 1,
+            @"The full slider range increases material and tint monotonically");
+        previousMaterial = material;
+        previousTint = tint;
+    }
+    NSCAssert(BHTGlassDockMaterialFraction(0) == 0 && BHTGlassDockTintFraction(0) == 0,
+        @"The clear endpoint removes both the material and tint");
+    NSCAssert(BHTGlassDockMaterialFraction(0.25) == 0.5 && BHTGlassDockTintFraction(0.25) == 0,
+        @"The lower half controls the material instead of leaving a fixed frosted minimum");
+    NSCAssert(BHTGlassDockMaterialFraction(0.5) == 1 && BHTGlassDockTintFraction(0.5) == 0,
+        @"The midpoint retains standard clear glass without an opaque fill");
+    NSCAssert(BHTGlassDockMaterialFraction(0.75) == 1 && BHTGlassDockTintFraction(0.75) == 0.5 &&
+        BHTGlassDockTintFraction(1) == 1, @"The upper half adds tint up to an opaque surface");
+    NSCAssert(BHTGlassDockMaterialFraction(-1) == 0 && BHTGlassDockTintFraction(-1) == 0 &&
+        BHTGlassDockMaterialFraction(2) == 1 && BHTGlassDockTintFraction(2) == 1 &&
+        BHTGlassDockMaterialFraction(NAN) == 0 && BHTGlassDockTintFraction(NAN) == 0,
+        @"Invalid material inputs cannot escape their supported range");
     CGRect compose = CGRectMake(376, 850, 56, 56);
     CGRect avoided = BHTGlassDockAvoidedComposeFrame(compose, phone);
     NSCAssert(CGRectGetMaxY(avoided) == CGRectGetMinY(phone) - 12 && avoided.size.width == compose.size.width,
@@ -87,5 +123,5 @@ static void testLiquidGlassPolicy(void) {
     for (id value in @[@0, @35, @100]) NSCAssert(BHTGlassOpacityPreferenceIsValid(value), @"Valid opacity profiles import");
     for (id value in @[@-1, @101, @0.5, @(NAN), @"35", NSNull.null])
         NSCAssert(!BHTGlassOpacityPreferenceIsValid(value), @"Malformed opacity profiles are rejected");
-    NSLog(@"PASS: wide dock geometry, manual expansion across inertia/drags/source replacement, page reset, native inset removal/restoration, docked-content guard and opacity/profile validation");
+    NSLog(@"PASS: wide dock geometry, manual expansion, page reset, zero-height stock slot, independent footer clearance and clear-to-opaque material/tint range");
 }

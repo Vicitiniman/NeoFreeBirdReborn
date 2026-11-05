@@ -1598,6 +1598,8 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"appearance", @"T1TabBarHostView", @"tabBarViewController", NO),
         BHTProbe(@"appearance", @"T1AppSplitViewController", @"viewDidLayoutSubviews", NO),
         BHTProbe(@"appearance", @"T1AppSplitViewController", @"viewSafeAreaInsetsDidChange", NO),
+        BHTProbe(@"appearance", @"T1AppSplitViewController", @"private_bottomTabBarHeight", NO),
+        BHTProbe(@"appearance", @"T1AppSplitViewController", @"tabBarViewController", NO),
         BHTProbe(@"home", @"T1FleetLineHeaderController", @"_t1_shouldShowFleetLine", NO),
         BHTProbe(@"home", @"TUIUpdateIndicator", @"_recreatePillControlForContentNotification:hideOnScroll:", NO),
         BHTProbe(@"appearance", @"TwitterHome.HomeDefaultNavigationBarTitleViewPlugin", @"titleView", NO),

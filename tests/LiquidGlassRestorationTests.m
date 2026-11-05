@@ -42,5 +42,35 @@ static void testLiquidGlassRestoration(void) {
     native.backgroundColor = original;
     BHTGlassRestore(owner);
     NSCAssert(native.backgroundColor == original, @"A newer native background is not overwritten while restoring");
-    NSLog(@"PASS: Liquid Glass repeat-refresh stability, native frame ownership, disable/restore, native theme changes and hidden decorations");
+    state.savedViews = [NSMutableArray array];
+    UIView* fullHost = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 440, 956)];
+    UIView* stockRoot = [[UIView alloc] initWithFrame:CGRectMake(0, 873, 440, 83)];
+    UIView* privateFill = [[UIView alloc] initWithFrame:CGRectMake(0, 0, 440, 83)];
+    privateFill.backgroundColor = original;
+    privateFill.opaque = YES;
+    [stockRoot addSubview:privateFill];
+    [stockRoot addSubview:native];
+    [fullHost addSubview:stockRoot];
+    [fullHost addSubview:state.material];
+    objc_setAssociatedObject(owner, &BHTLiquidGlassStateKey, state, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    for (NSUInteger pass = 0; pass < 1000; pass++) BHTGlassClearView(state, stockRoot, YES);
+    NSCAssert(stockRoot.hidden && [privateFill isDescendantOfView:stockRoot],
+        @"Hiding the native root suppresses private fills while retaining its hierarchy");
+    NSCAssert(!state.material.hidden && state.material.superview == fullHost &&
+        ![state.material isDescendantOfView:stockRoot], @"The floating controls remain outside the hidden stock tree");
+    NSCAssert(native.superview == stockRoot && CGRectGetHeight(stockRoot.frame) == 83,
+        @"Hiding does not replace native routing objects or manually rewrite layout frames");
+    BHTGlassRestore(owner);
+    NSCAssert(!stockRoot.hidden && privateFill.backgroundColor == original && native.superview == stockRoot,
+        @"Disabling restores the entire stock tree without changing its contents");
+    state.savedViews = [NSMutableArray array];
+    objc_setAssociatedObject(owner, &BHTLiquidGlassStateKey, state, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+    stockRoot.backgroundColor = original;
+    stockRoot.opaque = YES;
+    BHTGlassClearView(state, stockRoot, NO);
+    BHTGlassClearView(state, stockRoot, YES);
+    BHTGlassRestore(owner);
+    NSCAssert(!stockRoot.hidden && stockRoot.backgroundColor == original && stockRoot.opaque,
+        @"A root first seen before reparenting restores both its clear and hidden state");
+    NSLog(@"PASS: Liquid Glass repeat-refresh stability, whole stock-tree suppression, sibling dock, reparent/disable restoration and native theme changes");
 }

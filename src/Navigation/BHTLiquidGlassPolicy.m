@@ -42,8 +42,8 @@ CGRect BHTGlassDockCompactFrame(CGRect expanded, BOOL rightToLeft) {
         CGRectGetMaxY(expanded) - diameter, diameter, diameter);
 }
 
-CGRect BHTGlassDockVisibleFrame(CGRect nativeFrame, BOOL overlayEnabled, BOOL activeDockedContent) {
-    if (!overlayEnabled || activeDockedContent || CGRectIsEmpty(nativeFrame) || CGRectIsInfinite(nativeFrame)) return nativeFrame;
+CGRect BHTGlassDockVisibleFrame(CGRect nativeFrame, BOOL overlayEnabled) {
+    if (!overlayEnabled || CGRectIsEmpty(nativeFrame) || CGRectIsInfinite(nativeFrame)) return nativeFrame;
     // Native layout measures MIN Y, not height. Anchor the empty reservation
     // at the old bar's bottom; CGRectZero would reserve the entire screen.
     return CGRectMake(nativeFrame.origin.x, CGRectGetMaxY(nativeFrame), nativeFrame.size.width, 0);
@@ -63,6 +63,26 @@ CGRect BHTGlassDockAvoidedComposeFrame(CGRect nativeFrame, CGRect dockFrame) {
     if (CGRectIsEmpty(nativeFrame) || CGRectIsEmpty(dockFrame) || !CGRectIntersectsRect(nativeFrame, dockFrame)) return nativeFrame;
     nativeFrame.origin.y = MAX(0, MIN(nativeFrame.origin.y, CGRectGetMinY(dockFrame) - nativeFrame.size.height - 12));
     return nativeFrame;
+}
+
+CGFloat BHTGlassDockStockHeight(CGFloat nativeHeight, BOOL overlayEnabled) {
+    return overlayEnabled ? 0 : nativeHeight;
+}
+
+CGRect BHTGlassDockOverlayReferenceFrame(CGRect hostBounds, CGFloat stockOriginY) {
+    if (CGRectIsEmpty(hostBounds) || !isfinite(stockOriginY)) return CGRectZero;
+    CGFloat bottom = MIN(CGRectGetMaxY(hostBounds), MAX(CGRectGetMinY(hostBounds), stockOriginY));
+    return CGRectMake(hostBounds.origin.x, bottom - 49, hostBounds.size.width, 49);
+}
+
+CGFloat BHTGlassDockMaterialFraction(CGFloat opacity) {
+    if (!isfinite(opacity)) return 0;
+    return MAX(0, MIN(1, opacity * 2));
+}
+
+CGFloat BHTGlassDockTintFraction(CGFloat opacity) {
+    if (!isfinite(opacity)) return 0;
+    return MAX(0, MIN(1, opacity * 2 - 1));
 }
 
 void BHTGlassDockReveal(BHTGlassDockScrollState* state, BOOL manualOverride) {
