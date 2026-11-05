@@ -1,4 +1,7 @@
 #import "Likes/BHTLikesTab.h"
+#import "Likes/BHTNativeLikesContract.h"
+#import "Navigation/BHTGlassNavigation.h"
+#import "Navigation/BHTLiquidGlassDesign.h"
 
 #import <AVFoundation/AVFoundation.h>
 #import <AVKit/AVKit.h>
@@ -13,6 +16,7 @@
 
 #import "Core/BHTBundle.h"
 #import "CustomTabBar/CustomTabBarUtility.h"
+#import "CustomTabBar/BHTTabViewAppearance.h"
 #import "Headers/TWHeaders.h"
 #import "Hooks/HookHelpers.h"
 #import "Likes/BHTLikesNavigationUtility.h"
@@ -31,10 +35,7 @@ static char kBHTNativeLikesControllerKey;
 static char kBHTNativeLikesNavigationKey;
 static char kBHTNativeLikesTabViewKey;
 static char kBHTInitialResetPanMarkerKey;
-static const long long kBHTLikesPanelID = 6; // X 12.24.1 Bookmarks panel
-static const uintptr_t kBHTEntryFactoryOffset = 0x69B0C4;
-static const uintptr_t kBHTEntryFactoryJumpTableOffset = 0x1403730;
-static const uintptr_t kBHTBookmarksFactoryCaseOffset = 0x69B1E0;
+static const long long kBHTLikesPanelID = 6; // X 12.40.1 Bookmarks panel
 
 static NSObject* BHTLikesDiagnosticsLock(void) {
     static NSObject* lock;
@@ -92,6 +93,8 @@ static NSMutableDictionary* BHTMutableLikesDiagnostics(void) {
             @"nativeRootCreations": @0,
             @"nativeSurfaceCreations": @0,
             @"nativeEntryFactoryAttempts": @0,
+            @"nativeEntryFactoryTargetVersion": BHTTargetAppVersion,
+            @"nativeEntryFactoryJumpTableBits": @16,
             @"nativeEntryFactorySuccesses": @0,
             @"nativeNavigationInstalls": @0,
             @"factoryRequests": @0,
@@ -174,6 +177,7 @@ static UIViewController* BHTFindController(UIViewController* root, Class wanted)
 }
 
 void BHTRefreshVisibleAppTabs(void) {
+    BHTRefreshGlassNavigation();
     Class navigationClass = NSClassFromString(@"T1TabbedAppNavigationViewController");
     if (!navigationClass) return;
     for (UIWindow* window in UIApplication.sharedApplication.windows) {
@@ -3718,6 +3722,7 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
 }
 
 - (void)scrollViewDidScroll:(UIScrollView*)scrollView {
+    BHTObserveGlassDockScroll(self, scrollView);
     if (self.updatingProfileMediaInsets && scrollView == self.collectionView) return;
     if (self.profileMediaKind && scrollView == self.collectionView) {
         SEL event = NSSelectorFromString(@"tfn_contentScrollViewDidScroll:animate:");
@@ -3892,6 +3897,7 @@ static Class BHTNativeBookmarksNavigationClass(void) {
 }
 
 static uintptr_t BHTT1TwitterImageBase(void) {
+    if (!BHTIsSupportedHost()) return 0;
     uint32_t count = _dyld_image_count();
     for (uint32_t index = 0; index < count; index++) {
         const char* name = _dyld_get_image_name(index);
@@ -3901,11 +3907,7 @@ static uintptr_t BHTT1TwitterImageBase(void) {
                 (const struct mach_header_64*)_dyld_get_image_header(index);
             if (!header || header->magic != MH_MAGIC_64) return 0;
             // Exact binary identity gates every read of a private offset.
-            // X 12.24.1 build 1; a later app fails closed before dereferencing.
-            const uint8_t expectedUUID[16] = {
-                0xB7, 0x62, 0x6D, 0x78, 0xE9, 0x63, 0x30, 0xFF,
-                0xA7, 0xE1, 0xC1, 0x28, 0x1B, 0xC7, 0x29, 0x8D
-            };
+            // X 12.40.1 build 1; a later app fails closed before dereferencing.
             const uint8_t* cursor = (const uint8_t*)(header + 1);
             const uint8_t* end = cursor + header->sizeofcmds;
             for (uint32_t commandIndex = 0; commandIndex < header->ncmds; commandIndex++) {
@@ -3913,7 +3915,7 @@ static uintptr_t BHTT1TwitterImageBase(void) {
                 const struct load_command* command = (const void*)cursor;
                 if (command->cmdsize < sizeof(*command) || cursor + command->cmdsize > end) return 0;
                 if (command->cmd == LC_UUID && command->cmdsize >= sizeof(struct uuid_command)) {
-                    return memcmp(((const struct uuid_command*)command)->uuid, expectedUUID, 16) == 0
+                    return memcmp(((const struct uuid_command*)command)->uuid, kBHTT1TwitterUUID, 16) == 0
                         ? (uintptr_t)header : 0;
                 }
                 cursor += command->cmdsize;
@@ -3933,26 +3935,24 @@ static id BHTMakeNativeBookmarksEntry(void) {
         return nil;
     }
 
-    // X 12.24.1 build 1's own panel-entry switch. Its case 6 allocates and
+    // X 12.40.1 build 1's own panel-entry switch. Its case 6 allocates and
     // initializes BookmarksAppNavigationTabEntry with the current account.
     // Validate the switch prologue, panel-6 jump-table target, and invariant
     // case instructions before calling so another X build is skipped safely
     // instead of jumping into a changed private function.
     uintptr_t factoryAddress = imageBase + kBHTEntryFactoryOffset;
     const uint32_t* instructions = (const uint32_t*)factoryAddress;
-    const uint8_t* jumpTable =
-        (const uint8_t*)(imageBase +
+    const uint16_t* jumpTable =
+        (const uint16_t*)(imageBase +
                          kBHTEntryFactoryJumpTableOffset);
     const uint32_t* bookmarksCase =
         (const uint32_t*)(imageBase +
                           kBHTBookmarksFactoryCaseOffset);
-    if (instructions[0] != 0xD10203FF ||
-        instructions[6] != 0xF100601F ||
-        jumpTable[kBHTLikesPanelID] != 0x37 ||
-        bookmarksCase[0] != 0xD2800000 ||
-        bookmarksCase[3] != 0xAA0003F4 ||
-        bookmarksCase[4] != 0xAA1303E0 ||
-        bookmarksCase[6] != 0xAA0003F3) {
+    // The 12.40 factory has 26 panel cases and a 16-bit jump table; the
+    // older 8-bit load silently selected the wrong case on this release.
+    if (memcmp(instructions, kBHTEntryFactoryPrologue, sizeof(kBHTEntryFactoryPrologue)) != 0 ||
+        jumpTable[kBHTLikesPanelID] != kBHTBookmarksFactoryJump ||
+        memcmp(bookmarksCase, kBHTBookmarksFactoryCase, sizeof(kBHTBookmarksFactoryCase)) != 0) {
         BHTSetLikesDiagnostic(@"nativeEntryFactoryFailure",
                               @"NativeFactorySignatureMismatch");
         return nil;
@@ -3994,24 +3994,7 @@ BOOL BHTIsNativeLikesEntry(id entry) {
 
 static void BHTRefreshNativeTabViewAppearance(T1TabView* tabView) {
     if (!tabView) return;
-    SEL titleSelector = @selector(_t1_updateTitleLabel);
-    Method titleMethod =
-        class_getInstanceMethod([tabView class], titleSelector);
-    char titleReturnType[16] = {0};
-    if ([tabView respondsToSelector:titleSelector] &&
-        titleMethod &&
-        method_getNumberOfArguments(titleMethod) == 2) {
-        method_getReturnType(
-            titleMethod, titleReturnType,
-            sizeof(titleReturnType));
-        if (titleReturnType[0] == 'v') {
-            @try {
-                ((void (*)(id, SEL))objc_msgSend)(
-                    tabView, titleSelector);
-            } @catch (__unused NSException* exception) {
-            }
-        }
-    }
+    BHTRefreshTabViewAppearance(tabView);
 
     SEL imageSelector = @selector(_t1_updateImageViewAnimated:);
     Method imageMethod =
@@ -4061,7 +4044,7 @@ static void BHTConfigureNativeLikesEntry(id entry, BOOL injected) {
     // been rendered before the scribe page is changed. Force the hooked
     // refresh paths now; otherwise the first frame can still say Bookmarks
     // until the user selects the tab.
-    tabView.titleLabel.text = @"Likes";
+    BHTSetTabViewTitleOverride(tabView, @"Likes");
     tabView.accessibilityLabel = @"Likes";
     BHTRefreshNativeTabViewAppearance(tabView);
 }
@@ -4073,6 +4056,7 @@ static void BHTRestoreNativeEntryPage(id entry) {
     NSString* original =
         objc_getAssociatedObject(tabView, &kBHTOriginalNativePageKey);
     if (original.length > 0) tabView.scribePage = original;
+    BHTSetTabViewTitleOverride(tabView, nil);
     BHTRefreshNativeTabViewAppearance(tabView);
     tabView.accessibilityLabel = tabView.title;
     objc_setAssociatedObject(tabView, &kBHTLikesEntryKey, nil,
@@ -4320,4 +4304,9 @@ UIViewController* BHTProfileMediaController(UIViewController* nativeController,
                           NSStringFromClass(nativeController.class));
     return [[BHTLikesViewController alloc] initWithPostsController:nativeController
                                                  profileMediaKind:mediaKind];
+}
+
+UIViewController* BHTMakeStandaloneLikesController(id account) {
+    return [[BHTLikesViewController alloc]
+        initWithPostsController:BHTMakeNativeLikesController(account) profileMediaKind:nil];
 }

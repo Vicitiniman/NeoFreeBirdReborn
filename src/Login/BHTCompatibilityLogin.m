@@ -1,3 +1,4 @@
+#import "Compatibility/BHTHostCompatibility.h"
 #import "Login/BHTCompatibilityLogin.h"
 
 #import "Reply/BHTDetailedReplyDiagnostics.h"
@@ -17,7 +18,6 @@
 #import <string.h>
 #import <math.h>
 
-static NSString* const BHTCompatibilityTargetVersion = @"12.24.1";
 static NSString* const BHTMetricsHandlerName = @"bht";
 static const NSTimeInterval BHTCompatibilityMinimumPreflightDuration = 12.0;
 
@@ -291,8 +291,7 @@ static NSString* BHTAppVersion(void) {
 }
 
 static BOOL BHTCompatibilityVersionIsSupported(void) {
-    return [BHTAppVersion()
-        isEqualToString:BHTCompatibilityTargetVersion];
+    return BHTIsSupportedHost();
 }
 
 static void BHTLoadCompatibilityFrameworkIfNeeded(void) {
@@ -3156,7 +3155,7 @@ BHTCompatibilitySignInDiagnosticSnapshot(void) {
                            @selector(viewDidAppear:)] &&
         nativeAddAccountCompletionSelectorAvailable;
     return @{
-        @"targetAppVersion": BHTCompatibilityTargetVersion,
+        @"targetAppVersion": BHTTargetAppVersion,
         @"appVersionSupported":
             @(BHTCompatibilityVersionIsSupported()),
         @"runtimeAvailable": @(secureWebSessionAvailable),
@@ -3196,9 +3195,9 @@ BHTCompatibilitySignInDiagnosticSnapshot(void) {
         @"credentialPersistence":
             @"per_account_device_only_keychain_with_isolated_webkit",
         @"xAuthClientMetadataPolicy":
-            @"native_x_12_24_1",
+            @"native_x_12_40_1",
         @"xAuthClientMetadataTargetVersion":
-            BHTCompatibilityTargetVersion,
+            BHTTargetAppVersion,
         @"xAuthClientMetadataOverrideInstalled": @NO,
         @"xAuthClientMetadataOverrideClaimed": @0,
         @"xAuthClientMetadataOverrideApplied": @0,

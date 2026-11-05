@@ -7,6 +7,7 @@
 
 #import "CustomTabBarUtility.h"
 #import "Headers/T1Headers.h"
+#import "Core/BHTSettings.h"
 
 // The Home tab is the app's landing surface, so it is always kept visible,
 // pinned first, and can never end up in the hidden list.
@@ -116,6 +117,28 @@ static NSString* const kLegacyHiddenKey = @"bh_tabs_hidden";
     return [tabs copy];
 }
 
++ (void)recordTabMetadata:(NSArray<NSDictionary*>*)metadata {
+    NSMutableArray<NSDictionary*>* registry = [self registry];
+    BOOL changed = NO;
+    for (NSDictionary* entry in metadata) {
+        if (![entry isKindOfClass:NSDictionary.class] ||
+            ![entry[TabPageKey] isKindOfClass:NSString.class] ||
+            [entry[TabPageKey] length] == 0 ||
+            ![entry[TabTitleKey] isKindOfClass:NSString.class] ||
+            ![entry[TabImageKey] isKindOfClass:NSString.class]) continue;
+        NSUInteger index = [registry indexOfObjectPassingTest:^BOOL(NSDictionary* value, NSUInteger i, BOOL* stop) {
+            return [value[TabPageKey] isEqual:entry[TabPageKey]];
+        }];
+        if (index == NSNotFound) { [registry addObject:entry]; changed = YES; }
+        else {
+            NSMutableDictionary* merged = [registry[index] mutableCopy];
+            [merged addEntriesFromDictionary:entry];
+            if (![merged isEqualToDictionary:registry[index]]) { registry[index] = merged; changed = YES; }
+        }
+    }
+    if (changed) [[NSUserDefaults standardUserDefaults] setObject:[registry copy] forKey:kRegistryKey];
+}
+
 + (NSDictionary*)metadataForPage:(NSString*)pageID {
     for (NSDictionary* entry in [self availableTabs]) {
         if ([entry[TabPageKey] isEqualToString:pageID]) {
@@ -164,6 +187,7 @@ static NSString* const kLegacyHiddenKey = @"bh_tabs_hidden";
     [defaults setBool:[visible containsObject:@"likes"]
                forKey:@"enable_likes_tab"];
     [defaults synchronize];
+    [BHTSettings notePreferencesChanged];
 }
 
 + (void)resetSelection {
@@ -172,6 +196,7 @@ static NSString* const kLegacyHiddenKey = @"bh_tabs_hidden";
     [defaults removeObjectForKey:kLegacyHiddenKey];
     [defaults setBool:NO forKey:@"enable_likes_tab"];
     [defaults synchronize];
+    [BHTSettings notePreferencesChanged];
 }
 
 + (NSArray<NSString*>*)defaultVisiblePageIDs {

@@ -26,6 +26,10 @@ def main():
 #import "Timeline/BHTTimelineCleanup.h"
 #import "Likes/BHTLikesNavigationUtility.h"
 #import "Compatibility/BHTCompatibilityReporter.h"
+#import "Compatibility/BHTHostCompatibility.h"
+#import "Navigation/BHTLiquidGlassPolicy.h"
+#import "Timeline/BHTLiveAudioBanner.h"
+#import "Timeline/BHTTimelineModelRuntime.h"
 #import "Login/BHTWebSessionSecurity.h"
 #import "Login/BHTWebSessionVault.h"
 NSString* const BHTSettingsProfileDidApplyNotification = @"TestProfileChanged";
@@ -70,11 +74,42 @@ static NSUInteger BHTTestSettingsGeneration = 1;
 static BOOL ReportGenuineTabGates = NO;
 static BOOL AccountIsGenuinelyPremium(void) { return NO; }
 '''
+    unit += (ROOT / "tests/TabViewAppearanceFixture.m").read_text(encoding="utf8")
+    tabs_source = (ROOT / "src/CustomTabBar/BHTTabViewAppearance.m").read_text(encoding="utf8")
+    unit += tabs_source[tabs_source.index("static char BHTTabLabelKey;"):]
+    unit += (ROOT / "tests/TabViewAppearanceTests.m").read_text(encoding="utf8")
+    unit += (ROOT / "tests/SettingsEntryFixture.m").read_text(encoding="utf8")
+    entry_source = (ROOT / "src/Settings/BHTSettingsEntry.m").read_text(encoding="utf8")
+    unit += section(entry_source, "BOOL BHTSettingsEntryIsContainer(", "@interface BHTModernSettingsEntryState")
+    settings_source = (ROOT / "src/Hooks/Settings.x").read_text(encoding="utf8")
+    unit += section(settings_source, "static BOOL isSettingsClass(", "static BOOL sectionsContainNeoFreeBirdEntry(")
+    unit += (ROOT / "tests/SettingsEntryTests.m").read_text(encoding="utf8")
     unit += section(media_source, "static NSArray<BHTLikedMediaItem*>* BHTProfileMediaSnapshot", "@protocol BHTWaterfallLayoutDelegate")
     unit += section(media_source, "static CGFloat BHTMediaViewerCaptionWidth", "@interface BHTMediaPagerController")
     profile_source = (ROOT / "src/Hooks/Profile.x").read_text(encoding="utf8")
     unit += section(profile_source, "static NSArray* BHTProfileMainEntriesWithPhotosFirst", "// Keep the profile's native")
+    unit += (ROOT / "tests/LiquidGlassPolicyTests.m").read_text(encoding="utf8")
+    unit += (ROOT / "tests/GlassDockRoutingTests.m").read_text(encoding="utf8")
+    surface_source = (ROOT / "src/ThemeColor/BHTPostSurfaceTheme.m").read_text(encoding="utf8")
+    unit += (ROOT / "tests/PostSurfaceThemeFixture.m").read_text(encoding="utf8")
+    unit += "\n#define BHTIsSupportedHost BHTTestSurfaceSupportedHost\n"
+    unit += section(surface_source, "BOOL BHTApplySurfaceBackingColor(", "static id BHTSurfaceObject(")
+    unit += "\n#undef BHTIsSupportedHost\n"
+    unit += (ROOT / "tests/PostSurfaceThemeTests.m").read_text(encoding="utf8")
+    unit += (ROOT / "tests/LiveAudioBannerTests.m").read_text(encoding="utf8")
+    glass_source = (ROOT / "src/Navigation/BHTLiquidGlassDesign.m").read_text(encoding="utf8")
+    unit += section(glass_source, "@interface BHTGlassSavedView", "@interface BHTGlassChromeState")
+    unit += (ROOT / "tests/LiquidGlassRestorationFixture.m").read_text(encoding="utf8")
+    unit += section(glass_source, "static void BHTGlassClearView(", "BOOL BHTGlassDockUsesOverlayLayout(")
+    unit += (ROOT / "tests/LiquidGlassRestorationTests.m").read_text(encoding="utf8")
+    unit += (ROOT / "tests/ComposeButtonVisibilityFixture.m").read_text(encoding="utf8")
+    compose_source = (ROOT / "src/Navigation/BHTComposeButtonVisibility.m").read_text(encoding="utf8")
+    unit += section(compose_source, "@interface BHTComposeVisibilityState", "NSDictionary* BHTComposeButtonVisibilityDiagnostics(")
+    unit += (ROOT / "tests/ComposeButtonVisibilityTests.m").read_text(encoding="utf8")
     unit += section(switches, "static NSNumber* FeatureSwitchOverrideValueForKey", "// Every feature switch facade")
+    player_source = (ROOT / "src/Hooks/ImmersivePlayer.x").read_text(encoding="utf8")
+    unit += section(player_source, "static BOOL cardStateFieldIndex", "static const uint8_t* immersiveCardStateMetadata")
+    unit += (ROOT / "tests/SwiftFieldMetadataTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/ProfileMediaTests.m").read_text(encoding="utf8")
     login_source = (ROOT / "src/Login/BHTCompatibilityLogin.m").read_text(encoding="utf8")
     unit += section(login_source, "static NSInteger BHTCompatibilityAPIErrorCode(", "static void BHTCompatibilityRecordCommandCompletion(")
@@ -82,6 +117,7 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
     unit += (ROOT / "tests/CompatibilityLoginTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/WebSessionSecurityTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/WebSessionVaultTests.m").read_text(encoding="utf8")
+    unit += (ROOT / "tests/HostCompatibilityTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/TimelineCleanupTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/TimelineKeywordTests.m").read_text(encoding="utf8")
     if args.emit_only:
@@ -93,9 +129,14 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
         test_source.write_text(unit, encoding="utf8")
         binary = base / "native-tests"
         subprocess.run(["xcrun", "clang", "-fobjc-arc", "-fblocks", "-Werror=implicit-function-declaration",
-                        "-framework", "Foundation", "-framework", "Security", "-I", str(ROOT / "src"), str(test_source),
+                        "-framework", "Foundation", "-framework", "Security", "-framework", "CoreGraphics",
+                        "-I", str(ROOT / "src"), str(test_source),
                         str(ROOT / "src/Timeline/BHTForYouKeywordFilter.m"),
                         str(ROOT / "src/Timeline/BHTTimelineCleanup.m"),
+                        str(ROOT / "src/Timeline/BHTLiveAudioBanner.m"),
+                        str(ROOT / "src/Timeline/BHTTimelineModelRuntime.m"),
+                        str(ROOT / "src/Compatibility/BHTHostCompatibility.m"),
+                        str(ROOT / "src/Navigation/BHTLiquidGlassPolicy.m"),
                         str(ROOT / "src/Likes/BHTLikesNavigationUtility.m"),
                         str(ROOT / "src/Login/BHTWebSessionSecurity.m"),
                         str(ROOT / "src/Login/BHTWebSessionVault.m"),

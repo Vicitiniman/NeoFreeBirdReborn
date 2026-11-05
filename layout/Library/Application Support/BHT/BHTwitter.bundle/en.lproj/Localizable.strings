@@ -4,6 +4,7 @@
 */
 
 "NFB_SETTINGS_TITLE" = "NeoFreeBird";
+"NFB_SETTINGS_ENTRY_SUBTITLE" = "Settings and customization";
 "NFB_SETTINGS_DETAIL" = "Tweak your Twitter. Hide ads, enable Blue features, and much more.";
 
 /*Alerts and popups*/
@@ -92,7 +93,7 @@
 /* Compatibility sign-in */
 "COMPATIBILITY_SIGN_IN_TITLE" = "Secure Web Sign-in";
 "COMPATIBILITY_SIGN_IN_HEADING" = "Compatibility Sign-in";
-"COMPATIBILITY_SIGN_IN_DETAIL" = "Tries an alternative sign-in with X 12.24.1's account service. Complete any verification X requests. If it fails, Share Report helps identify the cause.";
+"COMPATIBILITY_SIGN_IN_DETAIL" = "Sign in on X's website, then use that account in NeoFreeBird. Complete any verification X requests. Your saved sign-in stays on this device.";
 "COMPATIBILITY_SIGN_IN_USERNAME_PLACEHOLDER" = "Username, email, or phone";
 "COMPATIBILITY_SIGN_IN_PASSWORD_PLACEHOLDER" = "Password";
 "COMPATIBILITY_SIGN_IN_ACTION" = "Sign in";
@@ -100,7 +101,7 @@
 "COMPATIBILITY_SIGN_IN_PREPARING" = "Preparing X's sign-in request…";
 "COMPATIBILITY_SIGN_IN_CONTACTING_X" = "Contacting X…";
 "COMPATIBILITY_SIGN_IN_REQUIRED_ERROR" = "Enter both your account identifier and password.";
-"COMPATIBILITY_SIGN_IN_VERSION_ERROR" = "This version of Compatibility Sign-in supports X 12.24.1. Install the matching NeoFreeBird build to continue.";
+"COMPATIBILITY_SIGN_IN_VERSION_ERROR" = "This version of Compatibility Sign-in supports X 12.40.1 build 1. Install the matching NeoFreeBird build to continue.";
 "COMPATIBILITY_SIGN_IN_RUNTIME_ERROR" = "The guarded compatibility account service is unavailable in this X build. Export a pre-login compatibility report so its selector checks can be reviewed.";
 "COMPATIBILITY_SIGN_IN_REJECTED_ERROR" = "X did not accept this sign-in. If your details work on x.com, use Share Report so we can check why the app was rejected.";
 "COMPATIBILITY_SIGN_IN_REQUEST_ERROR" = "X could not complete this compatibility request. This does not confirm an incorrect password. Use Share Report to help diagnose the failure.";
@@ -317,6 +318,23 @@
 "UNDO_SEND_DESCRIPTION" = "Choose how long to hold a post before sending, giving you time to undo it.";
 "BHT_DOWNLOAD_PROGRESS" = "Downloading…";
 "BHT_RESTORE_DEFAULTS" = "Restore defaults";
+"CLASSIC_NAVIGATION_TITLE" = "Classic navigation";
+"CLASSIC_NAVIGATION_DETAIL" = "Use the older navigation layout. Turning this on turns off Liquid Glass design. Reopen X after changing this.";
+"LIQUID_GLASS_DESIGN_TITLE" = "Liquid Glass design";
+"LIQUID_GLASS_DESIGN_DETAIL" = "Use a floating glass tray without the old bottom-bar space. Scroll up to reveal it, or tap the compact button to keep it open for this page. Reopen X after changing the navigation layout.";
+"GLASS_OPACITY_TITLE" = "Glass opacity";
+"GLASS_OPACITY_DETAIL" = "0% is clear, 50% is the standard glass look, and 100% is opaque. Icons stay fully visible. Reduce Transparency in Accessibility keeps it opaque.";
+"GLASS_OPACITY_CLEAR" = "Clear";
+"GLASS_OPACITY_OPAQUE" = "Opaque";
+"GLASS_OPACITY_RESET" = "Reset to clear";
+"HIDE_COMPOSE_BUTTON_TITLE" = "Hide compose button";
+"HIDE_COMPOSE_BUTTON_DETAIL" = "Hide the floating blue plus button used to create a post.";
+"GLASS_DOCK_UNREAD_FORMAT" = "%@ unread";
+"GLASS_DOCK_OPTIONS" = "Options";
+"GLASS_DOCK_EXPAND" = "Show navigation";
+"HIDE_LISTEN_LIVE_TITLE" = "Hide Listen Live banner";
+"HIDE_LISTEN_LIVE_DETAIL" = "Hide live audio recommendations above Home. You can still open Spaces yourself.";
+"SETTINGS_UNAVAILABLE_CURRENT_X" = "Not supported in this version of X. Your saved preference is preserved.";
 "SIDEBAR_GROK_BOT_TITLE" = "Try Grok Bot";
 
 "DOWNLOAD_VIDEOS_TITLE" = "Download media";
@@ -624,6 +642,7 @@
 "SIDEBAR_NAVIGATION_RESET_MESSAGE" = "Restore the sidebar to its default layout?";
 "SIDEBAR_PROFILE_TITLE" = "Profile";
 "SIDEBAR_BLUE_TITLE" = "Blue";
+"SIDEBAR_SUBSCRIPTIONS_TITLE" = "Subscriptions";
 "SIDEBAR_HISTORY_TITLE" = "History";
 "SIDEBAR_COMMUNITIES_TITLE" = "Communities";
 "SIDEBAR_NEWS_TITLE" = "News";
@@ -649,7 +668,7 @@
 "HIDE_SCREENSHOT_BRANDING_TITLE" = "Hide screenshot branding";
 "HIDE_SCREENSHOT_BRANDING_DETAIL" = "Hide X's custom overlay on timeline screenshots.";
 "EXPORT_COMPATIBILITY_REPORT_TITLE" = "Export compatibility report";
-"EXPORT_COMPATIBILITY_REPORT_DETAIL" = "Share the X 12.9 runtime hook report for troubleshooting.";
+"EXPORT_COMPATIBILITY_REPORT_DETAIL" = "Share the runtime compatibility report for troubleshooting.";
 "DETAILED_REPLY_DIAGNOSTICS_TITLE" = "Compare native posting and replies";
 "DETAILED_REPLY_DIAGNOSTICS_DETAIL" = "Temporary testing mode. Send one normal post first, verify it is visible, then send one native reply and export the compatibility report.";
 "DETAILED_REPLY_DIAGNOSTICS_WARNING_TITLE" = "Compare one post and one reply?";

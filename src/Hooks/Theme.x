@@ -7,7 +7,9 @@
 #import "Branding/BHTBranding.h"
 #import "Compatibility/BHTCompatibilityReporter.h"
 #import "Likes/BHTLikesTab.h"
+#import "CustomTabBar/BHTTabViewAppearance.h"
 #import "ThemeColor/BHTThemePresets.h"
+#import "Navigation/BHTLiquidGlassDesign.h"
 
 // MARK: - Custom accent color
 
@@ -407,52 +409,19 @@ static void BHTRefreshCurrentThemeTabItems(
     T1TabBarViewController* controller) {
     id value = BHTThemeSafeValue(controller, @"tabViews");
     if (![value isKindOfClass:NSArray.class]) return;
-    SEL imageSelector =
-        NSSelectorFromString(@"_t1_updateImageViewAnimated:");
-    SEL titleSelector =
-        NSSelectorFromString(@"_t1_updateTitleLabel");
-    for (id tabView in (NSArray*)value) {
-        Method imageMethod =
-            class_getInstanceMethod([tabView class], imageSelector);
-        char imageReturnType[16] = {0};
-        char animatedType[16] = {0};
-        if ([tabView respondsToSelector:imageSelector] &&
-            imageMethod &&
-            method_getNumberOfArguments(imageMethod) == 3) {
-            method_getReturnType(
-                imageMethod, imageReturnType,
-                sizeof(imageReturnType));
-            method_getArgumentType(
-                imageMethod, 2, animatedType,
-                sizeof(animatedType));
-            if (imageReturnType[0] == 'v' &&
-                (animatedType[0] == 'c' ||
-                 animatedType[0] == 'B')) {
-                @try {
-                    ((void (*)(id, SEL, BOOL))objc_msgSend)(
-                        tabView, imageSelector, NO);
-                } @catch (__unused NSException* exception) {
-                }
+    SEL selector = NSSelectorFromString(@"_t1_updateImageViewAnimated:");
+    for (UIView* tabView in (NSArray*)value) {
+        Method method = class_getInstanceMethod([tabView class], selector);
+        if (method && method_getNumberOfArguments(method) == 3) {
+            char result[16] = {0}, argument[16] = {0};
+            method_getReturnType(method, result, sizeof(result));
+            method_getArgumentType(method, 2, argument, sizeof(argument));
+            if (result[0] == 'v' && (argument[0] == 'B' || argument[0] == 'c')) {
+                ((void (*)(id, SEL, BOOL))objc_msgSend)(tabView, selector, NO);
             }
         }
-
-        Method titleMethod =
-            class_getInstanceMethod([tabView class], titleSelector);
-        char titleReturnType[16] = {0};
-        if ([tabView respondsToSelector:titleSelector] &&
-            titleMethod &&
-            method_getNumberOfArguments(titleMethod) == 2) {
-            method_getReturnType(
-                titleMethod, titleReturnType,
-                sizeof(titleReturnType));
-            if (titleReturnType[0] == 'v') {
-                @try {
-                    ((void (*)(id, SEL))objc_msgSend)(
-                        tabView, titleSelector);
-                } @catch (__unused NSException* exception) {
-                }
-            }
-        }
+        BHTRefreshTabViewAppearance(tabView);
+        [tabView setNeedsLayout];
     }
 }
 
@@ -507,7 +476,7 @@ static void BHTTrackThemedTabBarController(
 
 static BOOL shouldPinCollapsibleTabBar(
     T1TabBarViewController* controller) {
-    if (![BHTSettings boolForKey:@"no_tab_bar_hiding"]) {
+    if (![BHTSettings boolForKey:@"no_tab_bar_hiding"] && ![BHTSettings boolForKey:@"liquid_glass_design"]) {
         return NO;
     }
 
@@ -532,11 +501,13 @@ static BOOL shouldPinCollapsibleTabBar(
     BHTTrackThemedTabBarController(self);
     BHTApplyCurrentThemeToTabBarController(self, YES);
     BHTRefreshCurrentThemeTabItems(self);
+    BHTUpdateLiquidGlassTabBar(self);
 }
 
 - (void)viewDidLayoutSubviews {
     %orig;
     BHTApplyCurrentThemeToTabBarController(self, NO);
+    BHTUpdateLiquidGlassTabBar(self);
 }
 
 - (void)traitCollectionDidChange:
@@ -544,6 +515,27 @@ static BOOL shouldPinCollapsibleTabBar(
     %orig(previousTraits);
     BHTApplyCurrentThemeToTabBarController(self, YES);
     BHTRefreshCurrentThemeTabItems(self);
+    BHTUpdateLiquidGlassTabBar(self);
+}
+
+- (void)setSelectedTabIndex:(NSInteger)index {
+    %orig(index);
+    BHTUpdateLiquidGlassTabBar(self);
+}
+
+- (void)_t1_updateBackground {
+    %orig;
+    BHTUpdateLiquidGlassTabBar(self);
+}
+
+- (void)setTabBarOpacity:(double)opacity {
+    %orig(opacity);
+    BHTUpdateLiquidGlassTabBar(self);
+}
+
+- (void)_t1_updateTabBarHidden {
+    %orig;
+    BHTUpdateLiquidGlassTabBar(self);
 }
 
 // X 12.9 consults these capabilities before sending collapse-ratio updates.
@@ -601,27 +593,31 @@ static BOOL BHTShouldThemeTabItems(void) {
     updatingTabIconColor = NO;
 
     %orig(animated);
+    BHTRefreshTabViewAppearance(self);
+    BHTRefreshGlassDockForTabView(self);
 }
 
-- (void)_t1_updateTitleLabel {
+- (void)setBadgeCount:(NSUInteger)count animated:(BOOL)animated {
+    %orig(count, animated);
+    BHTRefreshGlassDockForTabView(self);
+}
+
+- (void)setHasUnreadContent:(BOOL)unread animated:(BOOL)animated {
+    %orig(unread, animated);
+    BHTRefreshGlassDockForTabView(self);
+}
+
+- (void)layoutSubviews {
+    BHTPrepareTabViewLayout(self);
     %orig;
-
-    if (BHTShouldThemeTabItems()) {
-        self.titleLabel.textColor = tabItemColor(self.selected);
-    }
-}
-
-- (BOOL)showsTitleInDisplayMode:(long long)displayMode {
-    if ([BHTSettings boolForKey:@"restore_tab_labels"]) {
-        return YES;
-    }
-    return %orig;
+    BHTLayoutTabViewAppearance(self);
 }
 
 %new
 - (void)applyCurrentThemeToIcon {
     [self _t1_updateImageViewAnimated:NO];
-    [self _t1_updateTitleLabel];
+    BHTRefreshTabViewAppearance(self);
+    [self setNeedsLayout];
 }
 
 %end
@@ -700,11 +696,15 @@ static BOOL BHTRailHeaderCandidateIsVisible(UIView* candidate,
 static BOOL BHTRailHeaderCandidateBelongsToTab(UIView* candidate,
                                                UIView* hostView) {
     Class tabViewClass = NSClassFromString(@"T1TabView");
-    if (!tabViewClass) return NO;
+    Class modernItem = NSClassFromString(@"XNavigation.TabBarItemView");
     for (UIView* current = candidate.superview;
          current && current != hostView;
          current = current.superview) {
-        if ([current isKindOfClass:tabViewClass]) {
+        NSString* name = NSStringFromClass(current.class);
+        if ((tabViewClass && [current isKindOfClass:tabViewClass]) ||
+            (modernItem && [current isKindOfClass:modernItem]) ||
+            [name rangeOfString:@"Avatar" options:NSCaseInsensitiveSearch].location != NSNotFound ||
+            [name rangeOfString:@"ProfileImage" options:NSCaseInsensitiveSearch].location != NSNotFound) {
             // The Home house and every other navigation item live inside a
             // T1TabView. The rail header mark does not, so this is a stronger
             // guard than comparing icon pixels or relying on view order.
@@ -720,7 +720,8 @@ static BOOL BHTIsSafeRailHeaderCandidate(UIImageView* candidate,
     if (!candidate || !hostView ||
         ![candidate isDescendantOfView:hostView] ||
         BHTRailHeaderCandidateBelongsToTab(candidate, hostView) ||
-        !BHTRailHeaderCandidateIsVisible(candidate, hostView)) {
+        !BHTRailHeaderCandidateIsVisible(candidate, hostView) ||
+        candidate.layer.cornerRadius > 4.0) {
         return NO;
     }
 
@@ -888,15 +889,18 @@ static UIImageView* BHTRailHeaderLogoImageView(UIView* hostView,
     return fallback;
 }
 
+static BOOL BHTHasBrandedRailInWindow(UIWindow* window) {
+    if (!window) return NO;
+    for (UIImageView* logo in BHTBrandedLogoViews().allObjects) {
+        if (logo.window == window && !logo.hidden &&
+            [objc_getAssociatedObject(logo, &kBHTOriginalRailLogoStateCapturedKey) boolValue]) return YES;
+    }
+    return NO;
+}
+
 static BOOL BHTShouldRecordUnresolvedRailHost(UIView* hostView) {
-    Class splitSidebarClass =
-        NSClassFromString(@"T1AppSplitSideBarViewController");
-    Class tabBarHostClass = NSClassFromString(@"T1TabBarHostView");
-    // On X 12.24 the child tab host contains only the navigation buttons.
-    // Let the full split-sidebar owner report resolution so the child's
-    // expected zero-candidate scan cannot overwrite a successful diagnostic.
-    return !splitSidebarClass || !tabBarHostClass ||
-           ![hostView isKindOfClass:tabBarHostClass];
+    // A later child layout must not overwrite the resolved parent rail.
+    return !BHTHasBrandedRailInWindow(hostView.window);
 }
 
 static void BHTUpdateRailHostBranding(UIView* hostView) {
@@ -1018,31 +1022,53 @@ static void BHTScheduleDeferredRailHostBranding(UIView* hostView) {
     });
 }
 
-// X 12.24 owns the permanent iPad rail header in this controller. Its
-// T1TabBarHostView child starts below the mark and therefore cannot see it.
-%hook T1AppSplitSideBarViewController
-
-- (void)viewDidLoad {
-    %orig;
-    UIView* railView = ((UIViewController*)self).view;
-    BHTUpdateRailHostBranding(railView);
-    BHTScheduleDeferredRailHostBranding(railView);
+// The old split-sidebar controller was removed. Discover tall, narrow rail
+// containers from the surviving split/navigation owner, without scanning the
+// timeline's image cells or depending on an assumed full-window logo position.
+static void BHTUpdateRailContainers(UIView* view, UIView* root,
+                                     NSUInteger depth, NSUInteger* budget) {
+    if (*budget == 0 || depth > 5 || view.hidden || view.alpha <= 0.01) return;
+    (*budget)--;
+    CGRect frame = [view convertRect:view.bounds toView:root];
+    CGFloat width = CGRectGetWidth(frame), height = CGRectGetHeight(frame);
+    BOOL rtl = [UIView userInterfaceLayoutDirectionForSemanticContentAttribute:
+                           root.semanticContentAttribute] == UIUserInterfaceLayoutDirectionRightToLeft;
+    BOOL leading = rtl ? CGRectGetMaxX(frame) >= CGRectGetWidth(root.bounds) - 24
+                       : CGRectGetMinX(frame) <= 24;
+    if (view != root && leading && width >= 44 && width <= 176 && height >= 240) {
+        BHTUpdateRailHostBranding(view);
+        BHTScheduleDeferredRailHostBranding(view);
+        return;
+    }
+    for (UIView* child in view.subviews) {
+        if (!leading && view != root) break;
+        BHTUpdateRailContainers(child, root, depth + 1, budget);
+        if (*budget == 0) break;
+    }
 }
 
-- (void)viewWillLayoutSubviews {
-    %orig;
-    UIView* railView = ((UIViewController*)self).view;
-    BHTUpdateRailHostBranding(railView);
-    BHTScheduleDeferredRailHostBranding(railView);
+static void BHTUpdateRailFromNavigationOwner(UIViewController* owner) {
+    if (!owner.isViewLoaded || !BHTUsesPadNavigation(owner.traitCollection)) return;
+    NSUInteger budget = 64;
+    BHTUpdateRailContainers(owner.view, owner.view, 0, &budget);
 }
 
+%hook T1AppSplitViewController
+- (void)viewDidLayoutSubviews {
+    %orig;
+    BHTUpdateRailFromNavigationOwner((UIViewController*)self);
+}
 - (void)viewSafeAreaInsetsDidChange {
     %orig;
-    UIView* railView = ((UIViewController*)self).view;
-    BHTUpdateRailHostBranding(railView);
-    BHTScheduleDeferredRailHostBranding(railView);
+    BHTUpdateRailFromNavigationOwner((UIViewController*)self);
 }
+%end
 
+%hook _TtC14T1TwitterSwift34XTabbedAppNavigationViewController
+- (void)viewDidLayoutSubviews {
+    %orig;
+    BHTUpdateRailFromNavigationOwner((UIViewController*)self);
+}
 %end
 
 %hook T1TabBarHostView
@@ -1093,9 +1119,9 @@ static void BHTScheduleDeferredRailHostBranding(UIView* hostView) {
             BHTUsesPadNavigation(titleView.traitCollection);
         // iPad already has the branded rail header. Suppress this second Home
         // title mark there; on iPhone it remains the single themed bird.
-        logoView.hidden = enabled && usesPadRail;
+        logoView.hidden = enabled && usesPadRail && BHTHasBrandedRailInWindow(logoView.window);
         logoView.accessibilityElementsHidden = logoView.hidden;
-        if (enabled && !usesPadRail) {
+        if (enabled && !logoView.hidden) {
             BHTInstallBrandingThemeObserver();
             BHTApplyCurrentBirdToImageView(logoView);
         }

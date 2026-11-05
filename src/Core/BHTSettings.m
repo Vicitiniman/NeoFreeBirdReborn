@@ -10,6 +10,7 @@
 #import "Core/BHTManager.h"
 #import "ThemeColor/BHTThemePresets.h"
 #include <stdatomic.h>
+#import "Navigation/BHTLiquidGlassPolicy.h"
 
 NSString* const BHTSettingsProfileDidApplyNotification =
     @"BHTSettingsProfileDidApplyNotification";
@@ -90,6 +91,24 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                         @"searchAutoOpen": @YES,
                         @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"
                     },
+                    @{@"key": @"liquid_glass_design",
+                      @"default": @NO,
+                      @"type": @"toggle",
+                      @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"},
+                    @{@"key": @"glass_opacity",
+                      @"default": @0,
+                      @"type": @"button",
+                      @"titleKey": @"GLASS_OPACITY_TITLE",
+                      @"action": @"showGlassOpacity:",
+                      @"searchAutoOpen": @YES,
+                      @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"},
+                    @{@"key": @"hide_compose_button",
+                      @"default": @NO,
+                      @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"},
+                    @{@"key": @"classic_navigation",
+                      @"default": @NO,
+                      @"type": @"toggle",
+                      @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"},
                     @{@"key": @"tab_bar_theming",
                       @"default": @NO,
                       @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"},
@@ -170,6 +189,9 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                     @{@"key": @"hide_topics_to_follow",
                       @"default": @NO,
                       @"sectionKey": @"SETTINGS_SECTION_TIMELINE_CLEANUP"},
+                    @{@"key": @"hide_listen_live",
+                      @"default": @YES,
+                      @"sectionKey": @"SETTINGS_SECTION_TIMELINE_BEHAVIOR"},
                     @{@"key": @"hide_spaces",
                       @"default": @NO,
                       @"sectionKey": @"SETTINGS_SECTION_TIMELINE_BEHAVIOR"},
@@ -902,7 +924,21 @@ static BOOL BHTIsValidKeywordArray(id value, BOOL usernameKeywords) {
     return nil;
 }
 
++ (NSString*)unavailableReasonKeyForPreference:(NSString*)key {
+    // These old DM/voice gates have no verified implementation in the current
+    // host. Preserve stored values for a future port, but do not present an
+    // active switch which silently does nothing.
+    if ([key isEqualToString:@"voice_creation_enabled"] ||
+        [key isEqualToString:@"no_voice_messages"] ||
+        [key isEqualToString:@"old_compose_bar"] ||
+        [key isEqualToString:@"dm_reply_later_enabled"]) {
+        return @"SETTINGS_UNAVAILABLE_CURRENT_X";
+    }
+    return nil;
+}
+
 + (BOOL)boolForKey:(NSString*)key {
+    if ([self unavailableReasonKeyForPreference:key]) return NO;
     id value = [[NSUserDefaults standardUserDefaults] objectForKey:key];
     if (value != nil) {
         return [value boolValue];
@@ -1053,7 +1089,9 @@ static BOOL BHTIsValidKeywordArray(id value, BOOL usernameKeywords) {
         NSDictionary* setting = [self settingForKey:key];
         id defaultValue = setting[@"default"];
         if ([defaultValue isKindOfClass:NSNumber.class]) {
-            if ([key isEqualToString:@"undo_tweet_timeout"] &&
+            if ([key isEqualToString:@"glass_opacity"]) {
+                valid = BHTGlassOpacityPreferenceIsValid(value);
+            } else if ([key isEqualToString:@"undo_tweet_timeout"] &&
                 [value isKindOfClass:NSNumber.class]) {
                 valid = [@[@0, @5, @10, @20, @30, @60]
                     containsObject:value];

@@ -20,6 +20,7 @@ FOUNDATION_EXPORT NSString* const BHTSettingsProfileDidApplyNotification;
 + (NSString*)subtitleKeyForPage:(NSString*)pageKey;
 + (NSDictionary*)settingForKey:(NSString*)key;
 + (BOOL)boolForKey:(NSString*)key;
++ (NSString*)unavailableReasonKeyForPreference:(NSString*)key;
 + (NSInteger)integerForKey:(NSString*)key;
 
 // Cheap invalidation token for hot-path setting snapshots. Callers can cache

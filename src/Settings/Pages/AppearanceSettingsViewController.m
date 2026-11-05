@@ -1,3 +1,4 @@
+#import "CustomTabBar/BHTTabViewAppearance.h"
 //
 //  AppearanceSettingsViewController.m
 //  NeoFreeBird
@@ -12,6 +13,9 @@
 #import "Headers/TWHeaders.h"
 #import "Settings/ModernSettingsCells.h"
 #import "Settings/Pages/PresetSettingsViewController.h"
+#import "Navigation/BHTLiquidGlassDesign.h"
+#import "Navigation/BHTComposeButtonVisibility.h"
+#import "Settings/Pages/BHTGlassOpacityViewController.h"
 
 @interface AppearanceSettingsViewController () <UIFontPickerViewControllerDelegate>
 @end
@@ -44,6 +48,10 @@
 }
 
 #pragma mark - Sub-page Navigation
+
+- (void)showGlassOpacity:(NSDictionary*)sender {
+    [self.navigationController pushViewController:[BHTGlassOpacityViewController new] animated:YES];
+}
 
 - (void)showThemeViewController:(NSDictionary*)sender {
     PresetSettingsViewController* themes =
@@ -131,32 +139,13 @@
 
 - (void)refreshTabViewsWithThemingInView:(UIView*)view {
     if ([view isKindOfClass:NSClassFromString(@"T1TabView")]) {
-        if ([view respondsToSelector:@selector(_t1_updateImageViewAnimated:)]) {
-            ((void (*)(id, SEL, BOOL))objc_msgSend)(
-                view, @selector(_t1_updateImageViewAnimated:), NO);
+        SEL selector = NSSelectorFromString(@"_t1_updateImageViewAnimated:");
+        if ([view respondsToSelector:selector]) {
+            ((void (*)(id, SEL, BOOL))objc_msgSend)(view, selector, NO);
         }
-        if ([view respondsToSelector:@selector(_t1_updateTitleLabel)]) {
-            [view performSelector:@selector(_t1_updateTitleLabel)];
-        }
-        if ([view respondsToSelector:@selector(_t1_layoutForTabBar)]) {
-            [view performSelector:@selector(_t1_layoutForTabBar)];
-        }
-        if ([view respondsToSelector:@selector(_t1_layoutBadgeViewMaximized)]) {
-            [view performSelector:@selector(_t1_layoutBadgeViewMaximized)];
-        }
-        if ([view respondsToSelector:@selector(_t1_layoutBadgeViewMinimized)]) {
-            [view performSelector:@selector(_t1_layoutBadgeViewMinimized)];
-        }
-
-        // Clearing the override lets the label fall back to its default color.
-        if (![BHTSettings boolForKey:@"tab_bar_theming"]) {
-            UILabel* titleLabel = [view valueForKey:@"titleLabel"];
-            if (titleLabel) {
-                titleLabel.textColor = nil;
-            }
-        }
+        BHTRefreshTabViewAppearance(view);
+        [view setNeedsLayout];
     }
-
     for (UIView* subview in view.subviews) {
         [self refreshTabViewsWithThemingInView:subview];
     }
@@ -172,24 +161,13 @@
 
 - (void)refreshTabViewsInView:(UIView*)view {
     if ([view isKindOfClass:NSClassFromString(@"T1TabView")]) {
-        if ([view respondsToSelector:@selector(_t1_updateTitleLabel)]) {
-            [view performSelector:@selector(_t1_updateTitleLabel)];
+        SEL selector = NSSelectorFromString(@"_t1_updateImageViewAnimated:");
+        if ([view respondsToSelector:selector]) {
+            ((void (*)(id, SEL, BOOL))objc_msgSend)(view, selector, NO);
         }
-        if ([view respondsToSelector:@selector(_t1_layoutForTabBar)]) {
-            [view performSelector:@selector(_t1_layoutForTabBar)];
-        }
-        if ([view respondsToSelector:@selector(_t1_layoutBadgeViewMaximized)]) {
-            [view performSelector:@selector(_t1_layoutBadgeViewMaximized)];
-        }
-
-        if (![BHTSettings boolForKey:@"tab_bar_theming"]) {
-            UILabel* titleLabel = [view valueForKey:@"titleLabel"];
-            if (titleLabel) {
-                titleLabel.textColor = nil;
-            }
-        }
+        BHTRefreshTabViewAppearance(view);
+        [view setNeedsLayout];
     }
-
     for (UIView* subview in view.subviews) {
         [self refreshTabViewsInView:subview];
     }
@@ -198,7 +176,17 @@
 - (void)switchChanged:(UISwitch*)sender {
     [super switchChanged:sender];
     NSString* key = BHTSettingsKeyForSwitch(sender);
-    if ([key isEqualToString:@"tab_bar_theming"]) {
+    if ([key isEqualToString:@"liquid_glass_design"] || [key isEqualToString:@"classic_navigation"]) {
+        if (sender.isOn) {
+            NSString* other = [key isEqualToString:@"liquid_glass_design"] ? @"classic_navigation" : @"liquid_glass_design";
+            [NSUserDefaults.standardUserDefaults setBool:NO forKey:other];
+            [BHTSettings notePreferencesChanged];
+            [self updateVisibleToggles];
+        }
+        BHTRefreshLiquidGlassDesign();
+    } else if ([key isEqualToString:@"hide_compose_button"]) {
+        BHTRefreshComposeButtonVisibility();
+    } else if ([key isEqualToString:@"tab_bar_theming"]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [self refreshAllTabViewsWithTheming];
         });

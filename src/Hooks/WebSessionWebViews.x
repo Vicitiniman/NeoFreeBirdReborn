@@ -1,3 +1,4 @@
+#import "Compatibility/BHTHostCompatibility.h"
 #import "HookHelpers.h"
 #import "Login/BHTSecureWebSession.h"
 #import "Login/BHTWebSessionSecurity.h"
@@ -146,7 +147,7 @@ static id BHTConfigureNativeWebSession(id controller, id configuration) {
 %end
 
 %ctor {
-    if (![[NSBundle.mainBundle objectForInfoDictionaryKey:@"CFBundleShortVersionString"] isEqual:@"12.24.1"]) return;
+    if (!BHTIsSupportedHost()) return;
     Class controller = NSClassFromString(@"T1WebViewController");
     if (class_getInstanceMethod(controller, @selector(updateConfiguration:)) &&
         class_getInstanceMethod(controller, @selector(_t1_sharedInitWithRootURL:account:sourceStatus:scribeComponent:scribeParameters:)) &&

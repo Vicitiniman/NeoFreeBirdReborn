@@ -3,6 +3,7 @@
 // Adds a native X navigation entry for My Likes. Native entries (including
 // Grok) remain separate and can be selected/reordered independently.
 NSArray* BHTEntriesByInstallingLikesDestination(NSArray* entries);
+UIViewController* BHTMakeStandaloneLikesController(id account);
 
 // The Likes entry is created by X's own 12.9 navigation-entry factory. These
 // helpers let the hooks identify its genuine Bookmarks carrier and replace only

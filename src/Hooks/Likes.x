@@ -1,6 +1,7 @@
 #import "HookHelpers.h"
 #import "Likes/BHTLikesTab.h"
 #import "Likes/BHTLikesNavigationUtility.h"
+#import "CustomTabBar/BHTTabViewAppearance.h"
 
 static id BHTLikesSafeValue(id object, NSString* key) {
     if (!object || key.length == 0) return nil;
@@ -54,7 +55,7 @@ static void BHTApplyLikesHeartToTab(T1TabView* tabView) {
     // The entry is a native Bookmarks carrier. X copies its original title
     // before the first selection-driven refresh, so update the live label as
     // soon as the carrier is identified instead of waiting for a tap.
-    tabView.titleLabel.text = @"Likes";
+    BHTSetTabViewTitleOverride(tabView, @"Likes");
     tabView.accessibilityLabel = @"Likes";
 
     UIImageView* imageView = BHTLikesIconView(tabView);
@@ -414,13 +415,6 @@ void BHTRefreshLikesActivityHistoryConfiguration(
 
 - (NSString*)imageName {
     return [self.scribePage isEqualToString:BHTLikesPageID()] ? @"heart_stroke" : %orig;
-}
-
-- (void)_t1_updateTitleLabel {
-    %orig;
-    if ([self.scribePage isEqualToString:BHTLikesPageID()]) {
-        self.titleLabel.text = @"Likes";
-    }
 }
 
 - (void)_t1_updateImageViewAnimated:(BOOL)animated {

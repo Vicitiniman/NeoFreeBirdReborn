@@ -4,6 +4,7 @@ NS_ASSUME_NONNULL_BEGIN
 
 extern NSString* const BHTSidebarProfileItemID;
 extern NSString* const BHTSidebarBlueItemID;
+extern NSString* const BHTSidebarSubscriptionsItemID;
 extern NSString* const BHTSidebarHistoryItemID;
 extern NSString* const BHTSidebarCommunitiesItemID;
 extern NSString* const BHTSidebarNewsItemID;

@@ -19,6 +19,7 @@
 #import "CustomTabBarNativeColors.h"
 #import "CustomTabBarPreviewCell.h"
 #import "CustomTabBarUtility.h"
+#import "Navigation/BHTGlassNavigation.h"
 #import "Likes/BHTLikesTab.h"
 
 extern UIColor* CurrentAccentColor(void);
@@ -394,6 +395,7 @@ static UIViewController* findViewControllerOfClass(UIViewController* vc,
 }
 
 - (BOOL)applyLiveLayout {
+    if (BHTRefreshGlassNavigation()) return YES;
     Class navClass = objc_getClass("T1TabbedAppNavigationViewController");
     if (!navClass) {
         return NO;

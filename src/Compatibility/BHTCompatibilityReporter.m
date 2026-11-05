@@ -1,4 +1,9 @@
+#import "Compatibility/BHTHostCompatibility.h"
 #import "Compatibility/BHTCompatibilityReporter.h"
+#import "Navigation/BHTGlassNavigation.h"
+#import "Navigation/BHTLiquidGlassDesign.h"
+#import "Navigation/BHTComposeButtonVisibility.h"
+#import "Settings/BHTSettingsEntry.h"
 #import "Core/BHTManager.h"
 #import "Core/BHTSettings.h"
 #import "Likes/BHTLikesTab.h"
@@ -12,6 +17,8 @@
 #import "Security/BHTAuthenticationURLUtility.h"
 #import "Sidebar/BHTSidebarNavigationUtility.h"
 #import "ThemeColor/BHTThemePresets.h"
+#import "ThemeColor/BHTPostSurfaceTheme.h"
+#import "Timeline/BHTLiveAudioBanner.h"
 
 #import <UIKit/UIKit.h>
 #import <dlfcn.h>
@@ -659,10 +666,7 @@ static NSString* BHTReplyNotificationNameForSymbol(
 }
 
 void BHTInstallReplyWorkflowDiagnosticObservers(void) {
-    NSString* version = [NSBundle.mainBundle
-        objectForInfoDictionaryKey:@"CFBundleShortVersionString"];
-    if (![version isKindOfClass:NSString.class] ||
-        ![version isEqualToString:@"12.24.1"]) {
+    if (!BHTIsSupportedHost()) {
         return;
     }
 
@@ -1484,7 +1488,7 @@ NSURL* BHTCompatibilityReportURL(void) {
     NSURL* caches = [[[NSFileManager defaultManager]
         URLsForDirectory:NSCachesDirectory
                inDomains:NSUserDomainMask] firstObject];
-    return [caches URLByAppendingPathComponent:@"BHTwitter-X12.24.1-Compatibility.json"];
+    return [caches URLByAppendingPathComponent:[NSString stringWithFormat:@"BHTwitter-X%@-Compatibility.json", BHTTargetAppVersion]];
 }
 
 static NSDictionary* BHTProbe(NSString* feature, NSString* className,
@@ -1512,8 +1516,8 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"ads", @"TFNItemsDataViewController", @"itemAtIndexPath:", NO),
         BHTProbe(@"ads", @"TFNItemsDataViewController", @"tableViewCellForItem:atIndexPath:", NO),
         BHTProbe(@"ads", @"TFNItemsDataViewController", @"tableView:heightForRowAtIndexPath:", NO),
-        BHTProbe(@"ads", @"T1URTTimelineStatusItemViewModel", @"isPromoted", NO),
-        BHTProbe(@"ads", @"T1URTTimelineStatusItemViewModel", @"status", NO),
+        BHTProbe(@"ads", @"URTTimelineStatusItemViewModel", @"isPromoted", NO),
+        BHTProbe(@"ads", @"URTTimelineStatusItemViewModel", @"status", NO),
         BHTProbe(@"ads", @"TwitterURT.URTTimelineGoogleNativeAdViewModel", @"init", NO),
         BHTProbe(@"ads", @"T1TwitterSwift.GoogleNativeAdCell", @"preferredLayoutAttributesFittingAttributes:", NO),
         BHTProbe(@"ads", @"UICollectionViewCell", @"preferredLayoutAttributesFittingAttributes:", NO),
@@ -1563,7 +1567,7 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"likes", @"T1TabbedAppNavigationViewController", @"recalculateVisiblePanels", NO),
         BHTProbe(@"likes", @"T1TabView", @"scribePage", NO),
         BHTProbe(@"likes", @"T1TabView", @"setSelected:", NO),
-        BHTProbe(@"likes", @"T1TabView", @"_t1_updateTitleLabel", NO),
+        BHTProbe(@"likes", @"T1TabView", @"title", NO),
         BHTProbe(@"likes", @"T1TabView", @"_t1_updateImageViewAnimated:", NO),
         BHTProbe(@"likes", @"T1TwitterSwift.GrokAppNavigationTabEntry", @"rootTabViewController", NO),
 
@@ -1584,7 +1588,7 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"forYouFilters", @"TFNTwitterHomeTimeline", @"deserializeStream", NO),
         BHTProbe(@"forYouFilters", @"T1URTViewController", @"adDisplayLocation", NO),
         BHTProbe(@"forYouFilters", @"T1URTViewController", @"urtTimeline", NO),
-        BHTProbe(@"forYouFilters", @"T1URTTimelineStatusItemViewModel", @"tweet", NO),
+        BHTProbe(@"forYouFilters", @"URTTimelineStatusItemViewModel", @"tweet", NO),
         BHTProbe(@"forYouFilters", @"TFNTwitterStatus", @"representedStatus", NO),
         BHTProbe(@"forYouFilters", @"TFNTwitterStatus", @"retweetedStatus", NO),
         BHTProbe(@"forYouFilters", @"TFNTwitterStatus", @"fullText", NO),
@@ -1592,8 +1596,10 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"forYouFilters", @"TFNTwitterStatus", @"fromUserFullName", NO),
         BHTProbe(@"appearance", @"T1TabBarHostView", @"logoImageView", NO),
         BHTProbe(@"appearance", @"T1TabBarHostView", @"tabBarViewController", NO),
-        BHTProbe(@"appearance", @"T1AppSplitSideBarViewController", @"viewWillLayoutSubviews", NO),
-        BHTProbe(@"appearance", @"T1AppSplitSideBarViewController", @"viewSafeAreaInsetsDidChange", NO),
+        BHTProbe(@"appearance", @"T1AppSplitViewController", @"viewDidLayoutSubviews", NO),
+        BHTProbe(@"appearance", @"T1AppSplitViewController", @"viewSafeAreaInsetsDidChange", NO),
+        BHTProbe(@"appearance", @"T1AppSplitViewController", @"private_bottomTabBarHeight", NO),
+        BHTProbe(@"appearance", @"T1AppSplitViewController", @"tabBarViewController", NO),
         BHTProbe(@"home", @"T1FleetLineHeaderController", @"_t1_shouldShowFleetLine", NO),
         BHTProbe(@"home", @"TUIUpdateIndicator", @"_recreatePillControlForContentNotification:hideOnScroll:", NO),
         BHTProbe(@"appearance", @"TwitterHome.HomeDefaultNavigationBarTitleViewPlugin", @"titleView", NO),
@@ -1644,7 +1650,7 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"badges", @"TFSTwitterUser", @"isBlueVerified", NO),
         BHTProbe(@"badges", @"TFSTwitterUserSource", @"isBlueVerified", NO),
         BHTProbe(@"badges", @"TFSTwitterTypeaheadUser", @"isBlueVerified", NO),
-        BHTProbe(@"badges", @"TFSDirectMessageUser", @"isBlueVerified", NO),
+        BHTProbe(@"badges", @"T1TwitterSwift.XChatSenderCardSourceObject", @"isBlueVerified", NO),
         BHTProbe(@"badges", @"T1TwitterCoreStatusViewModelAdapter", @"isFromUserBlueVerified", NO),
 
         BHTProbe(@"grok", @"GrokAnalyzeButtonManager", @"init", NO),
@@ -1652,6 +1658,10 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"grok", @"T1StatusPhotoEditorHandler", @"photoEditorCanEditWithGrok:", NO),
 
         BHTProbe(@"settings", @"T1GenericSettingsViewController", @"viewWillAppear:", NO),
+        BHTProbe(@"settings", @"XSettings.SettingsListViewController", @"viewWillAppear:", NO),
+        BHTProbe(@"settings", @"T1TwitterSwift.SettingsChromeViewController", @"viewDidLoad", NO),
+        BHTProbe(@"glassNavigation", @"T1TwitterSwift.XTabbedAppNavigationViewController", @"viewDidAppear:", NO),
+        BHTProbe(@"glassNavigation", @"XNavigation.TabBarController", @"viewDidLoad", NO),
         BHTProbe(@"settings", @"TFSFeatureSwitches", @"boolForKey:", NO),
         BHTProbe(@"settings", @"TFSInstrumentedFeatureSwitches", @"boolForKey:", NO),
 
@@ -1659,7 +1669,7 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"sensitiveContent", @"TFNTwitterAccount", @"isSensitiveTweetWarningsConsumeEnabled", NO),
         BHTProbe(@"sensitiveContent", @"T1CompositionStatusViewModel", @"isPossiblySensitiveViewModelForAccount:", NO),
         BHTProbe(@"sensitiveContent", @"T1TranslatedStatusViewModel", @"isPossiblySensitiveViewModelForAccount:", NO),
-        BHTProbe(@"sensitiveContent", @"T1URTTimelineStatusItemViewModel", @"isPossiblySensitiveViewModelForAccount:", NO),
+        BHTProbe(@"sensitiveContent", @"URTTimelineStatusItemViewModel", @"isPossiblySensitiveViewModelForAccount:", NO),
         BHTProbe(@"sensitiveContent", @"T1StatusTableRowAdapter", @"sensitiveStatusViewModelAtRow:section:dataViewController:", NO),
         BHTProbe(@"sensitiveContent", @"TFNTwitterStatus", @"hasImageInterstitial", NO),
         BHTProbe(@"sensitiveContent", @"HFHealthSafetyFeature", @"isTweetMedialInterstitialEnabled:", YES),
@@ -1707,7 +1717,8 @@ static NSArray* BHTRuntimeProbes(void) {
         BHTProbe(@"webReplyAccountBound", @"T1WebViewController", @"account", NO),
         BHTProbe(@"webReplyAccountBound", @"T1WebViewController", @"doesURLResultTypeOpenInWebview:", NO),
 
-        BHTProbe(@"compatibilitySignIn", @"TFSTwitterAPIXAuthPasswordCommand", @"initWithContext:accountID:authContext:identifier:password:simCountryCode:httpRequestConfiguration:supportOneFactorAuthorization:knownDeviceToken:uiMetrics:authTokenStorage:source:responseModelBuilder:completionBlock:", NO),
+        BHTProbe(@"legacyPasswordSignIn", @"TFSTwitterAPIXAuthPasswordCommand", @"initWithContext:accountID:authContext:identifier:password:simCountryCode:httpRequestConfiguration:supportOneFactorAuthorization:knownDeviceToken:uiMetrics:authTokenStorage:source:responseModelBuilder:completionBlock:", NO),
+        BHTProbe(@"compatibilitySignIn", @"T1AccountController", @"removeAccount:source:withAccountRemovalCompletionHandler:", NO),
         BHTProbe(@"compatibilitySignIn", @"TFSTwitterServiceRunner", @"APICommandContext", YES),
         BHTProbe(@"compatibilitySignIn", @"TFSTwitterServiceRunner", @"APICommandLoader", YES),
         BHTProbe(@"compatibilitySignIn", @"TNUServiceHTTPConfiguration", @"configurationForForegroundRetriableRequest", YES),
@@ -1725,7 +1736,7 @@ static NSDictionary* BHTSettingsSnapshot(void) {
         @"padlock", @"hide_promoted", @"hide_premium_offer",
         @"no_tab_bar_hiding", @"disable_rtl", @"strip_share_tracking",
         @"expand_tco_links", @"show_scroll_indicator",
-        @"tab_bar_theming", @"restore_tab_labels",
+        @"classic_navigation", @"tab_bar_theming", @"restore_tab_labels",
         @"restore_launch_animation", @"restore_refresh_sounds",
         @"custom_fonts", @"hide_who_to_follow",
         @"hide_timeline_prompts", @"hide_discover_more", @"hide_topics",
@@ -1854,6 +1865,15 @@ static NSURL* BHTWriteCompatibilityReportNow(
             @"missing": @(probes.count - available)
         },
         @"features": featureSummary,
+        @"compatibilityTarget": @{
+            @"version": BHTTargetAppVersion,
+            @"build": BHTTargetAppBuild,
+            @"supportedHost": @(BHTIsSupportedHost()),
+            @"navigationPreference": [BHTSettings boolForKey:@"liquid_glass_design"] ? @"neofreebird_glass_dock" :
+                ([BHTSettings boolForKey:@"classic_navigation"] ? @"classic_native" : @"native_system"),
+            @"unavailablePreferences": @[@"voice_creation_enabled", @"no_voice_messages", @"old_compose_bar", @"dm_reply_later_enabled"],
+            @"trendSidebarPolicy": @"bounded_navigation_owner_discovery"
+        },
         @"settings": BHTSettingsSnapshot(),
         @"authenticationRouting":
             BHTAuthenticationRoutingDiagnosticSnapshot(),
@@ -1880,6 +1900,13 @@ static NSURL* BHTWriteCompatibilityReportNow(
         },
         @"navigationEntryClasses": BHTNavigationEntryClassSnapshot(),
         @"navigationMethods": BHTNavigationMethodSnapshot(),
+        @"glassNavigationRuntime": BHTGlassNavigationDiagnosticSnapshot(),
+        @"settingsEntryRuntime": BHTSettingsEntryDiagnosticSnapshot(),
+        @"modernSettingsEntryRuntime": BHTModernSettingsEntryDiagnosticSnapshot(),
+        @"liquidGlassDesignRuntime": BHTLiquidGlassDesignDiagnosticSnapshot(),
+        @"composeButtonVisibilityRuntime": BHTComposeButtonVisibilityDiagnostics(),
+        @"postSurfaceThemeRuntime": BHTPostSurfaceThemeDiagnostics(),
+        @"liveAudioBannerRuntime": BHTLiveAudioBannerDiagnostics(),
         @"timelineItemObservations": BHTTimelineObservationSnapshot(),
         @"mediaActionRuntime": BHTMediaActionObservationSnapshot(),
         @"railBrandingRuntime": BHTRailBrandingObservationSnapshot(),

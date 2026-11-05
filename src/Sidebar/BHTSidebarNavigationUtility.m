@@ -29,6 +29,7 @@ __asm__(
 
 NSString* const BHTSidebarProfileItemID = @"profile";
 NSString* const BHTSidebarBlueItemID = @"blue";
+NSString* const BHTSidebarSubscriptionsItemID = @"subscriptions";
 NSString* const BHTSidebarHistoryItemID = @"history";
 NSString* const BHTSidebarCommunitiesItemID = @"communities";
 NSString* const BHTSidebarNewsItemID = @"news";
@@ -107,6 +108,12 @@ void BHTRecordSidebarAddAccountRefreshRequested(void) {
             TabTitleKey:
                 [bundle localizedStringForKey:@"SIDEBAR_BLUE_TITLE"],
             TabImageKey: @"sf:checkmark.seal"
+        },
+        @{
+            TabPageKey: BHTSidebarSubscriptionsItemID,
+            TabTitleKey:
+                [bundle localizedStringForKey:@"SIDEBAR_SUBSCRIPTIONS_TITLE"],
+            TabImageKey: @"sf:star.circle"
         },
         @{
             TabPageKey: BHTSidebarHistoryItemID,

@@ -23,7 +23,7 @@
 @interface TUIFollowControlCustomScreenshot : UIView
 @end
 
-@interface _TtC14T1TwitterSwift27TrendsSidebarViewController : UIViewController
+@interface _TtC14T1TwitterSwift34XTabbedAppNavigationViewController : UIViewController
 @end
 
 @interface T1UserRecommendationsViewController : UIViewController
@@ -70,7 +70,7 @@
 @end
 
 @interface T1TabView : UIView
-@property (readonly, nonatomic) UILabel* titleLabel;
+// X 12.40 stores title only; NeoFreeBird owns its optional label.
 @property (readonly, nonatomic) long long panelID;
 @property (copy, nonatomic) NSString* scribePage;
 @property (readonly, nonatomic) NSString* title;
@@ -81,7 +81,6 @@
                          title:(NSString*)title
                      imageName:(NSString*)imageName
                        panelID:(long long)panelID;
-- (void)_t1_updateTitleLabel;
 - (void)_t1_updateImageViewAnimated:(BOOL)animated;
 @end
 
@@ -321,4 +320,7 @@
                      singularLabel:(id)arg2
                              count:(id)arg3
                        highlighted:(_Bool)arg4;
+@end
+
+@interface T1AppSplitViewController : UIViewController
 @end

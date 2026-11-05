@@ -1,3 +1,4 @@
+#import "Compatibility/BHTHostCompatibility.h"
 #import "Reply/BHTReplyFailureDiagnostics.h"
 #import "Reply/BHTDetailedReplyDiagnostics.h"
 
@@ -263,11 +264,7 @@ BHTReplyFailureResolveBooleanClassifier(
 void BHTPrepareNativeReplyFailureDiagnostics(void) {
     static dispatch_once_t onceToken;
     dispatch_once(&onceToken, ^{
-        NSString* version = [NSBundle.mainBundle
-            objectForInfoDictionaryKey:
-                @"CFBundleShortVersionString"];
-        if (![version isKindOfClass:NSString.class] ||
-            ![version isEqualToString:@"12.24.1"]) {
+            if (!BHTIsSupportedHost()) {
             BHTReplyFailurePrepared = YES;
             return;
         }

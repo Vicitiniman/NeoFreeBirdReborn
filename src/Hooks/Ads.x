@@ -342,7 +342,7 @@ static BOOL ShouldHideItem(id item, NSString* location,
         if (StatusItemPromotionDecision(item, &statusResolved) ||
             BHTClassMarksPromotion([item classForCoder]) ||
             ScribeItemIsPromoted(item) ||
-            ([className isEqualToString:@"T1URTTimelineStatusItemViewModel"] &&
+            (BHTIsURTStatusItemViewModel(item) &&
              !statusResolved &&
              BHTNestedObjectMarksPromotion(item, 0))) {
             return YES;

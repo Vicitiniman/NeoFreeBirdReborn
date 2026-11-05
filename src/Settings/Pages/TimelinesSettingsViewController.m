@@ -8,6 +8,7 @@
 #import "Settings/Pages/TimelinesSettingsViewController.h"
 #import "Headers/TWHeaders.h"
 #import "Settings/Pages/BHTForYouKeywordFiltersViewController.h"
+#import "Timeline/BHTLiveAudioBanner.h"
 
 extern void applyHideCustomTimelinesSetting(void);
 
@@ -22,6 +23,8 @@ extern void applyHideCustomTimelinesSetting(void);
     NSString* key = BHTSettingsKeyForSwitch(sender);
     if ([key isEqualToString:@"hide_custom_timelines"]) {
         applyHideCustomTimelinesSetting();
+    } else if ([key isEqualToString:@"hide_listen_live"] || [key isEqualToString:@"hide_spaces"]) {
+        BHTRefreshLiveAudioBanner();
     }
 }
 

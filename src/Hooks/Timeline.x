@@ -8,6 +8,7 @@
 #import "Likes/BHTLikesTab.h"
 #import "Timeline/BHTForYouKeywordFilter.h"
 #import "Timeline/BHTTimelineCleanup.h"
+#import "Timeline/BHTLiveAudioBanner.h"
 #import <stddef.h>
 #import <stdint.h>
 #import <string.h>
@@ -237,12 +238,28 @@ static NSNumber* BHTHomeTimelineRoleForTimeline(id timeline) {
 static __weak NSObject* PinnedTimelinesRepository;
 static NSArray* LastPinnedTimelineModels;
 static BOOL PinnedTimelinesWriteBypass = NO;
+static char BHTHomeAddTabOriginalStateKey;
+
+static NSHashTable* BHTKnownHomeContainers(void) {
+    static NSHashTable* containers;
+    static dispatch_once_t token;
+    dispatch_once(&token, ^{ containers = [NSHashTable weakObjectsHashTable]; });
+    return containers;
+}
+
+static void SyncHomeAddTabButton(id container, BOOL hidden);
 
 // Applies a toggle without relaunching. Hiding rewrites the UNCHANGED pinned
 // list purely to republish — updatePinnedTimelines: persists server-side, so
 // anything else would unpin for real; the delegate hook below swaps in the
 // empty list on the way through.
 void applyHideCustomTimelinesSetting(void) {
+    BOOL hidden = [BHTSettings boolForKey:@"hide_custom_timelines"];
+    // The removed add-accessory feature key cannot refresh an existing strip.
+    // Update known Home owners even when there are no pinned lists to republish.
+    for (id container in BHTKnownHomeContainers().allObjects) {
+        SyncHomeAddTabButton(container, hidden);
+    }
     NSObject* repository = PinnedTimelinesRepository;
     if (!repository) {
         return;
@@ -265,7 +282,8 @@ void applyHideCustomTimelinesSetting(void) {
 // button built before hiding mid-session survives; sync its visibility here. The
 // property is a Swift lazy var whose storage ivar KVC can't see, hence the fallback.
 static void SyncHomeAddTabButton(id container, BOOL hidden) {
-    UIView* button = nil;
+    [BHTKnownHomeContainers() addObject:container];
+    id button = nil;
 
     @try {
         button = [container valueForKey:@"addTabButton"];
@@ -282,8 +300,40 @@ static void SyncHomeAddTabButton(id container, BOOL hidden) {
         free(ivars);
     }
 
-    if ([button isKindOfClass:[UIView class]]) {
-        button.hidden = hidden;
+    if ([button isKindOfClass:UIView.class]) {
+        UIView* view = button;
+        NSDictionary* original = objc_getAssociatedObject(view, &BHTHomeAddTabOriginalStateKey);
+        if (hidden && !original) {
+            original = @{@"hidden": @(view.hidden), @"interactive": @(view.userInteractionEnabled)};
+            objc_setAssociatedObject(view, &BHTHomeAddTabOriginalStateKey, original,
+                                     OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
+        if (hidden) {
+            view.hidden = YES;
+            view.userInteractionEnabled = NO;
+        } else if (original) {
+            view.hidden = [original[@"hidden"] boolValue];
+            view.userInteractionEnabled = [original[@"interactive"] boolValue];
+            objc_setAssociatedObject(view, &BHTHomeAddTabOriginalStateKey, nil,
+                                     OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
+    } else if ([button isKindOfClass:UIBarButtonItem.class]) {
+        UIBarButtonItem* item = button;
+        NSDictionary* original = objc_getAssociatedObject(item, &BHTHomeAddTabOriginalStateKey);
+        if (hidden && !original) {
+            original = @{@"view": item.customView ?: NSNull.null, @"enabled": @(item.enabled)};
+            objc_setAssociatedObject(item, &BHTHomeAddTabOriginalStateKey, original,
+                                     OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+            item.customView = [[UIView alloc] initWithFrame:CGRectZero];
+        }
+        if (hidden) item.enabled = NO;
+        else if (original) {
+            id view = original[@"view"];
+            item.customView = view == NSNull.null ? nil : view;
+            item.enabled = [original[@"enabled"] boolValue];
+            objc_setAssociatedObject(item, &BHTHomeAddTabOriginalStateKey, nil,
+                                     OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
     }
 }
 
@@ -315,11 +365,11 @@ static void SyncHomeAddTabButton(id container, BOOL hidden) {
 }
 
 - (BOOL)tfn_supportsTabBarCollapsing {
-    return [BHTSettings boolForKey:@"no_tab_bar_hiding"] ? NO : %orig;
+    return ([BHTSettings boolForKey:@"no_tab_bar_hiding"] || [BHTSettings boolForKey:@"liquid_glass_design"]) ? NO : %orig;
 }
 
 - (BOOL)tfn_prefersTabBarPinned {
-    return [BHTSettings boolForKey:@"no_tab_bar_hiding"] ? YES : %orig;
+    return ([BHTSettings boolForKey:@"no_tab_bar_hiding"] || [BHTSettings boolForKey:@"liquid_glass_design"]) ? YES : %orig;
 }
 
 %end
@@ -351,11 +401,11 @@ static void SyncHomeAddTabButton(id container, BOOL hidden) {
 }
 
 - (BOOL)tfn_supportsTabBarCollapsing {
-    return [BHTSettings boolForKey:@"no_tab_bar_hiding"] ? NO : %orig;
+    return ([BHTSettings boolForKey:@"no_tab_bar_hiding"] || [BHTSettings boolForKey:@"liquid_glass_design"]) ? NO : %orig;
 }
 
 - (BOOL)tfn_prefersTabBarPinned {
-    return [BHTSettings boolForKey:@"no_tab_bar_hiding"] ? YES : %orig;
+    return ([BHTSettings boolForKey:@"no_tab_bar_hiding"] || [BHTSettings boolForKey:@"liquid_glass_design"]) ? YES : %orig;
 }
 
 %end
@@ -391,14 +441,15 @@ static void SyncHomeAddTabButton(id container, BOOL hidden) {
 
 %end
 
-// MARK: - Hide the Spaces bar
+// MARK: - Hide the Spaces / Listen Live recommendation strip
 
 // The bar is still the repurposed Fleets line; both home timeline implementations
 // share this visibility gate, re-evaluated on every content or settings update.
 %hook T1FleetLineHeaderController
 
 - (BOOL)_t1_shouldShowFleetLine {
-    if ([BHTSettings boolForKey:@"hide_spaces"]) {
+    BHTTrackLiveAudioBannerOwner(self);
+    if (BHTShouldHideLiveAudioBanner()) {
         return NO;
     }
 
@@ -553,13 +604,7 @@ static NSString* ItemReadableTextValue(id object, SEL selector,
 }
 
 static Class BHTStatusItemViewModelClass(void) {
-    static Class cls;
-    static dispatch_once_t onceToken;
-    dispatch_once(&onceToken, ^{
-        cls = NSClassFromString(
-            @"T1URTTimelineStatusItemViewModel");
-    });
-    return cls;
+    return BHTURTStatusItemViewModelClass();
 }
 
 static Class BHTTwitterStatusClass(void) {
@@ -774,10 +819,9 @@ static BOOL IsPrimaryForYouTimelineController(
 }
 
 static BOOL BHTIsKeywordStatusViewModel(id viewModel) {
-    Class statusItem = BHTStatusItemViewModelClass();
     Class status = BHTTwitterStatusClass();
     Class composition = NSClassFromString(@"T1CompositionStatusViewModel");
-    return (statusItem && [viewModel isKindOfClass:statusItem]) ||
+    return BHTIsURTStatusItemViewModel(viewModel) ||
            (status && [viewModel isKindOfClass:status]) ||
            (composition && [viewModel isKindOfClass:composition]);
 }

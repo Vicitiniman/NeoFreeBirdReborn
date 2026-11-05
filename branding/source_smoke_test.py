@@ -228,7 +228,8 @@ def main() -> None:
     for required in (
         "UIUserInterfaceIdiomPad",
         "T1TabBarHostView",
-        "T1AppSplitSideBarViewController",
+        "T1AppSplitViewController",
+        "BHTUpdateRailContainers",
         "BHTRailHeaderLogoImageView",
         "BHTGuardedRailHeaderImageScan",
         "BHTRailHeaderCandidateBelongsToTab",
@@ -266,7 +267,7 @@ def main() -> None:
     for required in (
         'BHTProbe(@"appearance", @"T1TabBarHostView", @"logoImageView", NO)',
         'BHTProbe(@"appearance", @"T1TabBarHostView", @"tabBarViewController", NO)',
-        'BHTProbe(@"appearance", @"T1AppSplitSideBarViewController", @"viewWillLayoutSubviews", NO)',
+        'BHTProbe(@"appearance", @"T1AppSplitViewController", @"viewDidLayoutSubviews", NO)',
         'BHTProbe(@"profiles", @"T1ProfileHeaderViewController", @"profileMoreActionsBaseActionItemsWithSender:", NO)',
         'BHTProbe(@"profiles", @"TFNActionItem", @"nestedMenuWithTitle:items:", YES)',
         'BHTProbe(@"appearance", @"TAEColorSettings", @"currentColorPalette", NO)',
@@ -442,7 +443,7 @@ def main() -> None:
             "BHTInstallCompatibilitySignInEntry",
             "BHTInstallCompatibilityAddAccountSignInEntry",
             "BHTCompatibilitySignInDiagnosticSnapshot",
-            "user-confirmed X 12.24.1 web-session bridge",
+            "user-confirmed supported-build web-session bridge",
             "Successful accounts are registered and switched through X's account APIs",
             "BHTCompatibilityInstallWebSessionAccount",
             "BHTCompatibilityRemoveWebSessionAccount",
@@ -459,7 +460,7 @@ def main() -> None:
     require_source_tokens(
         compatibility_login_source,
         (
-            'BHTCompatibilityTargetVersion = @"12.24.1"',
+            'BHTTargetAppVersion',
             "static void BHTLoadCompatibilityFrameworkIfNeeded(void)",
             '@"TwitterSPMMigration.framework"',
             '@"TwitterSPMMigration"',
@@ -479,8 +480,7 @@ def main() -> None:
     require_source_tokens(
         version_gate,
         (
-            "BHTAppVersion()",
-            "isEqualToString:BHTCompatibilityTargetVersion",
+            "BHTIsSupportedHost()",
         ),
         "exact X 12.9 version comparison",
     )
@@ -1427,7 +1427,7 @@ def main() -> None:
             '@"credentialEntryOwner": @"x_webview"',
             '@"per_account_device_only_keychain_with_isolated_webkit"',
             '@"xAuthClientMetadataPolicy":',
-            '@"native_x_12_24_1"',
+            '@"native_x_12_40_1"',
             '@"xAuthClientMetadataTargetVersion":',
             '@"xAuthClientMetadataOverrideInstalled": @NO',
             '@"xAuthClientMetadataOverrideClaimed": @0',
@@ -1634,7 +1634,7 @@ def main() -> None:
             "%hook NSURLSession",
             "BHTSecureWebSessionAuthenticatedRequest(request)",
             "BHTWebSessionTaskMethodHasObjectShape(",
-            '@"12.24.1"',
+            'BHTIsSupportedHost()',
         ),
         "guarded final-boundary request hooks",
     )
@@ -1780,7 +1780,7 @@ def main() -> None:
         (
             "BHTReplyDiagnosticMethodHasShape(",
             "BHTReplyDiagnosticMethodHasObjectArguments(",
-            'isEqualToString:@"12.24.1"',
+            'BHTIsSupportedHost()',
             "method_getNumberOfArguments(method)",
             "if (*type != '@') return NO;",
             "BHTInstallReplyWorkflowDiagnosticObservers();",
@@ -1996,7 +1996,7 @@ def main() -> None:
     require_source_tokens(
         reply_network_hook,
         (
-            'isEqualToString:@"12.24.1"',
+            'BHTIsSupportedHost()',
             "%hook NSURLSession",
             "dataTaskWithRequest:(NSURLRequest*)request",
             "uploadTaskWithRequest:(NSURLRequest*)request",
@@ -2107,7 +2107,7 @@ def main() -> None:
             "BHTPrepareNativeReplyFailureDiagnostics(void)",
             "BHTObserveNativeReplyFailureNotification(",
             "BHTNativeReplyFailureDiagnosticSnapshot(void)",
-            'isEqualToString:@"12.24.1"',
+            'BHTIsSupportedHost()',
             '"TFNTwitterCompositionOutboxNotificationErrorUserInfoKey"',
             '"HTTPRequestActionResponseErrorGetAPIErrors"',
             '"HTTPRequestActionResponseErrorGetRestErrors"',
@@ -2698,7 +2698,7 @@ def main() -> None:
     require_source_tokens(
         reply_application_hook,
         (
-            'isEqualToString:@"12.24.1"',
+            'BHTIsSupportedHost()',
             '%hook _TtC14GraphQLActions23GraphQLEndpointResponse',
             'modelWithParseError:(id __autoreleasing*)parseError',
             'APIErrors:(id __autoreleasing*)APIErrors',
@@ -3532,7 +3532,7 @@ def main() -> None:
             'NSClassFromString(@"T1WebViewController")',
             'NSClassFromString(@"T1BaseWebViewController")',
             'NSClassFromString(@"T1WebNavigationController")',
-            'isEqualToString:@"12.24.1"',
+            'BHTIsSupportedHost()',
             "replyURL, account, YES, NO,",
             "nil, nil, nil",
             "controllerAccount != account",
@@ -4296,11 +4296,11 @@ def main() -> None:
             "navigation delegate"
         )
 
-    if "Version: 6.1.0-beta.68" not in (
+    if "Version: 6.1.0-beta.77" not in (
         ROOT / "control"
     ).read_text(encoding="utf-8"):
         raise AssertionError(
-            "Current compatibility changes must ship as beta.68"
+            "Current compatibility changes must ship as beta.77"
         )
 
     require_source_tokens(
@@ -4833,7 +4833,7 @@ def main() -> None:
         (
             "BHTShouldSuppressSensitiveTweetWarnings",
             "BHTInstallURTSensitiveStatusDecisionHook",
-            'objc_getClass("T1URTTimelineStatusItemViewModel")',
+            'BHTURTStatusItemViewModelClass()',
             'NSSelectorFromString(@"isPossiblySensitiveViewModelForAccount:")',
             "class_getInstanceMethod(viewModelClass, selector)",
             "method_setImplementation(method,",
@@ -4853,7 +4853,7 @@ def main() -> None:
             '@"isPossiblySensitiveViewModelForAccount:", NO)',
             'BHTProbe(@"sensitiveContent", @"T1TranslatedStatusViewModel", '
             '@"isPossiblySensitiveViewModelForAccount:", NO)',
-            'BHTProbe(@"sensitiveContent", @"T1URTTimelineStatusItemViewModel", '
+            'BHTProbe(@"sensitiveContent", @"URTTimelineStatusItemViewModel", '
             '@"isPossiblySensitiveViewModelForAccount:", NO)',
             'BHTProbe(@"sensitiveContent", @"T1StatusTableRowAdapter", '
             '@"sensitiveStatusViewModelAtRow:section:dataViewController:", NO)',
