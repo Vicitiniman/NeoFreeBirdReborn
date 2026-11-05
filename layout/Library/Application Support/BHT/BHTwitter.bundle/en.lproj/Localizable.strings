@@ -321,7 +321,11 @@
 "CLASSIC_NAVIGATION_TITLE" = "Classic navigation";
 "CLASSIC_NAVIGATION_DETAIL" = "Use the older navigation layout. Turning this on turns off Liquid Glass design. Reopen X after changing this.";
 "LIQUID_GLASS_DESIGN_TITLE" = "Liquid Glass design";
-"LIQUID_GLASS_DESIGN_DETAIL" = "Floating glass tabs and translucent navigation with your existing layout. Requests X's native glass navigation on supported iOS versions; uses a soft material on older devices. Reopen X to switch the native navigation layout.";
+"LIQUID_GLASS_DESIGN_DETAIL" = "Use NeoFreeBird's floating glass dock with new icons, badges and a spring selection highlight. Keeps your tab order and actions. Reopen X after changing the navigation layout.";
+"GLASS_DOCK_UNREAD_FORMAT" = "%@ unread";
+"GLASS_DOCK_OPTIONS" = "Options";
+"HIDE_LISTEN_LIVE_TITLE" = "Hide Listen Live banner";
+"HIDE_LISTEN_LIVE_DETAIL" = "Hide live audio recommendations above Home. You can still open Spaces yourself.";
 "SETTINGS_UNAVAILABLE_CURRENT_X" = "Not supported in this version of X. Your saved preference is preserved.";
 "SIDEBAR_GROK_BOT_TITLE" = "Try Grok Bot";
 

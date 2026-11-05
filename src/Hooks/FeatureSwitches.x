@@ -39,8 +39,8 @@ static NSNumber* FeatureSwitchOverrideValueForKey(NSString* key) {
         return nil;
     }
 
-    // Explicit opt-in is necessary on accounts where X keeps the rollout off.
-    // Only request native glass on the supported host with UIKit glass present.
+    // Our glass dock replaces the controls on the verified entry/delegate
+    // pipeline; it does not request X's unrelated glass navigation rollout.
     if ([key isEqualToString:@"ios_liquid_glass_redesign_enabled"] ||
         [key isEqualToString:@"ios_liquid_glass_redesign_quick_composer_enabled"]) {
         return BHTLiquidGlassNavigationOverride([BHTSettings boolForKey:@"liquid_glass_design"],

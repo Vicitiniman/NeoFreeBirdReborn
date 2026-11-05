@@ -1,4 +1,5 @@
 #import "BHTLiquidGlassDesign.h"
+#import "BHTGlassDockView.h"
 #import "Core/BHTSettings.h"
 #import "Compatibility/BHTHostCompatibility.h"
 #import "ThemeColor/Palette.h"
@@ -17,8 +18,7 @@
 @implementation BHTGlassSavedView @end
 
 @interface BHTGlassChromeState : NSObject
-@property(nonatomic, strong) UIVisualEffectView* material;
-@property(nonatomic, strong) UIView* selection;
+@property(nonatomic, strong) BHTGlassDockView* material;
 @property(nonatomic, strong) NSMutableArray<BHTGlassSavedView*>* savedViews;
 @property(nonatomic, strong) UITraitCollection* traits;
 @property(nonatomic, copy) NSString* materialKind;
@@ -35,7 +35,12 @@
 static char BHTLiquidGlassStateKey;
 static NSUInteger BHTLiquidGlassGeneration = 1;
 static NSHashTable<UIViewController*>* BHTLiquidGlassTabOwners;
-static NSHashTable<UINavigationBar*>* BHTLiquidGlassNavigationBars;
+static char BHTGlassDockOwnerKey;
+@interface BHTGlassDockOwner : NSObject
+@property(nonatomic, weak) UIViewController* controller;
+@property(nonatomic) BOOL refreshScheduled;
+@end
+@implementation BHTGlassDockOwner @end
 
 BOOL BHTNativeLiquidGlassAvailable(void) {
     Class glass = NSClassFromString(@"UIGlassEffect");
@@ -55,7 +60,6 @@ static void BHTRegisterLiquidGlassObservers(void) {
     static dispatch_once_t once;
     dispatch_once(&once, ^{
         BHTLiquidGlassTabOwners = [NSHashTable weakObjectsHashTable];
-        BHTLiquidGlassNavigationBars = [NSHashTable weakObjectsHashTable];
         for (NSString* name in @[BHTThemeDidChangeNotification, BHTSettingsProfileDidApplyNotification,
              UIAccessibilityReduceTransparencyStatusDidChangeNotification,
              UIAccessibilityReduceMotionStatusDidChangeNotification,
@@ -72,16 +76,11 @@ static BHTGlassChromeState* BHTGlassState(id owner, BOOL create) {
     if (!state && create) {
         state = [BHTGlassChromeState new];
         state.savedViews = [NSMutableArray array];
-        state.material = [[UIVisualEffectView alloc] initWithEffect:nil];
-        state.material.userInteractionEnabled = NO;
+        state.material = [[BHTGlassDockView alloc] initWithEffect:nil];
+        state.material.userInteractionEnabled = YES;
         state.material.isAccessibilityElement = NO;
         state.material.layer.cornerCurve = kCACornerCurveContinuous;
         state.material.clipsToBounds = YES;
-        state.selection = [UIView new];
-        state.selection.userInteractionEnabled = NO;
-        state.selection.isAccessibilityElement = NO;
-        state.selection.layer.cornerCurve = kCACornerCurveContinuous;
-        [state.material.contentView addSubview:state.selection];
         objc_setAssociatedObject(owner, &BHTLiquidGlassStateKey, state, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     }
     return state;
@@ -136,29 +135,49 @@ static void BHTGlassUpdateMaterial(BHTGlassChromeState* state, UIView* host) {
     state.requestedMaterialKind = kind;
     UIVisualEffect* effect = nil;
     if ([kind isEqualToString:@"native_liquid_glass"]) {
-        // Public UIKit factory, verified against UIGlassEffect.h. Regular is
-        // the first (zero-valued) NSInteger style. Runtime dispatch retains the
-        // iOS 16.5 build SDK without relying on an inherited initializer.
+        // Public UIKit clear glass (style 1), with our own controls inside its
+        // content view. X's bar and navigation rollout are not used to draw it.
         id candidate = ((id (*)(id, SEL, NSInteger))objc_msgSend)(NSClassFromString(@"UIGlassEffect"),
-            NSSelectorFromString(@"effectWithStyle:"), 0);
+            NSSelectorFromString(@"effectWithStyle:"), 1);
+        if ([candidate respondsToSelector:NSSelectorFromString(@"setInteractive:")])
+            ((void (*)(id, SEL, BOOL))objc_msgSend)(candidate, NSSelectorFromString(@"setInteractive:"), YES);
         if ([candidate isKindOfClass:UIVisualEffect.class]) effect = candidate;
     }
     if (!effect && !UIAccessibilityIsReduceTransparencyEnabled()) {
-        effect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemMaterial];
+        effect = [UIBlurEffect effectWithStyle:UIBlurEffectStyleSystemUltraThinMaterial];
         kind = @"system_material";
     }
     state.material.effect = effect;
     state.material.backgroundColor = effect ? UIColor.clearColor : [Palette currentSurfaceColor];
     state.material.overrideUserInterfaceStyle = [Palette currentPaletteUsesDarkAppearance]
         ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
-    state.material.layer.borderColor = [[Palette currentSeparatorColor] colorWithAlphaComponent:0.4].CGColor;
+    UIColor* edge = [Palette currentPaletteUsesDarkAppearance] ? UIColor.whiteColor : UIColor.blackColor;
+    state.material.layer.borderColor = [edge colorWithAlphaComponent:0.22].CGColor;
     state.material.layer.borderWidth = UIAccessibilityDarkerSystemColorsEnabled() ? 1 : 0.5;
-    state.selection.backgroundColor = [(CurrentAccentColor() ?: UIColor.systemBlueColor)
-        colorWithAlphaComponent:UIAccessibilityDarkerSystemColorsEnabled() ? 0.28 : 0.14];
     state.materialKind = kind;
     state.traits = host.traitCollection;
     state.generation = BHTLiquidGlassGeneration;
     state.materialUpdates++;
+}
+
+static double BHTGlassNumber(id object, NSString* name, double fallback) {
+    Method method = class_getInstanceMethod([object class], NSSelectorFromString(name));
+    char type[16] = {0};
+    if (!method || method_getNumberOfArguments(method) != 2) return fallback;
+    method_getReturnType(method, type, sizeof(type));
+    if (type[0] == 'B' || type[0] == 'c') return ((BOOL (*)(id, SEL))objc_msgSend)(object, NSSelectorFromString(name));
+    if (type[0] == 'd') return ((double (*)(id, SEL))objc_msgSend)(object, NSSelectorFromString(name));
+    return fallback;
+}
+
+void BHTRefreshGlassDockForTabView(UIView* view) {
+    BHTGlassDockOwner* owner = objc_getAssociatedObject(view, &BHTGlassDockOwnerKey);
+    if (!owner.controller || owner.refreshScheduled || ![BHTSettings boolForKey:@"liquid_glass_design"]) return;
+    owner.refreshScheduled = YES;
+    dispatch_async(dispatch_get_main_queue(), ^{
+        owner.refreshScheduled = NO;
+        if (owner.controller) BHTUpdateLiquidGlassTabBar(owner.controller);
+    });
 }
 
 void BHTUpdateLiquidGlassTabBar(UIViewController* controller) {
@@ -169,93 +188,63 @@ void BHTUpdateLiquidGlassTabBar(UIViewController* controller) {
     UIView* tabBar = BHTGlassObject(controller, @"tabBar");
     NSArray* tabs = BHTGlassObject(controller, @"tabViews");
     if (![tabBar isKindOfClass:UIView.class] || ![tabs isKindOfClass:NSArray.class] || !tabs.count ||
-        ![tabBar isDescendantOfView:controller.view] || CGRectIsEmpty(tabBar.bounds)) {
+        ![tabBar isDescendantOfView:controller.view] || CGRectIsEmpty(tabBar.bounds) || !BHTGlassDockCanRoute(controller, NO)) {
         BHTGlassRestore(controller);
         return;
     }
-    UIView* host = tabBar == controller.view ? tabBar : tabBar.superview;
+    for (id tab in tabs) if (![tab isKindOfClass:UIView.class]) { BHTGlassRestore(controller); return; }
+    UIView* host = controller.view.superview ?: controller.view;
     BHTGlassChromeState* state = BHTGlassState(controller, YES);
     if (state.updating) return;
     state.updating = YES;
     @try {
         CGRect nativeFrame = [tabBar convertRect:tabBar.bounds toView:host];
         state.vertical = nativeFrame.size.height > nativeFrame.size.width;
-        CGRect frame = BHTLiquidGlassFrame(nativeFrame, state.vertical);
-        if (CGRectIsEmpty(frame)) return;
+        BOOL labels = [BHTSettings boolForKey:@"restore_tab_labels"];
+        CGFloat safeBottom = host.safeAreaInsets.bottom;
+        CGRect frame = BHTGlassDockFrame(nativeFrame, host.bounds, safeBottom, tabs.count, state.vertical, labels);
+        if (CGRectIsEmpty(frame)) { BHTGlassRestore(controller); return; }
         BHTGlassClearView(state, controller.view, NO);
-        BHTGlassClearView(state, tabBar, NO);
+        if (tabBar != controller.view) BHTGlassClearView(state, tabBar, YES);
+        else for (UIView* tab in tabs) BHTGlassClearView(state, tab, YES);
         for (NSString* name in @[@"tabBarBackgroundView", @"tabBarDivider"]) {
             UIView* background = BHTGlassObject(controller, name);
-            if ([background isKindOfClass:UIView.class] && background != tabBar &&
+            if ([background isKindOfClass:UIView.class] && background != tabBar && background != controller.view &&
                 ![tabBar isDescendantOfView:background]) BHTGlassClearView(state, background, YES);
         }
         if (state.material.superview != host) {
-            if (host == tabBar) [host insertSubview:state.material atIndex:0];
-            else [host insertSubview:state.material belowSubview:tabBar];
+            [host addSubview:state.material];
         }
-        BOOL hidden = host == tabBar ? NO : tabBar.hidden;
-        CGFloat alpha = host == tabBar ? 1 : tabBar.alpha;
+        BOOL hidden = BHTGlassNumber(controller, @"isTabBarHidden", NO) != 0;
+        double collapse = BHTGlassNumber(controller, @"tabBarCollapseRatio", 0);
+        CGFloat alpha = hidden ? 0 : tabBar.alpha * MAX(0, MIN(1, 1 - collapse));
         if (state.material.hidden != hidden) state.material.hidden = hidden;
         if (state.material.alpha != alpha) state.material.alpha = alpha;
+        state.material.userInteractionEnabled = !hidden && alpha > 0.05;
         if (!CGRectEqualToRect(state.material.frame, frame)) state.material.frame = frame;
         CGFloat radius = state.vertical ? MIN(24, frame.size.width / 2) : frame.size.height / 2;
         if (state.material.layer.cornerRadius != radius) state.material.layer.cornerRadius = radius;
         BHTGlassUpdateMaterial(state, host);
-        CGRect selected = CGRectZero;
+        [state.material updateTabs:tabs owner:controller vertical:state.vertical showLabels:labels
+            textColor:[Palette currentTextColor] accent:(CurrentAccentColor() ?: UIColor.systemBlueColor)];
+        BHTGlassDockOwner* box = objc_getAssociatedObject(controller, &BHTGlassDockOwnerKey);
+        if (!box) {
+            box = [BHTGlassDockOwner new];
+            box.controller = controller;
+            objc_setAssociatedObject(controller, &BHTGlassDockOwnerKey, box, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+        }
         for (UIView* tab in tabs) {
-            if (![tab isKindOfClass:UIView.class] || ![tab isDescendantOfView:tabBar]) continue;
-            SEL selector = NSSelectorFromString(@"isSelected");
-            Method method = class_getInstanceMethod(tab.class, selector);
-            char result[16] = {0};
-            if (!method || method_getNumberOfArguments(method) != 2) continue;
-            method_getReturnType(method, result, sizeof(result));
-            if ((result[0] == 'B' || result[0] == 'c') && ((BOOL (*)(id, SEL))objc_msgSend)(tab, selector)) {
-                CGRect item = [tab convertRect:tab.bounds toView:host];
-                selected = BHTLiquidGlassSelectionFrame(item, frame);
-                if (!CGRectIsEmpty(selected)) selected = CGRectOffset(selected, -frame.origin.x, -frame.origin.y);
-                break;
-            }
+            if (objc_getAssociatedObject(tab, &BHTGlassDockOwnerKey) != box)
+                objc_setAssociatedObject(tab, &BHTGlassDockOwnerKey, box, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
         }
-        if (!CGRectEqualToRect(state.selectedFrame, selected)) {
-            BOOL animate = !CGRectIsEmpty(state.selectedFrame) && !CGRectIsEmpty(selected) &&
-                state.material.window && !UIAccessibilityIsReduceMotionEnabled();
-            state.selectedFrame = selected;
-            state.selectionUpdates++;
-            void (^layout)(void) = ^{
-                state.selection.frame = selected;
-                state.selection.layer.cornerRadius = MIN(22, MIN(selected.size.width, selected.size.height) / 2);
-            };
-            if (animate) [UIView animateWithDuration:0.18 delay:0 options:UIViewAnimationOptionBeginFromCurrentState |
-                UIViewAnimationOptionAllowUserInteraction animations:layout completion:nil];
-            else layout();
-        }
-        BOOL hideSelection = CGRectIsEmpty(selected);
-        if (state.selection.hidden != hideSelection) state.selection.hidden = hideSelection;
     } @finally { state.updating = NO; }
 }
 
 void BHTUpdateLiquidGlassNavigationBar(UINavigationBar* bar) {
     if (!NSThread.isMainThread) return;
-    BHTRegisterLiquidGlassObservers();
-    [BHTLiquidGlassNavigationBars addObject:bar];
-    if (![BHTSettings boolForKey:@"liquid_glass_design"] || !BHTIsSupportedHost()) { BHTGlassRestore(bar); return; }
-    // Limit the retrofit to TFNNavigationBar's known background owner. Native
-    // XNavigation bars retain UIKit's own glass/scroll-edge implementation.
-    UIView* background = BHTGlassObject(bar, @"backgroundView");
-    if (![background isKindOfClass:UIView.class] || background == bar || background.superview != bar ||
-        CGRectIsEmpty(background.frame)) return;
-    BHTGlassChromeState* state = BHTGlassState(bar, YES);
-    if (state.updating) return;
-    state.updating = YES;
-    @try {
-        BHTGlassClearView(state, background, YES);
-        BHTGlassClearView(state, bar, NO);
-        if (state.material.superview != bar) [bar insertSubview:state.material atIndex:0];
-        if (!CGRectEqualToRect(state.material.frame, background.frame)) state.material.frame = background.frame;
-        if (state.material.layer.cornerRadius != 0) state.material.layer.cornerRadius = 0;
-        state.selection.hidden = YES;
-        BHTGlassUpdateMaterial(state, bar);
-    } @finally { state.updating = NO; }
+    // A full-size effect added above TFNNavigationBar's private content can
+    // cover the avatar, title/bird and actions. Leave the header native.
+    BHTGlassRestore(bar);
 }
 
 void BHTRefreshLiquidGlassDesign(void) {
@@ -263,7 +252,6 @@ void BHTRefreshLiquidGlassDesign(void) {
     BHTRegisterLiquidGlassObservers();
     BHTLiquidGlassGeneration++;
     for (UIViewController* owner in BHTLiquidGlassTabOwners.allObjects) BHTUpdateLiquidGlassTabBar(owner);
-    for (UINavigationBar* bar in BHTLiquidGlassNavigationBars.allObjects) BHTUpdateLiquidGlassNavigationBar(bar);
 }
 
 NSDictionary* BHTLiquidGlassDesignDiagnosticSnapshot(void) {
@@ -273,20 +261,21 @@ NSDictionary* BHTLiquidGlassDesignDiagnosticSnapshot(void) {
         return result;
     }
     NSMutableArray* entries = [NSMutableArray array];
-    NSArray* owners = [(BHTLiquidGlassTabOwners.allObjects ?: @[]) arrayByAddingObjectsFromArray:
-        BHTLiquidGlassNavigationBars.allObjects ?: @[]];
+    NSArray* owners = BHTLiquidGlassTabOwners.allObjects ?: @[];
     for (id owner in owners) {
         BHTGlassChromeState* state = BHTGlassState(owner, NO);
         if (!state) continue;
         [entries addObject:@{@"ownerClass": NSStringFromClass([owner class]), @"material": state.materialKind ?: @"none",
             @"verticalRail": @(state.vertical), @"windowAttached": @(state.material.window != nil),
             @"width": @(state.material.bounds.size.width), @"height": @(state.material.bounds.size.height),
-            @"materialUpdates": @(state.materialUpdates), @"selectionUpdates": @(state.selectionUpdates)}];
+            @"materialUpdates": @(state.materialUpdates), @"selectionUpdates": @(state.material.selectionUpdates),
+            @"customButtons": @(state.material.buttonCount)}];
     }
     return @{@"enabled": @([BHTSettings boolForKey:@"liquid_glass_design"]),
         @"nativeGlassAvailable": @(BHTNativeLiquidGlassAvailable()),
         @"reduceTransparency": @(UIAccessibilityIsReduceTransparencyEnabled()),
         @"reduceMotion": @(UIAccessibilityIsReduceMotionEnabled()),
         @"nativeTabActionsPreserved": @YES, @"nativeTabFramesPreserved": @YES,
+        @"implementation": @"owned_glass_dock", @"headerOverlayInstalled": @NO,
         @"surfaces": entries, @"capturesTextOrAccountIdentifiers": @NO};
 }

@@ -122,11 +122,11 @@ static void testProfileMediaAndGrok(void) {
     BHTTestNativeGlassAvailable = YES;
     [defaults setBool:YES forKey:@"liquid_glass_design"];
     for (NSString* key in @[@"ios_liquid_glass_redesign_enabled", @"ios_liquid_glass_redesign_quick_composer_enabled"]) {
-        NSCAssert([FeatureSwitchOverrideValueForKey(key) isEqual:@YES], @"Opt-in requests the current native glass UI");
+        NSCAssert([FeatureSwitchOverrideValueForKey(key) isEqual:@NO], @"The owned dock retains its verified native action pipeline");
     }
     BHTTestNativeGlassAvailable = NO;
-    NSCAssert(FeatureSwitchOverrideValueForKey(@"ios_liquid_glass_redesign_enabled") == nil,
-              @"The visual material fallback does not force native glass on unsupported UIKit");
+    NSCAssert([FeatureSwitchOverrideValueForKey(@"ios_liquid_glass_redesign_enabled") isEqual:@NO],
+              @"The owned dock uses the same action pipeline with a blur fallback on older UIKit");
     if (previousGlass) [defaults setObject:previousGlass forKey:@"liquid_glass_design"];
     else [defaults removeObjectForKey:@"liquid_glass_design"];
     if (previousClassic) [defaults setObject:previousClassic forKey:@"classic_navigation"];

@@ -16,6 +16,8 @@
 #import "Security/BHTAuthenticationURLUtility.h"
 #import "Sidebar/BHTSidebarNavigationUtility.h"
 #import "ThemeColor/BHTThemePresets.h"
+#import "ThemeColor/BHTPostSurfaceTheme.h"
+#import "Timeline/BHTLiveAudioBanner.h"
 
 #import <UIKit/UIKit.h>
 #import <dlfcn.h>
@@ -1864,7 +1866,8 @@ static NSURL* BHTWriteCompatibilityReportNow(
             @"version": BHTTargetAppVersion,
             @"build": BHTTargetAppBuild,
             @"supportedHost": @(BHTIsSupportedHost()),
-            @"navigationPreference": [BHTSettings boolForKey:@"classic_navigation"] ? @"classic_native" : @"native_system",
+            @"navigationPreference": [BHTSettings boolForKey:@"liquid_glass_design"] ? @"neofreebird_glass_dock" :
+                ([BHTSettings boolForKey:@"classic_navigation"] ? @"classic_native" : @"native_system"),
             @"unavailablePreferences": @[@"voice_creation_enabled", @"no_voice_messages", @"old_compose_bar", @"dm_reply_later_enabled"],
             @"trendSidebarPolicy": @"bounded_navigation_owner_discovery"
         },
@@ -1898,6 +1901,8 @@ static NSURL* BHTWriteCompatibilityReportNow(
         @"settingsEntryRuntime": BHTSettingsEntryDiagnosticSnapshot(),
         @"modernSettingsEntryRuntime": BHTModernSettingsEntryDiagnosticSnapshot(),
         @"liquidGlassDesignRuntime": BHTLiquidGlassDesignDiagnosticSnapshot(),
+        @"postSurfaceThemeRuntime": BHTPostSurfaceThemeDiagnostics(),
+        @"liveAudioBannerRuntime": BHTLiveAudioBannerDiagnostics(),
         @"timelineItemObservations": BHTTimelineObservationSnapshot(),
         @"mediaActionRuntime": BHTMediaActionObservationSnapshot(),
         @"railBrandingRuntime": BHTRailBrandingObservationSnapshot(),

@@ -28,6 +28,7 @@ def main():
 #import "Compatibility/BHTCompatibilityReporter.h"
 #import "Compatibility/BHTHostCompatibility.h"
 #import "Navigation/BHTLiquidGlassPolicy.h"
+#import "Timeline/BHTLiveAudioBanner.h"
 #import "Timeline/BHTTimelineModelRuntime.h"
 #import "Login/BHTWebSessionSecurity.h"
 #import "Login/BHTWebSessionVault.h"
@@ -88,6 +89,11 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
     profile_source = (ROOT / "src/Hooks/Profile.x").read_text(encoding="utf8")
     unit += section(profile_source, "static NSArray* BHTProfileMainEntriesWithPhotosFirst", "// Keep the profile's native")
     unit += (ROOT / "tests/LiquidGlassPolicyTests.m").read_text(encoding="utf8")
+    unit += (ROOT / "tests/GlassDockRoutingTests.m").read_text(encoding="utf8")
+    surface_source = (ROOT / "src/ThemeColor/BHTPostSurfaceTheme.m").read_text(encoding="utf8")
+    unit += section(surface_source, "BOOL BHTPostSurfaceIsBackground(", "static NSHashTable<UIView*>* BHTPostSurfaces;")
+    unit += (ROOT / "tests/PostSurfaceThemeTests.m").read_text(encoding="utf8")
+    unit += (ROOT / "tests/LiveAudioBannerTests.m").read_text(encoding="utf8")
     glass_source = (ROOT / "src/Navigation/BHTLiquidGlassDesign.m").read_text(encoding="utf8")
     unit += section(glass_source, "@interface BHTGlassSavedView", "@interface BHTGlassChromeState")
     unit += (ROOT / "tests/LiquidGlassRestorationFixture.m").read_text(encoding="utf8")
@@ -120,6 +126,7 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
                         "-I", str(ROOT / "src"), str(test_source),
                         str(ROOT / "src/Timeline/BHTForYouKeywordFilter.m"),
                         str(ROOT / "src/Timeline/BHTTimelineCleanup.m"),
+                        str(ROOT / "src/Timeline/BHTLiveAudioBanner.m"),
                         str(ROOT / "src/Timeline/BHTTimelineModelRuntime.m"),
                         str(ROOT / "src/Compatibility/BHTHostCompatibility.m"),
                         str(ROOT / "src/Navigation/BHTLiquidGlassPolicy.m"),

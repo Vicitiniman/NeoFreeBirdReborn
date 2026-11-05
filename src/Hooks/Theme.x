@@ -594,6 +594,17 @@ static BOOL BHTShouldThemeTabItems(void) {
 
     %orig(animated);
     BHTRefreshTabViewAppearance(self);
+    BHTRefreshGlassDockForTabView(self);
+}
+
+- (void)setBadgeCount:(NSUInteger)count animated:(BOOL)animated {
+    %orig(count, animated);
+    BHTRefreshGlassDockForTabView(self);
+}
+
+- (void)setHasUnreadContent:(BOOL)unread animated:(BOOL)animated {
+    %orig(unread, animated);
+    BHTRefreshGlassDockForTabView(self);
 }
 
 - (void)layoutSubviews {

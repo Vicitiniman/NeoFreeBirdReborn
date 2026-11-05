@@ -139,6 +139,9 @@ int main(void) {
         testTabViewAppearance();
         testSettingsEntryRoot();
         testLiquidGlassPolicy();
+        testGlassDockRouting();
+        testPostSurfaceThemePolicy();
+        testLiveAudioBanner();
         testLiquidGlassRestoration();
         testProfileMediaAndGrok();
         testHostCompatibility();

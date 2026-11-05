@@ -8,6 +8,7 @@
 #import "Likes/BHTLikesTab.h"
 #import "Timeline/BHTForYouKeywordFilter.h"
 #import "Timeline/BHTTimelineCleanup.h"
+#import "Timeline/BHTLiveAudioBanner.h"
 #import <stddef.h>
 #import <stdint.h>
 #import <string.h>
@@ -440,14 +441,15 @@ static void SyncHomeAddTabButton(id container, BOOL hidden) {
 
 %end
 
-// MARK: - Hide the Spaces bar
+// MARK: - Hide the Spaces / Listen Live recommendation strip
 
 // The bar is still the repurposed Fleets line; both home timeline implementations
 // share this visibility gate, re-evaluated on every content or settings update.
 %hook T1FleetLineHeaderController
 
 - (BOOL)_t1_shouldShowFleetLine {
-    if ([BHTSettings boolForKey:@"hide_spaces"]) {
+    BHTTrackLiveAudioBannerOwner(self);
+    if (BHTShouldHideLiveAudioBanner()) {
         return NO;
     }
 
