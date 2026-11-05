@@ -58,6 +58,16 @@ CGRect BHTSettingsEntryButtonFrame(CGRect bounds, CGFloat safeTop, CGFloat safeL
 @end
 @implementation BHTModernSettingsEntryState @end
 
+@interface BHTSettingsSheetNavigationController : UINavigationController
+- (void)bhtCloseSettings:(id)sender;
+@end
+
+@implementation BHTSettingsSheetNavigationController
+- (void)bhtCloseSettings:(id)sender {
+    [self dismissViewControllerAnimated:YES completion:nil];
+}
+@end
+
 static char BHTModernSettingsEntryKey;
 static NSUInteger BHTModernSettingsEntryInstallCount;
 static NSUInteger BHTModernSettingsEntryOpenCount;
@@ -96,12 +106,11 @@ void BHTPresentSettingsFromController(UIViewController* controller) {
     if (navigation) {
         [navigation pushViewController:settings animated:YES];
     } else {
-        UINavigationController* modal = [[UINavigationController alloc] initWithRootViewController:settings];
-        __weak UINavigationController* weakModal = modal;
-        UIAction* close = [UIAction actionWithTitle:@"Done" image:nil identifier:nil handler:^(__kindof UIAction* action) {
-            [weakModal dismissViewControllerAnimated:YES completion:nil];
-        }];
-        settings.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc] initWithTitle:@"Done" image:nil primaryAction:close menu:nil];
+        BHTSettingsSheetNavigationController* modal = [[BHTSettingsSheetNavigationController alloc] initWithRootViewController:settings];
+        settings.navigationItem.leftBarButtonItem = [[UIBarButtonItem alloc]
+            initWithBarButtonSystemItem:UIBarButtonSystemItemDone
+                                target:modal
+                                action:@selector(bhtCloseSettings:)];
         [controller presentViewController:modal animated:YES completion:nil];
     }
 }
