@@ -76,14 +76,32 @@
 %hook T1ProfileHeaderViewController
 - (void)viewWillAppear:(BOOL)animated {
     %orig;
-    BHTApplyAppContainerTheme((UIViewController*)self);
+    if ([(UIViewController*)self isViewLoaded]) BHTApplyPostSurfaceTheme([(UIViewController*)self view]);
 }
 %end
 
 %hook T1ProfileUserInfoViewController
 - (void)viewWillAppear:(BOOL)animated {
     %orig;
-    BHTApplyAppContainerTheme((UIViewController*)self);
+    if ([(UIViewController*)self isViewLoaded]) BHTApplyPostSurfaceTheme([(UIViewController*)self view]);
+}
+%end
+
+%hook T1ProfileFollowStatsViewController
+- (void)viewDidLoad {
+    %orig;
+    BHTApplyProfileStatsTheme((UIViewController*)self);
+}
+- (void)viewWillAppear:(BOOL)animated {
+    %orig;
+    BHTApplyProfileStatsTheme((UIViewController*)self);
+}
+%end
+
+%hook T1ProfileFriendsFollowingViewController
+- (void)viewWillAppear:(BOOL)animated {
+    %orig;
+    BHTApplyProfileStatsTheme((UIViewController*)self);
 }
 %end
 

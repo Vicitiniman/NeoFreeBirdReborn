@@ -150,6 +150,7 @@ static NSUInteger BHTDockNumber(id object, NSString* name) {
 @property(nonatomic) CGRect lensTarget;
 @property(nonatomic) NSInteger configuredAppearance;
 @property(nonatomic, strong) BHTGlassDockButton* compactButton;
+@property(nonatomic, strong) UIView* opacityFill;
 @property(nonatomic) CGRect expandedFrame;
 @property(nonatomic) CGRect presentationTarget;
 @property(nonatomic, readwrite, getter=isCollapsed) BOOL collapsed;
@@ -162,6 +163,10 @@ static NSUInteger BHTDockNumber(id object, NSString* name) {
         self.accessibilityContainerType = UIAccessibilityContainerTypeSemanticGroup;
         self.layer.cornerCurve = kCACornerCurveContinuous;
         self.clipsToBounds = YES;
+        _opacityFill = [UIView new];
+        _opacityFill.userInteractionEnabled = NO;
+        _opacityFill.isAccessibilityElement = NO;
+        [self.contentView addSubview:_opacityFill];
         _rim = [CAGradientLayer layer];
         _rim.colors = @[(id)[UIColor.whiteColor colorWithAlphaComponent:0.22].CGColor,
             (id)[UIColor.whiteColor colorWithAlphaComponent:0.015].CGColor,
@@ -196,6 +201,10 @@ static NSUInteger BHTDockNumber(id object, NSString* name) {
     return self;
 }
 - (NSUInteger)buttonCount { return self.buttons.count; }
+- (void)setGlassOpacity:(CGFloat)opacity surfaceColor:(UIColor*)color {
+    UIColor* fill = [color colorWithAlphaComponent:MAX(0, MIN(1, opacity))];
+    if (![self.opacityFill.backgroundColor isEqual:fill]) self.opacityFill.backgroundColor = fill;
+}
 - (void)updateTabs:(NSArray<UIView*>*)tabs owner:(UIViewController*)owner vertical:(BOOL)vertical
         showLabels:(BOOL)labels textColor:(UIColor*)text accent:(UIColor*)accent {
     NSInteger appearance = self.overrideUserInterfaceStyle;
@@ -268,6 +277,7 @@ static NSUInteger BHTDockNumber(id object, NSString* name) {
     CGRect bounds = CGRectMake(0, 0, self.expandedFrame.size.width, self.expandedFrame.size.height);
     if (CGRectIsEmpty(bounds)) bounds = self.contentView.bounds;
     self.compactButton.frame = self.contentView.bounds;
+    if (!CGRectEqualToRect(self.opacityFill.frame, self.contentView.bounds)) self.opacityFill.frame = self.contentView.bounds;
     if (!CGRectEqualToRect(self.scroll.frame, bounds)) self.scroll.frame = bounds;
     CGSize content = BHTGlassDockContentSize(bounds.size, self.buttons.count, self.vertical);
     if (!CGSizeEqualToSize(self.scroll.contentSize, content)) self.scroll.contentSize = content;

@@ -8,12 +8,15 @@ static void testLiquidGlassRestoration(void) {
     UIColor* original = [UIColor new];
     native.backgroundColor = original;
     native.opaque = YES;
+    native.userInteractionEnabled = YES;
     [host addSubview:state.material];
     objc_setAssociatedObject(owner, &BHTLiquidGlassStateKey, state, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
     for (NSUInteger pass = 0; pass < 1000; pass++) BHTGlassClearView(state, native, NO);
     NSCAssert(state.savedViews.count == 1 && native.backgroundColor == UIColor.clearColor && !native.opaque,
               @"Repeated refreshes reuse one native-view snapshot");
     NSCAssert(CGRectEqualToRect(native.frame, CGRectMake(0, 0, 440, 49)), @"The glass treatment leaves native tab frames unchanged");
+    BHTGlassPassThrough(state, native);
+    NSCAssert(!native.userInteractionEnabled, @"The invisible native bar cannot intercept timeline touches");
     UIView* divider = [UIView new];
     BHTGlassClearView(state, divider, YES);
     UIView* alreadyHidden = [UIView new];
@@ -21,6 +24,7 @@ static void testLiquidGlassRestoration(void) {
     BHTGlassClearView(state, alreadyHidden, YES);
     BHTGlassRestore(owner);
     NSCAssert(native.backgroundColor == original && native.opaque, @"Disabling restores the original background and opacity");
+    NSCAssert(native.userInteractionEnabled, @"Disabling restores native bar interaction");
     NSCAssert(!divider.hidden && alreadyHidden.hidden, @"Disabling preserves originally hidden native decorations");
     NSCAssert(!state.material.superview && !BHTGlassState(owner, NO), @"Disabling removes the material and releases owned state");
     BHTGlassRestore(owner);

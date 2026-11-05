@@ -17,6 +17,14 @@
 }
 %end
 
+%hook T1TabBarViewController
+- (CGRect)visibleTabBarFrame {
+    CGRect native = %orig;
+    return BHTGlassDockVisibleFrame(native, BHTGlassDockUsesOverlayLayout((UIViewController*)self),
+        BHTGlassDockHasActiveDockedContent((UIViewController*)self));
+}
+%end
+
 %hook TFNNavigationBar
 - (void)layoutSubviews {
     %orig;

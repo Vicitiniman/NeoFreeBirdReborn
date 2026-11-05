@@ -141,6 +141,7 @@ int main(void) {
         testLiquidGlassPolicy();
         testGlassDockRouting();
         testPostSurfaceThemePolicy();
+    testComposeButtonVisibility();
         testLiveAudioBanner();
         testLiquidGlassRestoration();
         testProfileMediaAndGrok();

@@ -2,6 +2,7 @@
 #import "Compatibility/BHTCompatibilityReporter.h"
 #import "Navigation/BHTGlassNavigation.h"
 #import "Navigation/BHTLiquidGlassDesign.h"
+#import "Navigation/BHTComposeButtonVisibility.h"
 #import "Settings/BHTSettingsEntry.h"
 #import "Core/BHTManager.h"
 #import "Core/BHTSettings.h"
@@ -1901,6 +1902,7 @@ static NSURL* BHTWriteCompatibilityReportNow(
         @"settingsEntryRuntime": BHTSettingsEntryDiagnosticSnapshot(),
         @"modernSettingsEntryRuntime": BHTModernSettingsEntryDiagnosticSnapshot(),
         @"liquidGlassDesignRuntime": BHTLiquidGlassDesignDiagnosticSnapshot(),
+        @"composeButtonVisibilityRuntime": BHTComposeButtonVisibilityDiagnostics(),
         @"postSurfaceThemeRuntime": BHTPostSurfaceThemeDiagnostics(),
         @"liveAudioBannerRuntime": BHTLiveAudioBannerDiagnostics(),
         @"timelineItemObservations": BHTTimelineObservationSnapshot(),

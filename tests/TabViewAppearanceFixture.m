@@ -10,6 +10,7 @@
 @property(nonatomic, getter=isHidden) BOOL hidden;
 @property(nonatomic) BOOL userInteractionEnabled;
 @property(nonatomic) BOOL isAccessibilityElement;
+@property(nonatomic) BOOL accessibilityElementsHidden;
 @property(nonatomic, weak) UIView* superview;
 @property(nonatomic, weak) UIView* window;
 @property(nonatomic, readonly) NSArray<UIView*>* subviews;
@@ -90,11 +91,27 @@
 @implementation UIImageView @end
 @interface UIColor : NSObject
 + (instancetype)clearColor;
+@property(nonatomic, readonly) CGColorRef CGColor;
+- (instancetype)colorWithAlphaComponent:(CGFloat)alpha;
 @end
-@implementation UIColor
+@implementation UIColor {
+    CGColorRef _testColor;
+}
+- (instancetype)init {
+    if ((self = [super init])) _testColor = CGColorCreateGenericRGB(0, 0, 0, 1);
+    return self;
+}
+- (void)dealloc { if (_testColor) CGColorRelease(_testColor); }
+- (CGColorRef)CGColor { return _testColor; }
+- (instancetype)colorWithAlphaComponent:(CGFloat)alpha {
+    UIColor* color = [UIColor new];
+    CGColorRelease(color->_testColor);
+    color->_testColor = CGColorCreateCopyWithAlpha(self.CGColor, alpha);
+    return color;
+}
 + (instancetype)clearColor {
     static UIColor* clear;
-    if (!clear) clear = [self new];
+    if (!clear) clear = [[self new] colorWithAlphaComponent:0];
     return clear;
 }
 @end

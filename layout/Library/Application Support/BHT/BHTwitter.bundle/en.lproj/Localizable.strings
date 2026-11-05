@@ -321,7 +321,14 @@
 "CLASSIC_NAVIGATION_TITLE" = "Classic navigation";
 "CLASSIC_NAVIGATION_DETAIL" = "Use the older navigation layout. Turning this on turns off Liquid Glass design. Reopen X after changing this.";
 "LIQUID_GLASS_DESIGN_TITLE" = "Liquid Glass design";
-"LIQUID_GLASS_DESIGN_DETAIL" = "Use a wide floating glass tray. Scroll down to minimize it to one button; scroll up or tap to expand. Keep tab bar visible prevents minimization. Reopen X after changing the navigation layout.";
+"LIQUID_GLASS_DESIGN_DETAIL" = "Use a floating glass tray without the old bottom-bar space. Scroll up to reveal it, or tap the compact button to keep it open for this page. Reopen X after changing the navigation layout.";
+"GLASS_OPACITY_TITLE" = "Glass opacity";
+"GLASS_OPACITY_DETAIL" = "Choose how much content shows through the glass. Buttons stay fully visible. Reduce Transparency in Accessibility keeps it opaque.";
+"GLASS_OPACITY_CLEAR" = "Clear";
+"GLASS_OPACITY_OPAQUE" = "Opaque";
+"GLASS_OPACITY_RESET" = "Reset to clear";
+"HIDE_COMPOSE_BUTTON_TITLE" = "Hide compose button";
+"HIDE_COMPOSE_BUTTON_DETAIL" = "Hide the floating blue plus button used to create a post.";
 "GLASS_DOCK_UNREAD_FORMAT" = "%@ unread";
 "GLASS_DOCK_OPTIONS" = "Options";
 "GLASS_DOCK_EXPAND" = "Show navigation";

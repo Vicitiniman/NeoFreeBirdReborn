@@ -42,18 +42,56 @@ CGRect BHTGlassDockCompactFrame(CGRect expanded, BOOL rightToLeft) {
         CGRectGetMaxY(expanded) - diameter, diameter, diameter);
 }
 
-void BHTGlassDockReveal(BHTGlassDockScrollState* state, BOOL waitForDrag) {
+CGRect BHTGlassDockVisibleFrame(CGRect nativeFrame, BOOL overlayEnabled, BOOL activeDockedContent) {
+    if (!overlayEnabled || activeDockedContent || CGRectIsEmpty(nativeFrame) || CGRectIsInfinite(nativeFrame)) return nativeFrame;
+    // Native layout measures MIN Y, not height. Anchor the empty reservation
+    // at the old bar's bottom; CGRectZero would reserve the entire screen.
+    return CGRectMake(nativeFrame.origin.x, CGRectGetMaxY(nativeFrame), nativeFrame.size.width, 0);
+}
+
+CGFloat BHTGlassDockOpacity(NSInteger percentage, BOOL reduceTransparency) {
+    return reduceTransparency ? 1 : MIN(100, MAX(0, percentage)) / 100.0;
+}
+
+BOOL BHTGlassOpacityPreferenceIsValid(id value) {
+    if (![value isKindOfClass:NSNumber.class]) return NO;
+    double opacity = [value doubleValue];
+    return isfinite(opacity) && opacity >= 0 && opacity <= 100 && opacity == floor(opacity);
+}
+
+CGRect BHTGlassDockAvoidedComposeFrame(CGRect nativeFrame, CGRect dockFrame) {
+    if (CGRectIsEmpty(nativeFrame) || CGRectIsEmpty(dockFrame) || !CGRectIntersectsRect(nativeFrame, dockFrame)) return nativeFrame;
+    nativeFrame.origin.y = MAX(0, MIN(nativeFrame.origin.y, CGRectGetMinY(dockFrame) - nativeFrame.size.height - 12));
+    return nativeFrame;
+}
+
+void BHTGlassDockReveal(BHTGlassDockScrollState* state, BOOL manualOverride) {
     if (!state) return;
     state->collapsed = NO;
     state->distance = 0;
     state->direction = 0;
-    state->waitForDrag = waitForDrag;
+    if (manualOverride) state->manuallyExpanded = YES;
+}
+
+void BHTGlassDockResetScroll(BHTGlassDockScrollState* state, BOOL samePage) {
+    if (!state) return;
+    BOOL manual = samePage && state->manuallyExpanded;
+    *state = (BHTGlassDockScrollState){0};
+    state->manuallyExpanded = manual;
 }
 
 BOOL BHTGlassDockObserveScroll(BHTGlassDockScrollState* state, CGFloat offset, CGFloat maximumOffset,
                               BOOL dragging, BOOL decelerating, BOOL pinned) {
     if (!state || !isfinite(offset) || !isfinite(maximumOffset)) return NO;
     BOOL previous = state->collapsed;
+    if (state->manuallyExpanded) {
+        state->collapsed = NO;
+        state->lastOffset = offset;
+        state->hasOffset = YES;
+        state->distance = 0;
+        state->direction = 0;
+        return previous != state->collapsed;
+    }
     if (pinned || maximumOffset < 1 || offset <= 2) BHTGlassDockReveal(state, NO);
     if (pinned || maximumOffset < 1 || offset < 0 || offset > maximumOffset) {
         state->lastOffset = MAX(0, MIN(offset, MAX(0, maximumOffset)));
@@ -62,13 +100,12 @@ BOOL BHTGlassDockObserveScroll(BHTGlassDockScrollState* state, CGFloat offset, C
         state->direction = 0;
         return previous != state->collapsed;
     }
-    if (!state->hasOffset || (!dragging && !decelerating) || (state->waitForDrag && !dragging)) {
+    if (!state->hasOffset || (!dragging && !decelerating)) {
         state->lastOffset = offset;
         state->hasOffset = YES;
         state->distance = 0;
         return previous != state->collapsed;
     }
-    if (dragging) state->waitForDrag = NO;
     CGFloat delta = offset - state->lastOffset;
     state->lastOffset = offset;
     // Ignore native restoration/layout jumps, and use hysteresis for finger jitter.

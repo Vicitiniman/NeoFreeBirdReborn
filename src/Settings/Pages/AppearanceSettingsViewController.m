@@ -14,6 +14,8 @@
 #import "Settings/ModernSettingsCells.h"
 #import "Settings/Pages/PresetSettingsViewController.h"
 #import "Navigation/BHTLiquidGlassDesign.h"
+#import "Navigation/BHTComposeButtonVisibility.h"
+#import "Settings/Pages/BHTGlassOpacityViewController.h"
 
 @interface AppearanceSettingsViewController () <UIFontPickerViewControllerDelegate>
 @end
@@ -46,6 +48,10 @@
 }
 
 #pragma mark - Sub-page Navigation
+
+- (void)showGlassOpacity:(NSDictionary*)sender {
+    [self.navigationController pushViewController:[BHTGlassOpacityViewController new] animated:YES];
+}
 
 - (void)showThemeViewController:(NSDictionary*)sender {
     PresetSettingsViewController* themes =
@@ -178,6 +184,8 @@
             [self updateVisibleToggles];
         }
         BHTRefreshLiquidGlassDesign();
+    } else if ([key isEqualToString:@"hide_compose_button"]) {
+        BHTRefreshComposeButtonVisibility();
     } else if ([key isEqualToString:@"tab_bar_theming"]) {
         dispatch_async(dispatch_get_main_queue(), ^{
             [self refreshAllTabViewsWithTheming];

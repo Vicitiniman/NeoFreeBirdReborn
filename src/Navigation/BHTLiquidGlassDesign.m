@@ -1,5 +1,6 @@
 #import "BHTLiquidGlassDesign.h"
 #import "BHTGlassDockView.h"
+#import "BHTComposeButtonVisibility.h"
 #import "Core/BHTSettings.h"
 #import "Compatibility/BHTHostCompatibility.h"
 #import "ThemeColor/Palette.h"
@@ -14,6 +15,8 @@
 @property(nonatomic) BOOL opaque;
 @property(nonatomic) BOOL hidden;
 @property(nonatomic) BOOL hidesView;
+@property(nonatomic) BOOL disablesInteraction;
+@property(nonatomic) BOOL interactionEnabled;
 @end
 @implementation BHTGlassSavedView @end
 
@@ -33,6 +36,7 @@
 @property(nonatomic) NSUInteger collapseTransitions;
 @property(nonatomic) BHTGlassDockScrollState scrollState;
 @property(nonatomic, weak) UIScrollView* scrollSource;
+@property(nonatomic, weak) UIViewController* scrollPage;
 @property(nonatomic, weak) UIView* selectedTab;
 @end
 @implementation BHTGlassChromeState @end
@@ -41,6 +45,8 @@ static char BHTLiquidGlassStateKey;
 static NSUInteger BHTLiquidGlassGeneration = 1;
 static NSHashTable<UIViewController*>* BHTLiquidGlassTabOwners;
 static char BHTGlassDockOwnerKey;
+static BOOL BHTComposeLayoutRefreshScheduled;
+static BHTGlassChromeState* BHTGlassState(id owner, BOOL create);
 @interface BHTGlassDockOwner : NSObject
 @property(nonatomic, weak) UIViewController* controller;
 @property(nonatomic) BOOL refreshScheduled;
@@ -132,6 +138,7 @@ static void BHTGlassRestore(id owner) {
     for (BHTGlassSavedView* saved in state.savedViews) {
         UIView* view = saved.view;
         if (!view) continue;
+        if (saved.disablesInteraction && !view.userInteractionEnabled) view.userInteractionEnabled = saved.interactionEnabled;
         if (saved.hidesView) {
             if (view.hidden) view.hidden = saved.hidden;
         } else {
@@ -140,6 +147,31 @@ static void BHTGlassRestore(id owner) {
         }
     }
     objc_setAssociatedObject(owner, &BHTLiquidGlassStateKey, nil, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
+}
+
+static void BHTGlassPassThrough(BHTGlassChromeState* state, UIView* view) {
+    BHTGlassClearView(state, view, NO);
+    for (BHTGlassSavedView* saved in state.savedViews) if (saved.view == view) {
+        if (!saved.disablesInteraction) {
+            saved.interactionEnabled = view.userInteractionEnabled;
+            saved.disablesInteraction = YES;
+        }
+        if (view.userInteractionEnabled) view.userInteractionEnabled = NO;
+        break;
+    }
+}
+
+BOOL BHTGlassDockUsesOverlayLayout(UIViewController* owner) {
+    return BHTIsSupportedHost() && [BHTSettings boolForKey:@"liquid_glass_design"] &&
+        UIDevice.currentDevice.userInterfaceIdiom != UIUserInterfaceIdiomPad && BHTGlassDockCanRoute(owner, NO);
+}
+
+BOOL BHTGlassDockHasActiveDockedContent(UIViewController* owner) {
+    for (UIViewController* parent = owner.parentViewController; parent; parent = parent.parentViewController) {
+        id segment = BHTGlassObject(parent, @"tabBottomSegmentViewController");
+        if (segment) return BHTGlassObject(segment, @"activeController") != nil;
+    }
+    return NO;
 }
 
 static void BHTGlassUpdateMaterial(BHTGlassChromeState* state, UIView* host) {
@@ -165,6 +197,8 @@ static void BHTGlassUpdateMaterial(BHTGlassChromeState* state, UIView* host) {
         kind = @"system_material";
     }
     if (rebuild) { state.material.effect = effect; state.materialRebuilds++; }
+    [state.material setGlassOpacity:BHTGlassDockOpacity([BHTSettings integerForKey:@"glass_opacity"],
+        UIAccessibilityIsReduceTransparencyEnabled()) surfaceColor:[Palette currentBackgroundColor]];
     state.material.backgroundColor = effect ? UIColor.clearColor : [Palette currentSurfaceColor];
     state.material.overrideUserInterfaceStyle = [Palette currentPaletteUsesDarkAppearance]
         ? UIUserInterfaceStyleDark : UIUserInterfaceStyleLight;
@@ -230,6 +264,7 @@ void BHTUpdateLiquidGlassTabBar(UIViewController* controller) {
         CGRect frame = BHTGlassDockFrame(nativeFrame, host.bounds, safeBottom, tabs.count, state.vertical, labels);
         if (CGRectIsEmpty(frame)) { state.material.hidden = YES; state.material.userInteractionEnabled = NO; return; }
         BHTGlassClearView(state, controller.view, NO);
+        if (host != controller.view) BHTGlassPassThrough(state, controller.view);
         if (tabBar != controller.view) BHTGlassClearView(state, tabBar, YES);
         else for (UIView* tab in tabs) BHTGlassClearView(state, tab, YES);
         for (NSString* name in @[@"tabBarBackgroundView", @"tabBarDivider"]) {
@@ -247,11 +282,12 @@ void BHTUpdateLiquidGlassTabBar(UIViewController* controller) {
         if (state.material.alpha != alpha) state.material.alpha = alpha;
         state.material.userInteractionEnabled = !hidden && alpha > 0.05;
         UIView* selected = nil;
-        for (UIView* tab in tabs) if (BHTGlassNumber(tab, @"isSelected", NO)) { selected = tab; break; }
+        for (UIView* tab in tabs) if (BHTGlassNumber(tab, @"isSelected", NO) != 0) { selected = tab; break; }
         if (selected != state.selectedTab) {
             state.selectedTab = selected;
             state.scrollState = (BHTGlassDockScrollState){0};
             state.scrollSource = nil;
+            state.scrollPage = nil;
         }
         if (state.vertical || [BHTSettings boolForKey:@"no_tab_bar_hiding"] || UIAccessibilityIsVoiceOverRunning()) {
             BHTGlassDockScrollState scroll = state.scrollState;
@@ -261,8 +297,16 @@ void BHTUpdateLiquidGlassTabBar(UIViewController* controller) {
         BHTGlassUpdateMaterial(state, host);
         [state.material updateTabs:tabs owner:controller vertical:state.vertical showLabels:labels
             textColor:[Palette currentTextColor] accent:(CurrentAccentColor() ?: UIColor.systemBlueColor)];
+        CGRect previousDockFrame = state.material.frame;
         [state.material presentExpandedFrame:frame collapsed:state.scrollState.collapsed
             rightToLeft:host.effectiveUserInterfaceLayoutDirection == UIUserInterfaceLayoutDirectionRightToLeft animated:YES];
+        if (!CGRectEqualToRect(previousDockFrame, state.material.frame) && !BHTComposeLayoutRefreshScheduled) {
+            BHTComposeLayoutRefreshScheduled = YES;
+            dispatch_async(dispatch_get_main_queue(), ^{
+                BHTComposeLayoutRefreshScheduled = NO;
+                BHTRefreshComposeButtonLayout();
+            });
+        }
         BHTGlassDockOwner* box = objc_getAssociatedObject(controller, &BHTGlassDockOwnerKey);
         if (!box) {
             box = [BHTGlassDockOwner new];
@@ -274,6 +318,16 @@ void BHTUpdateLiquidGlassTabBar(UIViewController* controller) {
                 objc_setAssociatedObject(tab, &BHTGlassDockOwnerKey, box, OBJC_ASSOCIATION_RETAIN_NONATOMIC);
         }
     } @finally { state.updating = NO; }
+}
+
+CGRect BHTGlassDockAvoidanceFrame(UIView* view) {
+    if (!NSThread.isMainThread || !view.window || ![BHTSettings boolForKey:@"liquid_glass_design"]) return CGRectZero;
+    for (UIViewController* owner in BHTLiquidGlassTabOwners.allObjects) {
+        BHTGlassChromeState* state = BHTGlassState(owner, NO);
+        if (state.material.window == view.window && !state.material.hidden && state.material.alpha > 0.05)
+            return [state.material convertRect:state.material.bounds toView:view];
+    }
+    return CGRectZero;
 }
 
 void BHTObserveGlassDockScroll(UIViewController* source, UIScrollView* scrollView) {
@@ -293,9 +347,13 @@ void BHTObserveGlassDockScroll(UIViewController* source, UIScrollView* scrollVie
         for (NSUInteger depth = 0; !sameContainer && container && depth < 12; depth++, container = container.parentViewController)
             if (container.isViewLoaded) sameContainer = [source.view isDescendantOfView:container.view];
         if (!sameContainer) continue;
-        if (state.scrollSource != scrollView) {
+        if (state.scrollSource != scrollView || state.scrollPage != source) {
+            BOOL samePage = state.scrollPage == source;
+            state.scrollPage = source;
             state.scrollSource = scrollView;
-            state.scrollState = (BHTGlassDockScrollState){0};
+            BHTGlassDockScrollState scroll = state.scrollState;
+            BHTGlassDockResetScroll(&scroll, samePage);
+            state.scrollState = scroll;
             BHTUpdateLiquidGlassTabBar(owner);
         }
         BHTGlassDockScrollState scroll = state.scrollState;
@@ -320,7 +378,10 @@ void BHTRefreshLiquidGlassDesign(void) {
     if (!NSThread.isMainThread) { dispatch_async(dispatch_get_main_queue(), ^{ BHTRefreshLiquidGlassDesign(); }); return; }
     BHTRegisterLiquidGlassObservers();
     BHTLiquidGlassGeneration++;
-    for (UIViewController* owner in BHTLiquidGlassTabOwners.allObjects) BHTUpdateLiquidGlassTabBar(owner);
+    for (UIViewController* owner in BHTLiquidGlassTabOwners.allObjects) {
+        BHTUpdateLiquidGlassTabBar(owner);
+        if (owner.parentViewController.isViewLoaded) [owner.parentViewController.view setNeedsLayout];
+    }
 }
 
 NSDictionary* BHTLiquidGlassDesignDiagnosticSnapshot(void) {
@@ -340,12 +401,15 @@ NSDictionary* BHTLiquidGlassDesignDiagnosticSnapshot(void) {
             @"materialUpdates": @(state.materialUpdates), @"selectionUpdates": @(state.material.selectionUpdates),
             @"materialRebuilds": @(state.materialRebuilds), @"collapsed": @(state.material.isCollapsed),
             @"collapseTransitions": @(state.collapseTransitions),
+            @"manuallyExpanded": @(state.scrollState.manuallyExpanded),
+            @"bottomReservationRemoved": @(BHTGlassDockUsesOverlayLayout(owner) && !BHTGlassDockHasActiveDockedContent(owner)),
             @"customButtons": @(state.material.buttonCount)}];
     }
     return @{@"enabled": @([BHTSettings boolForKey:@"liquid_glass_design"]),
         @"nativeGlassAvailable": @(BHTNativeLiquidGlassAvailable()),
         @"reduceTransparency": @(UIAccessibilityIsReduceTransparencyEnabled()),
         @"reduceMotion": @(UIAccessibilityIsReduceMotionEnabled()),
+        @"opacityPercent": @(BHTGlassDockOpacity([BHTSettings integerForKey:@"glass_opacity"], NO) * 100),
         @"nativeTabActionsPreserved": @YES, @"nativeTabFramesPreserved": @YES,
         @"implementation": @"owned_glass_dock", @"headerOverlayInstalled": @NO,
         @"surfaces": entries, @"capturesTextOrAccountIdentifiers": @NO};

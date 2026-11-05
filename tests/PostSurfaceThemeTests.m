@@ -15,6 +15,13 @@
 }
 @end
 
+@interface BHTStatsDrawingSurface : UIView
+@property(nonatomic, strong) UIColor* color;
+@end
+@implementation BHTStatsDrawingSurface @end
+@interface T1ProfileSummaryView : BHTNativeThemedSurface @end
+@implementation T1ProfileSummaryView @end
+
 static void testPostSurfaceThemePolicy(void) {
     BHTRecordingSurface* root = [[BHTRecordingSurface alloc] initWithFrame:CGRectMake(0, 0, 360, 500)];
     BHTRecordingSurface* highlight = [[BHTRecordingSurface alloc] initWithFrame:root.bounds];
@@ -49,7 +56,7 @@ static void testPostSurfaceThemePolicy(void) {
     BHTApplyPostSurfaceTheme(native);
     NSCAssert(native.colorWrites == writes, @"The production state skips unchanged assignments");
     native.backgroundColor = UIColor.clearColor;
-    NSCAssert(native.backgroundColor == theme, @"A native refresh resolves the theme before its setter paints");
+    NSCAssert(native.backgroundColor == UIColor.clearColor, @"A transparent native overlay must remain transparent before paint");
     BHTTestSurfaceColor = nil;
     BHTApplyPostSurfaceTheme(native);
     NSCAssert(native.backgroundColor == UIColor.clearColor, @"Theme writes never overwrite the latest saved native color");
@@ -59,6 +66,38 @@ static void testPostSurfaceThemePolicy(void) {
     BHTTestSurfaceColor = nil;
     BHTApplyPostSurfaceTheme(native);
     NSCAssert(!native.backgroundColor, @"A saved native nil is restored through the real hooked-setter path");
+    BHTNativeThemedSurface* headerOverlay = [BHTNativeThemedSurface new];
+    headerOverlay.backgroundColor = UIColor.clearColor;
+    BHTTestSurfaceColor = theme;
+    BHTApplyPostSurfaceTheme(headerOverlay);
+    NSCAssert(CGColorGetAlpha(headerOverlay.backgroundColor.CGColor) == 0,
+        @"Theme attachment cannot create a block over a profile banner");
+    T1ProfileSummaryView* summary = [T1ProfileSummaryView new];
+    summary.backgroundColor = UIColor.clearColor;
+    BHTApplySurfaceBackdropTheme(summary);
+    NSCAssert(CGColorGetAlpha(summary.backgroundColor.CGColor) == 0,
+        @"A generic backdrop refresh cannot make a profile-summary overlay opaque");
+    BHTNativeThemedSurface* translucent = [BHTNativeThemedSurface new];
+    UIColor* nativeTranslucent = [original colorWithAlphaComponent:0.25];
+    translucent.backgroundColor = nativeTranslucent;
+    BHTApplyPostSurfaceTheme(translucent);
+    NSCAssert(fabs(CGColorGetAlpha(translucent.backgroundColor.CGColor) - 0.25) < 0.001,
+        @"Themed overlays retain their native partial alpha");
+    UIView* contentBackdrop = [UIView new];
+    BHTApplySurfaceBackdropTheme(contentBackdrop);
+    NSCAssert(contentBackdrop.backgroundColor == theme,
+        @"Only an explicitly registered content backdrop can replace a native nil with an opaque fill");
+    BHTStatsDrawingSurface* countsBackdrop = [BHTStatsDrawingSurface new];
+    countsBackdrop.color = original;
+    BHTApplyProfileColorSurface(countsBackdrop, YES);
+    NSCAssert(countsBackdrop.color == theme && !countsBackdrop.backgroundColor,
+        @"The followers row's native drawing color is themed independently from UIView background");
+    BHTTestSurfaceColor = nil;
+    BHTApplyPostSurfaceTheme(countsBackdrop);
+    BHTApplyPostSurfaceTheme(contentBackdrop);
+    BHTApplyPostSurfaceTheme(translucent);
+    NSCAssert(countsBackdrop.color == original && !contentBackdrop.backgroundColor && translucent.backgroundColor == nativeTranslucent,
+        @"Counts drawing colors, nil backdrops and translucent colors restore to native");
     UIView* otherBar = [UIView new];
     BHTTestSurfaceColor = theme;
     NSCAssert(BHTThemedSurfaceBackground(otherBar, original, NO) == original,
@@ -67,14 +106,18 @@ static void testPostSurfaceThemePolicy(void) {
     NSCAssert(BHTThemedSurfaceBackground(otherBar, original, NO) == theme,
         @"The profile owner can register its own segmented bar without affecting other bars");
     native.window = native;
+    native.backgroundColor = original;
+    headerOverlay.window = headerOverlay;
     UIColor* nextTheme = [UIColor new];
     BHTTestSurfaceColor = nextTheme;
     [NSNotificationCenter.defaultCenter postNotificationName:BHTThemeDidChangeNotification object:nil];
     NSCAssert(native.backgroundColor == nextTheme, @"Visible surfaces respond to an actual theme-change notification");
+    NSCAssert(CGColorGetAlpha(headerOverlay.backgroundColor.CGColor) == 0,
+        @"Theme notifications also preserve the transparent profile overlay");
     BHTTestSurfaceHostSupported = NO;
     NSCAssert(BHTThemedSurfaceBackground(native, original, YES) == original, @"Unsupported hosts remain native");
     BHTTestSurfaceHostSupported = YES;
     BHTTestSurfaceColor = nil;
     NSLog(@"PASS: production surface updates preserve transparent overlays, media colors/geometry/stacking, nil restoration and repeat-refresh stability");
-    NSLog(@"PASS: production theme state applies before paint, preserves original/native nil, scopes profile registration and refreshes on theme notification");
+    NSLog(@"PASS: production pre-paint transparency, banner-overlay alpha, explicit backdrops, followers drawing colors, native restoration and theme notifications");
 }

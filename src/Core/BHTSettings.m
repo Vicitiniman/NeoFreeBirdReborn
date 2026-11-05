@@ -10,6 +10,7 @@
 #import "Core/BHTManager.h"
 #import "ThemeColor/BHTThemePresets.h"
 #include <stdatomic.h>
+#import "Navigation/BHTLiquidGlassPolicy.h"
 
 NSString* const BHTSettingsProfileDidApplyNotification =
     @"BHTSettingsProfileDidApplyNotification";
@@ -93,6 +94,16 @@ static NSDictionary<NSString*, NSDictionary*>* BHTSettingsPages(void) {
                     @{@"key": @"liquid_glass_design",
                       @"default": @NO,
                       @"type": @"toggle",
+                      @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"},
+                    @{@"key": @"glass_opacity",
+                      @"default": @0,
+                      @"type": @"button",
+                      @"titleKey": @"GLASS_OPACITY_TITLE",
+                      @"action": @"showGlassOpacity:",
+                      @"searchAutoOpen": @YES,
+                      @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"},
+                    @{@"key": @"hide_compose_button",
+                      @"default": @NO,
                       @"sectionKey": @"SETTINGS_SECTION_NAVIGATION"},
                     @{@"key": @"classic_navigation",
                       @"default": @NO,
@@ -1078,7 +1089,9 @@ static BOOL BHTIsValidKeywordArray(id value, BOOL usernameKeywords) {
         NSDictionary* setting = [self settingForKey:key];
         id defaultValue = setting[@"default"];
         if ([defaultValue isKindOfClass:NSNumber.class]) {
-            if ([key isEqualToString:@"undo_tweet_timeout"] &&
+            if ([key isEqualToString:@"glass_opacity"]) {
+                valid = BHTGlassOpacityPreferenceIsValid(value);
+            } else if ([key isEqualToString:@"undo_tweet_timeout"] &&
                 [value isKindOfClass:NSNumber.class]) {
                 valid = [@[@0, @5, @10, @20, @30, @60]
                     containsObject:value];
