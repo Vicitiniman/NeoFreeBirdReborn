@@ -11,6 +11,7 @@
 @property(nonatomic) BOOL userInteractionEnabled;
 @property(nonatomic) BOOL isAccessibilityElement;
 @property(nonatomic, weak) UIView* superview;
+@property(nonatomic, weak) UIView* window;
 @property(nonatomic, readonly) NSArray<UIView*>* subviews;
 @property(nonatomic) BOOL layoutPending;
 @property(nonatomic) NSUInteger layoutRequestCount;
@@ -22,11 +23,13 @@
 - (void)setNeedsLayout;
 - (BOOL)isDescendantOfView:(UIView*)view;
 - (CGRect)convertRect:(CGRect)rect toView:(UIView*)view;
++ (void)performWithoutAnimation:(void (^)(void))changes;
 @end
 
 @implementation UIView {
     NSMutableArray<UIView*>* _children;
 }
++ (void)performWithoutAnimation:(void (^)(void))changes { changes(); }
 - (instancetype)init { return [self initWithFrame:CGRectZero]; }
 - (instancetype)initWithFrame:(CGRect)frame {
     if ((self = [super init])) {

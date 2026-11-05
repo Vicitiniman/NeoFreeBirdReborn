@@ -32,6 +32,7 @@ static NSUInteger BHTDockNumber(id object, NSString* name) {
 @property(nonatomic, strong) UILabel* badge;
 @property(nonatomic, copy) NSString* symbol;
 @property(nonatomic) BOOL showsCaption;
+@property(nonatomic, copy) void (^activationOverride)(void);
 - (void)refreshWithLabels:(BOOL)labels text:(UIColor*)text accent:(UIColor*)accent;
 @end
 
@@ -77,12 +78,18 @@ static NSUInteger BHTDockNumber(id object, NSString* name) {
         initialSpringVelocity:0 options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction
         animations:^{ self.transform = CGAffineTransformIdentity; } completion:nil];
 }
-- (void)activate { BHTGlassDockRoute(self.owner, self.originalTab, NO); }
+- (void)activate {
+    if (self.activationOverride) self.activationOverride();
+    else BHTGlassDockRoute(self.owner, self.originalTab, NO);
+}
 - (BOOL)showOptions:(id)sender { return BHTGlassDockRoute(self.owner, self.originalTab, YES); }
 - (void)hold:(UILongPressGestureRecognizer*)gesture {
     if (gesture.state == UIGestureRecognizerStateBegan) { [self releasePress]; [self showOptions:gesture]; }
 }
-- (BOOL)accessibilityActivate { return BHTGlassDockRoute(self.owner, self.originalTab, NO); }
+- (BOOL)accessibilityActivate {
+    if (self.activationOverride) { self.activationOverride(); return YES; }
+    return BHTGlassDockRoute(self.owner, self.originalTab, NO);
+}
 - (void)refreshWithLabels:(BOOL)labels text:(UIColor*)text accent:(UIColor*)accent {
     UIView* native = self.originalTab;
     NSString* page = BHTDockObject(native, @"scribePage");
@@ -142,6 +149,10 @@ static NSUInteger BHTDockNumber(id object, NSString* name) {
 @property(nonatomic) NSUInteger selectionUpdates;
 @property(nonatomic) CGRect lensTarget;
 @property(nonatomic) NSInteger configuredAppearance;
+@property(nonatomic, strong) BHTGlassDockButton* compactButton;
+@property(nonatomic) CGRect expandedFrame;
+@property(nonatomic) CGRect presentationTarget;
+@property(nonatomic, readwrite, getter=isCollapsed) BOOL collapsed;
 @end
 
 @implementation BHTGlassDockView
@@ -174,6 +185,13 @@ static NSUInteger BHTDockNumber(id object, NSString* name) {
         _sheen.colors = @[(id)[UIColor.whiteColor colorWithAlphaComponent:0.2].CGColor,
             (id)UIColor.clearColor.CGColor];
         [_lens.layer addSublayer:_sheen];
+        _compactButton = [[BHTGlassDockButton alloc] initWithFrame:CGRectZero];
+        _compactButton.alpha = 0;
+        _compactButton.userInteractionEnabled = NO;
+        __weak BHTGlassDockView* weakSelf = self;
+        _compactButton.activationOverride = ^{ if (weakSelf.expansionHandler) weakSelf.expansionHandler(); };
+        _compactButton.accessibilityHint = [[BHTBundle sharedBundle] localizedStringForKey:@"GLASS_DOCK_EXPAND"];
+        [self.contentView addSubview:_compactButton];
     }
     return self;
 }
@@ -213,12 +231,43 @@ static NSUInteger BHTDockNumber(id object, NSString* name) {
         button.owner = owner;
         [button refreshWithLabels:labels text:text accent:accent];
     }
+    UIView* selected = tabs.firstObject;
+    for (BHTGlassDockButton* button in self.buttons) if (button.selected) { selected = button.originalTab; break; }
+    self.compactButton.owner = owner;
+    self.compactButton.originalTab = selected;
+    [self.compactButton refreshWithLabels:NO text:text accent:accent];
+    self.accessibilityElements = self.collapsed ? @[self.compactButton] : self.buttons;
     [self layoutDock];
+}
+- (void)presentExpandedFrame:(CGRect)frame collapsed:(BOOL)collapsed rightToLeft:(BOOL)rightToLeft animated:(BOOL)animated {
+    BOOL changed = self.collapsed != collapsed;
+    self.expandedFrame = frame;
+    self.collapsed = collapsed;
+    CGRect target = collapsed ? BHTGlassDockCompactFrame(frame, rightToLeft) : frame;
+    if (!changed && CGRectEqualToRect(self.presentationTarget, target)) return;
+    self.presentationTarget = target;
+    self.scroll.userInteractionEnabled = !collapsed;
+    self.compactButton.userInteractionEnabled = collapsed;
+    self.accessibilityElements = collapsed ? @[self.compactButton] : self.buttons;
+    void (^layout)(void) = ^{
+        self.frame = target;
+        self.layer.cornerRadius = self.vertical && !collapsed ? MIN(24, frame.size.width / 2) : target.size.height / 2;
+        self.scroll.alpha = collapsed ? 0 : 1;
+        self.compactButton.alpha = collapsed ? 1 : 0;
+        [self layoutDock];
+    };
+    if (changed && animated && self.window && !UIAccessibilityIsReduceMotionEnabled())
+        [UIView animateWithDuration:0.38 delay:0 usingSpringWithDamping:0.88 initialSpringVelocity:0
+            options:UIViewAnimationOptionBeginFromCurrentState | UIViewAnimationOptionAllowUserInteraction
+            animations:layout completion:nil];
+    else [UIView performWithoutAnimation:layout];
 }
 - (void)layoutSubviews { [super layoutSubviews]; [self layoutDock]; }
 - (void)layoutDock {
     if (CGRectIsEmpty(self.bounds)) return;
-    CGRect bounds = self.contentView.bounds;
+    CGRect bounds = CGRectMake(0, 0, self.expandedFrame.size.width, self.expandedFrame.size.height);
+    if (CGRectIsEmpty(bounds)) bounds = self.contentView.bounds;
+    self.compactButton.frame = self.contentView.bounds;
     if (!CGRectEqualToRect(self.scroll.frame, bounds)) self.scroll.frame = bounds;
     CGSize content = BHTGlassDockContentSize(bounds.size, self.buttons.count, self.vertical);
     if (!CGSizeEqualToSize(self.scroll.contentSize, content)) self.scroll.contentSize = content;
@@ -234,7 +283,7 @@ static NSUInteger BHTDockNumber(id object, NSString* name) {
     }
     [CATransaction begin];
     [CATransaction setDisableActions:YES];
-    if (!CGRectEqualToRect(self.rim.frame, bounds)) self.rim.frame = bounds;
+    if (!CGRectEqualToRect(self.rim.frame, self.contentView.bounds)) self.rim.frame = self.contentView.bounds;
     [CATransaction commit];
     if (!CGRectEqualToRect(selected, self.lensTarget)) {
         BOOL animate = self.window && !CGRectIsEmpty(self.lensTarget) && !CGRectIsEmpty(selected) &&

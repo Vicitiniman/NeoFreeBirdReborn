@@ -3,6 +3,20 @@
 
 @interface TFNNavigationBar : UINavigationBar @end
 
+%hook TFNDataViewController
+- (void)scrollViewDidScroll:(UIScrollView*)scrollView {
+    %orig;
+    BHTObserveGlassDockScroll((UIViewController*)self, scrollView);
+}
+%end
+
+%hook T1URTViewController
+- (void)scrollViewDidScroll:(UIScrollView*)scrollView {
+    %orig;
+    BHTObserveGlassDockScroll((UIViewController*)self, scrollView);
+}
+%end
+
 %hook TFNNavigationBar
 - (void)layoutSubviews {
     %orig;

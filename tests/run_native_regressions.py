@@ -91,7 +91,10 @@ static BOOL AccountIsGenuinelyPremium(void) { return NO; }
     unit += (ROOT / "tests/LiquidGlassPolicyTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/GlassDockRoutingTests.m").read_text(encoding="utf8")
     surface_source = (ROOT / "src/ThemeColor/BHTPostSurfaceTheme.m").read_text(encoding="utf8")
-    unit += section(surface_source, "BOOL BHTPostSurfaceIsBackground(", "static NSHashTable<UIView*>* BHTPostSurfaces;")
+    unit += (ROOT / "tests/PostSurfaceThemeFixture.m").read_text(encoding="utf8")
+    unit += "\n#define BHTIsSupportedHost BHTTestSurfaceSupportedHost\n"
+    unit += section(surface_source, "BOOL BHTApplySurfaceBackingColor(", "static id BHTSurfaceObject(")
+    unit += "\n#undef BHTIsSupportedHost\n"
     unit += (ROOT / "tests/PostSurfaceThemeTests.m").read_text(encoding="utf8")
     unit += (ROOT / "tests/LiveAudioBannerTests.m").read_text(encoding="utf8")
     glass_source = (ROOT / "src/Navigation/BHTLiquidGlassDesign.m").read_text(encoding="utf8")

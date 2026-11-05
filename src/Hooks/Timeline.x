@@ -365,11 +365,11 @@ static void SyncHomeAddTabButton(id container, BOOL hidden) {
 }
 
 - (BOOL)tfn_supportsTabBarCollapsing {
-    return [BHTSettings boolForKey:@"no_tab_bar_hiding"] ? NO : %orig;
+    return ([BHTSettings boolForKey:@"no_tab_bar_hiding"] || [BHTSettings boolForKey:@"liquid_glass_design"]) ? NO : %orig;
 }
 
 - (BOOL)tfn_prefersTabBarPinned {
-    return [BHTSettings boolForKey:@"no_tab_bar_hiding"] ? YES : %orig;
+    return ([BHTSettings boolForKey:@"no_tab_bar_hiding"] || [BHTSettings boolForKey:@"liquid_glass_design"]) ? YES : %orig;
 }
 
 %end
@@ -401,11 +401,11 @@ static void SyncHomeAddTabButton(id container, BOOL hidden) {
 }
 
 - (BOOL)tfn_supportsTabBarCollapsing {
-    return [BHTSettings boolForKey:@"no_tab_bar_hiding"] ? NO : %orig;
+    return ([BHTSettings boolForKey:@"no_tab_bar_hiding"] || [BHTSettings boolForKey:@"liquid_glass_design"]) ? NO : %orig;
 }
 
 - (BOOL)tfn_prefersTabBarPinned {
-    return [BHTSettings boolForKey:@"no_tab_bar_hiding"] ? YES : %orig;
+    return ([BHTSettings boolForKey:@"no_tab_bar_hiding"] || [BHTSettings boolForKey:@"liquid_glass_design"]) ? YES : %orig;
 }
 
 %end

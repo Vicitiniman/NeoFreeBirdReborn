@@ -24,7 +24,7 @@ CGRect BHTGlassDockFrame(CGRect native, CGRect host, CGFloat safeBottom, NSUInte
     }
     CGFloat available = MAX(0, host.size.height - MAX(0, safeBottom));
     CGFloat height = MIN(labels ? 66 : 58, available);
-    CGFloat width = MIN(MAX(0, native.size.width - 32), MIN(420, MAX(232, count * 64.0 + 36)));
+    CGFloat width = MIN(600, MAX(0, MIN(native.size.width, host.size.width) - 40));
     if (width < 44 || height < 44) return CGRectZero;
     CGFloat bottom = MIN(CGRectGetMinY(host) + available, CGRectGetMaxY(native));
     available = MAX(0, bottom - CGRectGetMinY(host));
@@ -33,6 +33,57 @@ CGRect BHTGlassDockFrame(CGRect native, CGRect host, CGFloat safeBottom, NSUInte
     CGFloat gap = MIN(10, MAX(0, available - height));
     return CGRectMake(CGRectGetMidX(native) - width / 2,
         bottom - height - gap, width, height);
+}
+
+CGRect BHTGlassDockCompactFrame(CGRect expanded, BOOL rightToLeft) {
+    if (CGRectIsEmpty(expanded)) return CGRectZero;
+    CGFloat diameter = MIN(58, MIN(expanded.size.width, expanded.size.height));
+    return CGRectMake(rightToLeft ? CGRectGetMaxX(expanded) - diameter : expanded.origin.x,
+        CGRectGetMaxY(expanded) - diameter, diameter, diameter);
+}
+
+void BHTGlassDockReveal(BHTGlassDockScrollState* state, BOOL waitForDrag) {
+    if (!state) return;
+    state->collapsed = NO;
+    state->distance = 0;
+    state->direction = 0;
+    state->waitForDrag = waitForDrag;
+}
+
+BOOL BHTGlassDockObserveScroll(BHTGlassDockScrollState* state, CGFloat offset, CGFloat maximumOffset,
+                              BOOL dragging, BOOL decelerating, BOOL pinned) {
+    if (!state || !isfinite(offset) || !isfinite(maximumOffset)) return NO;
+    BOOL previous = state->collapsed;
+    if (pinned || maximumOffset < 1 || offset <= 2) BHTGlassDockReveal(state, NO);
+    if (pinned || maximumOffset < 1 || offset < 0 || offset > maximumOffset) {
+        state->lastOffset = MAX(0, MIN(offset, MAX(0, maximumOffset)));
+        state->hasOffset = YES;
+        state->distance = 0;
+        state->direction = 0;
+        return previous != state->collapsed;
+    }
+    if (!state->hasOffset || (!dragging && !decelerating) || (state->waitForDrag && !dragging)) {
+        state->lastOffset = offset;
+        state->hasOffset = YES;
+        state->distance = 0;
+        return previous != state->collapsed;
+    }
+    if (dragging) state->waitForDrag = NO;
+    CGFloat delta = offset - state->lastOffset;
+    state->lastOffset = offset;
+    // Ignore native restoration/layout jumps, and use hysteresis for finger jitter.
+    if (fabs(delta) > 240) { state->distance = 0; state->direction = 0; return previous != state->collapsed; }
+    if (fabs(delta) < 0.5) return previous != state->collapsed;
+    NSInteger direction = delta > 0 ? 1 : -1;
+    if (direction != state->direction) { state->direction = direction; state->distance = 0; }
+    state->distance += fabs(delta);
+    if (!state->collapsed && direction > 0 && state->distance >= 72) {
+        state->collapsed = YES;
+        state->distance = 0;
+    } else if (state->collapsed && direction < 0 && state->distance >= 12) {
+        BHTGlassDockReveal(state, NO);
+    }
+    return previous != state->collapsed;
 }
 
 CGSize BHTGlassDockContentSize(CGSize bounds, NSUInteger count, BOOL vertical) {

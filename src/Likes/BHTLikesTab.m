@@ -1,6 +1,7 @@
 #import "Likes/BHTLikesTab.h"
 #import "Likes/BHTNativeLikesContract.h"
 #import "Navigation/BHTGlassNavigation.h"
+#import "Navigation/BHTLiquidGlassDesign.h"
 
 #import <AVFoundation/AVFoundation.h>
 #import <AVKit/AVKit.h>
@@ -3721,6 +3722,7 @@ static UIScrollView* BHTFindScrollableView(UIView* view) {
 }
 
 - (void)scrollViewDidScroll:(UIScrollView*)scrollView {
+    BHTObserveGlassDockScroll(self, scrollView);
     if (self.updatingProfileMediaInsets && scrollView == self.collectionView) return;
     if (self.profileMediaKind && scrollView == self.collectionView) {
         SEL event = NSSelectorFromString(@"tfn_contentScrollViewDidScroll:animate:");

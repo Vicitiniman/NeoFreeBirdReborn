@@ -476,7 +476,7 @@ static void BHTTrackThemedTabBarController(
 
 static BOOL shouldPinCollapsibleTabBar(
     T1TabBarViewController* controller) {
-    if (![BHTSettings boolForKey:@"no_tab_bar_hiding"]) {
+    if (![BHTSettings boolForKey:@"no_tab_bar_hiding"] && ![BHTSettings boolForKey:@"liquid_glass_design"]) {
         return NO;
     }
 
