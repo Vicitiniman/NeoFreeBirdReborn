@@ -1,10 +1,21 @@
 import Foundation
 import Darwin
 import ObjectiveC
-@_spi(Reflection) import Swift
+import SwiftShims
 #if canImport(UIKit)
 import UIKit
 #endif
+
+// These are the stdlib entry points used by Mirror's field reflection. The
+// build SDK does not ship Swift's private SPI interface, but does ship the
+// shared C metadata structure. Keep the declarations identical to the runtime.
+@_silgen_name("swift_reflectionMirror_recursiveCount")
+private func BHTGlassFieldCount(_ type: Any.Type) -> Int
+@_silgen_name("swift_reflectionMirror_recursiveChildOffset")
+private func BHTGlassFieldOffset(_ type: Any.Type, index: Int) -> Int
+@_silgen_name("swift_reflectionMirror_recursiveChildMetadata")
+private func BHTGlassFieldMetadata(_ type: Any.Type, index: Int,
+                                  fieldMetadata: UnsafeMutablePointer<_FieldReflectionMetadata>) -> Any.Type?
 
 @_silgen_name("BHTInvokeGlassReplaceTabs")
 private func BHTInvokeGlassReplaceTabs(
@@ -64,6 +75,20 @@ public final class BHTGlassNavigationRuntime: NSObject {
         return field(identifier, "rawValue") as? String
     }
 
+    private static func storedFields(_ type: Any.Type) -> [String: (offset: Int, type: Any.Type)]? {
+        let count = BHTGlassFieldCount(type)
+        guard count > 0 && count <= 64 else { return nil }
+        var fields: [String: (offset: Int, type: Any.Type)] = [:]
+        for index in 0..<count {
+            var metadata = _FieldReflectionMetadata()
+            let childType = BHTGlassFieldMetadata(type, index: index, fieldMetadata: &metadata)
+            defer { metadata.freeFunc?(metadata.name) }
+            guard let name = metadata.name, let childType, metadata.isStrong else { return nil }
+            fields[String(cString: name)] = (BHTGlassFieldOffset(type, index: index), childType)
+        }
+        return fields.count == count ? fields : nil
+    }
+
     static func canonicalPage(_ identifier: String, registry: [[String: Any]]) -> String? {
         if identifier.hasPrefix("nfb.settings.") { return "nfb_settings" }
         if identifier.hasPrefix("nfb.likes.") { return "likes" }
@@ -89,11 +114,8 @@ public final class BHTGlassNavigationRuntime: NSObject {
     static func clone<T>(_ template: T, id: String, title: String,
                          image: UIImage, selectedImage: UIImage,
                          factory: @escaping () -> UIViewController) -> T? {
-        typealias Field = (offset: Int, type: Any.Type)
-        var fields: [String: Field] = [:]
-        guard _forEachField(of: T.self, options: .ignoreUnknown, body: { name, offset, type, _ in
-            fields[String(cString: name)] = (offset, type); return true
-        }), let identifier = fields["identifier"], let icon = fields["icon"],
+        guard Mirror(reflecting: template).displayStyle == .struct,
+        let fields = storedFields(T.self), let identifier = fields["identifier"], let icon = fields["icon"],
         let selectedIcon = fields["selectedIcon"], let label = fields["accessibilityLabel"],
         let root = fields["makeRootViewController"],
         icon.type == UIImage.self, selectedIcon.type == UIImage.self,
@@ -104,11 +126,10 @@ public final class BHTGlassNavigationRuntime: NSObject {
         let retap = field(template, "reTapAction"),
         Mirror(reflecting: retap).displayStyle == .enum,
         Mirror(reflecting: retap).children.isEmpty else { return nil }
-        var raw: Field?
-        guard _forEachField(of: identifier.type, body: { name, offset, type, _ in
-            if String(cString: name) == "rawValue" { raw = (offset, type) }
-            return true
-        }), let raw, raw.type == String.self else { return nil }
+        guard let identifierValue = field(template, "identifier"),
+              Mirror(reflecting: identifierValue).displayStyle == .struct,
+              let identifierFields = storedFields(identifier.type), identifierFields.count == 1,
+              let raw = identifierFields["rawValue"], raw.type == String.self else { return nil }
         let writes = [(identifier.offset + raw.offset, MemoryLayout<String>.size, MemoryLayout<String>.alignment),
                       (icon.offset, MemoryLayout<UIImage>.size, MemoryLayout<UIImage>.alignment),
                       (selectedIcon.offset, MemoryLayout<UIImage>.size, MemoryLayout<UIImage>.alignment),
